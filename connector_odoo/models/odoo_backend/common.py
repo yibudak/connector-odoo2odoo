@@ -326,7 +326,9 @@ class OdooBackend(models.Model):
         try:
             for backend in self:
                 for model_name in (
-                    "odoo.uom.uom",
+                    #Todo
+                    # "odoo.uom.uom",
+                    #  "odoo.res.currency",
                     "odoo.product.attribute",
                     "odoo.product.attribute.value",
                 ):

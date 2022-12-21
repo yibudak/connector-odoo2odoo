@@ -15,10 +15,10 @@ try:
 except ImportError:
     _logger.debug("Cannot import 'odoorpc' Lib")
 
-try:
-    import oerplib
-except ImportError:
-    _logger.debug("Cannot import 'oerplib' Lib")
+# try:
+#     import oerplib
+# except ImportError:
+#     _logger.debug("Cannot import 'oerplib' Lib")
 
 
 class OdooLocation(object):
@@ -101,6 +101,7 @@ class OdooAPI(object):
                     host=self._location.hostname,
                     port=self._location.port,
                     protocol=self._location.protocol,
+                    timeout=150,
                 )
 
             self._api_login(api)

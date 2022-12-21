@@ -12,9 +12,7 @@ _logger = logging.getLogger(__name__)
 
 class OdooResCurrencyRate(models.Model):
     _name = "odoo.res.currency.rate"
-    _inherit = [
-        "odoo.binding",
-    ]
+    _inherit = ["odoo.binding"]
     _inherits = {"res.currency.rate": "odoo_id"}
     _description = "Odoo Currency rate"
 
@@ -34,12 +32,9 @@ class OdooResCurrencyRate(models.Model):
                 self.backend_id, self.external_id, force=True
             )
 
-    def import_rate(self, backend_record, rate_id, currency_id):
+    def import_rate(self, currency_rate, backend_record, rate_id, currency_id):
         _logger.info("Obtaining Currency rate {}".format(rate_id))
-        currency_rate_model = backend_record.get_connection().api.get(
-            "res.currency.rate"
-        )
-        rate = currency_rate_model.browse(rate_id)
+        rate = currency_rate.browse(rate_id)
         currency_id = (
             self.env["odoo.res.currency"]
             .search([("external_id", "=", currency_id)])

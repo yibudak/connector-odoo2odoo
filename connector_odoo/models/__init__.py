@@ -5,6 +5,7 @@ from . import odoo_backend
 
 from . import res_currency_rate
 from . import res_currency
+from . import res_company
 from . import disappeared
 from . import partner_category
 from . import partner
@@ -15,6 +16,8 @@ from . import product_attribute_value
 from . import product_product
 from . import product_pricelist
 from . import product_template
+from . import product_image
+# from . import product_template_attribute_line
 from . import uom_uom
 from . import account_account
 from . import sale_order

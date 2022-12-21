@@ -27,10 +27,11 @@ class ProductAttributeMapper(Component):
     @only_create
     @mapping
     def check_att_exists(self, record):
+        # Todo: bu çalışmıyor ki? dict'e odoo_id ekliyor ama yine de create ediyor duplicate oluyor
         # TODO: Improve and check family, factor etc...
         domain = [("name", "=", record.name)]
         if hasattr(record, "create_variant"):
-            filter.append(("create_variant", "=", record.create_variant))
+            domain.append(("create_variant", "=", record.create_variant))
         att_id = self.env["product.attribute"].search(domain)
         res = {}
         if len(att_id) == 1:

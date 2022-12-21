@@ -57,9 +57,8 @@ class ProductPricelistImportMapper(Component):
 
     direct = [
         ("active", "active"),
-        ("code", "code"),
+        ("discount_policy", "discount_policy"),
         ("name", "name"),
-        ("selectable", "selectable"),
         ("sequence", "sequence"),
     ]
 
@@ -73,12 +72,6 @@ class ProductPricelistImportMapper(Component):
         _logger.debug("found pricelist %s for record %s" % (pricelist.name, record))
         if len(pricelist) == 1:
             return {"odoo_id": pricelist.id}
-        return {}
-
-    @mapping
-    def discount_policy(self, record):
-        if hasattr(record, "discount_policy"):
-            return {"discount_policy": record.discount_policy}
         return {}
 
     @mapping

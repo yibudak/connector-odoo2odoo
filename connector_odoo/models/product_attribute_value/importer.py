@@ -31,30 +31,37 @@ class ProductAttributeValueMapper(Component):
 
     direct = [
         ("name", "name"),
-        ("price_extra", "price_extra"),
     ]
 
     def get_attribute_id(self, record):
         binder = self.binder_for("odoo.product.attribute")
-        local_attribute_id = binder.to_internal(record.attribute_id.id, unwrap=True)
+        local_attribute_id = binder.to_internal(record.attribute_id.id,
+                                                unwrap=True)
         return local_attribute_id.id
 
     @mapping
     def attribute_id(self, record):
         return {"attribute_id": self.get_attribute_id(record)}
 
-    @only_create
-    @mapping
-    def check_att_value_exists(self, record):
-        # TODO: Improve and check family, factor etc...
-        att_id = self.get_attribute_id(record)
-        value_id = self.env["product.attribute.value"].search(
-            [
-                ("name", "=", record.name),
-                ("attribute_id", "=", att_id),
-            ]
-        )
-        res = {}
-        if len(value_id) == 1:
-            res.update({"odoo_id": value_id.id})
-        return res
+    # @only_create
+    # @mapping
+    # def check_att_value_exists(self, record):
+    #     # TODO: calısmıor burası aslında gerek yok check etmesine ama bakalım
+    #     lang = (
+    #         self.backend_record.default_lang_id.code
+    #         or self.env.user.lang
+    #         or self.env.context["lang"]
+    #         or "en_US"
+    #     )
+    #     att_id = self.get_attribute_id(record)
+    #
+    #     value_id = self.env["product.attribute.value"].with_context(lang=lang).search(
+    #         [
+    #             ("name", "=", record.name),
+    #             ("attribute_id", "=", att_id),
+    #         ], limit=1
+    #     )
+    #     res = {}
+    #     if len(value_id) > 0:
+    #         res.update({"odoo_id": value_id.id})
+    #     return res or False

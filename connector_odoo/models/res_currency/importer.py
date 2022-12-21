@@ -14,22 +14,8 @@ class ResCurrencyBatchImporter(Component):
     _inherit = "odoo.delayed.batch.importer"
     _apply_on = ["odoo.res.currency"]
 
-    def run(self, filters=None, force=False):
-        """Run the synchronization"""
-        external_ids = self.backend_adapter.search(
-            filters,
-        )
-        _logger.info(
-            "search for odoo Currency %s returned %s items", filters, len(external_ids)
-        )
-        for external_id in external_ids:
-            job_options = {
-                "priority": 15,
-            }
-            self._import_record(external_id, job_options=job_options)
 
-
-class UomMapper(Component):
+class ResCurrencyMapper(Component):
     _name = "odoo.res.currency.mapper"
     _inherit = "odoo.import.mapper"
     _apply_on = "odoo.res.currency"
@@ -48,6 +34,7 @@ class UomMapper(Component):
     @only_create
     @mapping
     def check_res_currency_exists(self, record):
+        # Todo: bu çalışmıyor ki? dict'e odoo_id ekliyor ama yine de create ediyor duplicate oluyor
         res = {}
         currency_id = self.env["res.currency"].search(
             [
@@ -75,6 +62,11 @@ class CurrencyImporter(Component):
     _name = "odoo.res.currency.importer"
     _inherit = "odoo.importer"
     _apply_on = "odoo.res.currency"
+
+    def run(self, external_id, force=False):
+        """ Run the synchronization """
+        return super().run(external_id, force=False)
+        # Todo: force true. we always need to update the currency rates
 
     def _after_import(self, binding, force=False):
         _logger.info(

@@ -49,9 +49,10 @@ class OdooImporter(AbstractComponent):
         """Return True if the import should be skipped because
         it is already up-to-date in Odoo"""
         assert self.odoo_record
+        odoo_date = self.odoo_record.write_date
         if (
             not hasattr(self.odoo_record, "write_date")
-            or not self.odoo_record.write_date
+            or not odoo_date
         ):
             return  # no update date on Odoo, always import it.
         if not binding:
@@ -61,7 +62,7 @@ class OdooImporter(AbstractComponent):
             return
         from_string = fields.Datetime.from_string
         sync_date = from_string(sync)
-        odoo_date = self.odoo_record.write_date
+
         # if the last synchronization date is greater than the last
         # update in odoo, we skip the import.
         # Important: at the beginning of the exporters flows, we have to
@@ -150,6 +151,9 @@ class OdooImporter(AbstractComponent):
     def _get_binding(self):
         return self.binder.to_internal(self.external_id)
 
+    def _get_binding2(self, binding):
+        return binding  # Todo fix
+
     # pylint: disable=W8121
     def _create_data(self, map_record, **kwargs):
         return map_record.values(for_create=True, **kwargs)
@@ -175,7 +179,8 @@ class OdooImporter(AbstractComponent):
         """Update an Odoo record"""
         # special check on data before import
         self._validate_data(data)
-        binding.with_context(connector_no_export=True).write(data)
+        context = {**{"connector_no_export": True}, **self._get_context(data)}
+        binding.with_context(context).write(data)
         _logger.debug("%d updated from Odoo %s", binding, self.external_id)
         return
 
@@ -228,6 +233,8 @@ class OdooImporter(AbstractComponent):
             self.odoo_record = self._get_odoo_data()
         except IDMissingInBackend:
             return _("Record does no longer exist in Odoo")
+
+        binding = self._get_binding2(binding)  # Todo experimental daha iyisini yaparsın
 
         if self._must_skip():
             _logger.info(
@@ -308,7 +315,9 @@ class DirectBatchImporter(AbstractComponent):
 
     def _import_record(self, external_id, force=False):
         """Import the record directly"""
-        self.model.import_record(self.backend_record, external_id, force)
+        self.model.import_record(
+            self.backend_record, external_id, work=self.work, force=force
+        )
 
 
 class DelayedBatchImporter(AbstractComponent):
@@ -320,4 +329,24 @@ class DelayedBatchImporter(AbstractComponent):
     def _import_record(self, external_id, job_options=None, **kwargs):
         """Delay the import of the records"""
         delayable = self.model.with_delay(**job_options or {})
-        delayable.import_record(self.backend_record, external_id, **kwargs)
+        delayable.import_record(
+            self.backend_record, external_id, work=self.work, **kwargs
+        )
+
+    # def run(self, filters=None, force=False):
+    #     """
+    #     base run function for odoo.delayed.batch.importer
+    #     experimental: we are trying to reduce RPC calls to Odoo
+    #     # Todo
+    #     """
+    #     ext_model = self.backend_adapter._odoo_model
+    #     try:
+    #         odoo_api = self.work.odoo_api.api
+    #     except AttributeError as e:
+    #         raise AttributeError(
+    #             "You must provide a odoo_api attribute with a "
+    #             "OdooAPI instance to be able to use the "
+    #             "Backend Adapter."
+    #         ) from e
+    #     self.backend_adapter.ext_model = odoo_api.env[ext_model]
+    #     return True

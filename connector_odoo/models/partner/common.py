@@ -62,7 +62,7 @@ class PartnerAdapter(Component):
 
     _odoo_model = "res.partner"
 
-    def search(self, filters=None, model=None, offset=0, limit=None, order=None):
+    def search(self, filters=None, model=None, offset=0, limit=50, order=None): # Todo: limit none olacak debug için 50 yaptım
         """Search records according to some criteria
         and returns a list of ids
 

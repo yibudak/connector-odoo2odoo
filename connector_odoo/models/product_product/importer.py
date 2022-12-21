@@ -29,12 +29,7 @@ class ProductBatchImporter(Component):
             "search for odoo products %s returned %s items", filters, len(external_ids)
         )
         for external_id in external_ids:
-            # TODO : get the categ parent_left and change the priority
-            prod_id = self.backend_adapter.read(external_id)
-            cat_id = self.backend_adapter.read(
-                prod_id.categ_id.id, model="product.category"
-            )
-            job_options = {"priority": 15 + cat_id.parent_left or 0}
+            job_options = {"priority": 15}
             self._import_record(external_id, job_options=job_options, force=force)
 
 
@@ -45,8 +40,6 @@ class ProductImportMapper(Component):
 
     direct = [
         ("description", "description"),
-        ("weight", "weight"),
-        ("volume", "volume"),
         ("standard_price", "standard_price"),
         ("description_sale", "description_sale"),
         ("description_purchase", "description_purchase"),
@@ -54,26 +47,43 @@ class ProductImportMapper(Component):
         ("sale_ok", "sale_ok"),
         ("purchase_ok", "purchase_ok"),
         ("type", "detailed_type"),
+        ("public_description", "public_description"),
+        ("v_cari_urun", "v_cari_urun"),
     ]
 
-    @only_create
     @mapping
-    def odoo_id(self, record):
-        # If product was imported or created yet (manually or by another connector)
-        binder = self.binder_for("odoo.product.product")
-        if binder.to_internal(record.id, unwrap=True):
-            return {"odoo_id": record.id}
-        product_id = self.env["product.product"].search(
-            [("default_code", "=", record.default_code)]
+    def template_and_attributes(self, record):
+        attr_line_vals = []
+        tmpl_binder = self.binder_for("odoo.product.template")
+        attr_value_binder = self.binder_for("odoo.product.attribute.value")
+        local_template_id = tmpl_binder.to_internal(
+            record.product_tmpl_id.id, unwrap=True
         )
-        if product_id:
-            return {"odoo_id": product_id.id}
-        barcode = self.barcode(record)["barcode"]
-        if barcode:
-            product_id = self.env["product.product"].search([("barcode", "=", barcode)])
-            if product_id:
-                return {"odoo_id": product_id.id}
-        return {}
+        attr_value_ids = record.attribute_value_ids
+        for attr_value in attr_value_ids:
+            local_attr_val_id = attr_value_binder.to_internal(
+                attr_value.id, unwrap=True
+            )
+
+            if not local_attr_val_id:
+                raise MappingError(
+                    "Attribute not found for value %s."
+                    " Import attributes first" % attr_value.name
+                )
+            attribute = self.env["product.template.attribute.value"].search(
+                [
+                    ("product_tmpl_id", "=", local_template_id.id),
+                    ("attribute_id", "=", local_attr_val_id.attribute_id.id),
+                    ("product_attribute_value_id", "=", local_attr_val_id.id),
+                ]
+            )
+            if attribute:
+                attr_line_vals.append(attribute.id)
+
+        return {
+            "product_tmpl_id": local_template_id.id,
+            "product_template_attribute_value_ids": [(6, 0, attr_line_vals)],
+        }
 
     @mapping
     def company_id(self, record):
@@ -83,21 +93,28 @@ class ProductImportMapper(Component):
     def uom_id(self, record):
         binder = self.binder_for("odoo.uom.uom")
         uom = binder.to_internal(record.uom_id.id, unwrap=True)
-        return {"uom_id": uom.id}
+        return {"uom_id": uom.id, "uom_po_id": uom.id}
 
     @mapping
-    def uom_po_id(self, record):
+    def dimensions(self, record):
         binder = self.binder_for("odoo.uom.uom")
-        uom = binder.to_internal(record.uom_id.id, unwrap=True)
-        return {"uom_po_id": uom.id}
+        uom = binder.to_internal(record.dimensional_uom_id.id, unwrap=True)
+        return {
+            "dimensional_uom_id": uom.id,
+            "product_length": record.product_length,
+            "product_width": record.product_width,
+            "product_height": record.product_height,
+            "weight": record.weight,
+        }
+        # Todo: weight'in uomu eksik, v16'da m2o yerine char yapmışlar
 
     @mapping
     def price(self, record):
-        return {"list_price": record.list_price}
+        return {"sale_price": record.attr_price}
 
     @mapping
     def default_code(self, record):
-        code = record["default_code"]
+        code = record.default_code
         if not code:
             return {"default_code": "/"}
         return {"default_code": code}
@@ -106,14 +123,14 @@ class ProductImportMapper(Component):
     def name(self, record):
         if not hasattr(record, "name"):
             return {}
-        name = record["name"]
+        name = record.name
         if not name:
             return {"name": "/"}
         return {"name": name}
 
     @mapping
     def category(self, record):
-        categ_id = record["categ_id"]
+        categ_id = record.categ_id
         binder = self.binder_for("odoo.product.category")
 
         cat = binder.to_internal(categ_id.id, unwrap=True)
@@ -125,14 +142,9 @@ class ProductImportMapper(Component):
 
     @mapping
     def is_published(self, record):
-        is_published = False
-        if hasattr(record, "website_published"):
-            is_published = record["website_published"]
-        elif hasattr(record, "is_published"):
-            is_published = record["is_published"]
-        else:
-            return {}
-        return {"is_published": is_published}
+        return {
+            "is_published": True  # record.product_tmpl_id.is_published
+        }  # Todo: v12 tarafında product.producta eklemen lazım bunu
 
     @mapping
     def image(self, record):
@@ -158,15 +170,6 @@ class ProductImportMapper(Component):
             barcode = record["ean13"]
         return {"barcode": barcode}
 
-    @mapping
-    def product_tmpl_id(self, record):
-        if self.backend_record.work_with_variants and record.product_tmpl_id:
-            binder = self.binder_for("odoo.product.template")
-            template_id = binder.to_internal(record.product_tmpl_id.id, unwrap=True)
-            if template_id:
-                return {"product_tmpl_id": template_id.id}
-        return {}
-
 
 class ProductImporter(Component):
     _name = "odoo.product.product.importer"
@@ -176,38 +179,35 @@ class ProductImporter(Component):
     def _import_dependencies(self, force=False):
         if self.backend_record.work_with_variants:
             product_tmpl_id = self.odoo_record.product_tmpl_id
-            binder = self.binder_for("odoo.product.template")
-            odoo_product_tmpl_id = binder.to_internal(product_tmpl_id.id, unwrap=True)
+            tmpl_binder = self.binder_for("odoo.product.template")
+            odoo_product_tmpl_id = tmpl_binder.to_internal(
+                product_tmpl_id.id, unwrap=True
+            )
+
             if not odoo_product_tmpl_id:
                 self._import_dependency(
                     product_tmpl_id.id, "odoo.product.template", force=force
                 )
 
-        uom_id = self.odoo_record.uom_id
-        self._import_dependency(uom_id.id, "odoo.uom.uom", force=force)
-
-        categ_id = self.odoo_record.categ_id
-        self._import_dependency(categ_id.id, "odoo.product.category", force=force)
-
         return super()._import_dependencies(force=force)
 
     def _after_import(self, binding, force=False):
-        attachment_model = self.work.odoo_api.api.get("ir.attachment")
-        attachment_ids = attachment_model.search(
-            [
-                ("res_model", "=", "product.product"),
-                ("res_id", "=", self.odoo_record.id),
-            ],
-            order="id",
-        )
-        total = len(attachment_ids)
-        _logger.info(
-            "{} Attachment found for external product {}".format(
-                total, self.odoo_record.id
-            )
-        )
-        for attachment_id in attachment_ids:
-            self.env["odoo.ir.attachment"].with_delay().import_record(
-                self.backend_record, attachment_id
-            )
+        # attachment_model = self.work.odoo_api.api.env["ir.attachment"]
+        # attachment_ids = attachment_model.search(
+        #     [
+        #         ("res_model", "=", "product.product"),
+        #         ("res_id", "=", self.odoo_record.id),
+        #     ],
+        #     order="id",
+        # )
+        # total = len(attachment_ids)
+        # _logger.info(
+        #     "{} Attachment found for external product {}".format(
+        #         total, self.odoo_record.id
+        #     )
+        # )
+        # for attachment_id in attachment_ids:
+        #     self.env["odoo.ir.attachment"].with_delay().import_record(
+        #         self.backend_record, attachment_id
+        #     )
         return super()._after_import(binding, force)

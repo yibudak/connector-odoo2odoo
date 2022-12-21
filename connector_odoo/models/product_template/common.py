@@ -70,6 +70,14 @@ class ProductTemplate(models.Model):
         store=True,
     )
 
+    def _create_variant_ids(self):
+        """We are handling variants with Odoo 12.0"""
+        return True
+        # if self.env.context.get("no_handle_variant", False):
+        #     return True
+        # else:
+        #     res = super(ProductTemplate, self)._create_variant_ids()
+
     @api.depends("product_variant_ids")
     def _compute_product_bind_ids(self):
         for record in self:

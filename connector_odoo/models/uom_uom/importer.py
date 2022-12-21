@@ -55,6 +55,7 @@ class UomMapper(Component):
     @only_create
     @mapping
     def check_uom_exists(self, record):
+        # Todo: bu çalışmıyor ki? dict'e odoo_id ekliyor ama yine de create ediyor duplicate oluyor
         res = {}
         category_name = record["category_id"].name
         lang = (
@@ -91,11 +92,10 @@ class UomMapper(Component):
                 res.update({"odoo_id": local_uom_id.id})
             else:
                 raise ValidationError(
-                    _(
-                        "Unable to find Reference UOM with factor {factor} \
-                    for category {category_name}. \
-                    It is possible that the UOM {record.name} was renamed."
-                    ).format(record.factor, category_name, record.name)
+                    _("Unable to find Reference UOM with factor %s for"
+                      " category %s. It is possible that the UOM %s was"
+                      " renamed."
+                      % (record.factor, category_name, record.name))
                 )
         return res
 

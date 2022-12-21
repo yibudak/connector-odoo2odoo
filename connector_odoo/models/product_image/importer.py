@@ -1,0 +1,85 @@
+import logging
+
+from odoo.addons.component.core import Component
+from odoo.addons.connector.components.mapper import mapping, only_create
+
+_logger = logging.getLogger(__name__)
+
+
+class ProductImageBatchImporter(Component):
+    """Import the Odoo Product Attachments.
+
+    For every Attachment in the list, a delayed job is created.
+    Import from a date
+    """
+
+    _name = "odoo.product.image.batch.importer"
+    _inherit = "odoo.delayed.batch.importer"
+    _apply_on = ["odoo.product.image"]
+
+    def run(self, filters=None, force=False):
+        """Run the synchronization"""
+
+        external_ids = self.backend_adapter.search(
+            filters, model="base_multi_image.image"
+        )
+        _logger.info(
+            "search for odoo product images %s returned %s items",
+            filters,
+            len(external_ids),
+        )
+        for external_id in external_ids:
+            job_options = {"priority": 15}
+            self._import_record(external_id, job_options=job_options, force=force)
+
+
+class ProductImageImportMapper(Component):
+    _name = "odoo.product.image.import.mapper"
+    _inherit = "odoo.import.mapper"
+    _apply_on = ["odoo.product.image"]
+
+    direct = [
+        ("image_main", "image_1920"),
+        ("name", "name"),
+        # ("name", "name"),
+        # ("description", "description"),
+        # ("type", "type"),
+        # ("res_model", "res_model"),
+        # ("res_name", "res_name"),
+        # ("store_fname", "store_fname"),
+        # ("file_size", "file_size"),
+        # ("index_content", "index_content"),
+        # ("usage", "usage"),
+    ]
+
+    @only_create
+    @mapping
+    def product_tmpl_id(self, record):
+        vals = {}
+        imported_tmpl_id = self.env["product.template"].search(
+            [
+                ("bind_ids.external_id", "in", [record.owner_id])
+            ]  # Todo: belki domain kötü olmuştur
+        )
+        if imported_tmpl_id:
+            vals.update({"product_tmpl_id": imported_tmpl_id.id})
+        return vals
+
+
+class ProductImageImporter(Component):
+    _name = "odoo.product.image.importer"
+    _inherit = "odoo.importer"
+    _apply_on = ["odoo.product.image"]
+
+    def run(self, external_id, force=False):
+        """Map base_multi_image.image to product.image before import"""
+        self.backend_adapter._odoo_model = "base_multi_image.image"
+        super(ProductImageImporter, self).run(external_id, force=force)
+
+    # FIXUP: We shouldn't skip the import. The record could be updated.
+    # def _must_skip(
+    #     self,
+    # ):
+    #     return self.env["product.image"].search(
+    #         [("store_fname", "=", self.odoo_record.store_fname)]
+    #     )

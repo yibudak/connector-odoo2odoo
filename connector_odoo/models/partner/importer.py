@@ -10,38 +10,12 @@ from odoo.addons.connector.components.mapper import mapping
 _logger = logging.getLogger(__name__)
 
 
-def get_state_from_record(self, record):
-    state_id = False
-    country_id = False
-    if record.country_id:
-        country_code = record.country_id.code
-    else:
-        country_code = "CA"
-    country = self.env["res.country"].search(
-        [
-            ("code", "=", country_code),
-        ]
-    )
-    country_id = country.id
-    if hasattr(record, "state_id") and record.state_id:
-        state = self.env["res.country.state"].search(
-            [
-                ("code", "=", record.state_id.code),
-                ("country_id", "=", country_id),
-            ]
-        )
-        if not state:
-            state = self.env["res.country.state"].search(
-                [
-                    ("name", "=", record.state_id.name),
-                    ("country_id", "=", country_id),
-                ]
-            )
-        state_id = state.id
-    return {
-        "state_id": state_id,
-        "country_id": country_id,
-    }
+def get_address_fields_from_record(env, record):
+    """
+     Return a dict with the address fields of the record.
+    """
+    # Todo : address fields should be different models
+    return True
 
 
 class PartnerBatchImporter(Component):
@@ -75,13 +49,21 @@ class PartnerImportMapper(Component):
     # TODO :     special_price => minimal_price
     direct = [
         ("name", "name"),
+        ("street", "street"),
+        ("street2", "street2"),
+        ("city", "city"),
+        ("zip", "zip"),
+        ("phone", "phone"),
+        ("mobile", "mobile"),
+        ("email", "email"),
         ("website", "website"),
         ("lang", "lang"),
         ("ref", "ref"),
         ("comment", "comment"),
         ("company_type", "company_type"),
-        ("zip", "zip"),
-        ("delivery_margin", "delivery_margin"),
+        ("sale_warn", "sale_warn"),
+        ("sale_warn_msg", "sale_warn_msg"),
+        # Todo : buraya v12 deki eklediğimiz özel fieldları da koy
     ]
 
     @mapping
@@ -90,67 +72,22 @@ class PartnerImportMapper(Component):
             binder = self.binder_for("odoo.res.partner.category")
             return {
                 "category_id": [
-                    (
-                        6,
-                        0,
-                        [
-                            binder.to_internal(category_id, unwrap=True).id
-                            for category_id in record.category_id.ids
-                        ],
-                    )
+                    (6, 0,
+                     [binder.to_internal(category_id, unwrap=True).id
+                      for category_id in record.category_id.ids],
+                     )
                 ]
             }
 
     @mapping
-    def street(self, record):
-        # res.partner.address imported as dependency
-        # in other version of odoo, this field is a direct mapping
-        if self.backend_record.version != "6.1":
-            return {"street": record.street}
-
-    @mapping
-    def street2(self, record):
-        # res.partner.address imported as dependency
-        # in other version of odoo, this field is a direct mapping
-        if self.backend_record.version != "6.1":
-            return {"street2": record.street2}
-
-    @mapping
-    def phone(self, record):
-        # res.partner.address imported as dependency
-        # in other version of odoo, this field is a direct mapping
-        if self.backend_record.version != "6.1":
-            return {"phone": record.phone}
-
-    @mapping
-    def mobile(self, record):
-        # res.partner.address imported as dependency
-        # in other version of odoo, this field is a direct mapping
-        if self.backend_record.version != "6.1":
-            return {"mobile": record.mobile}
-
-    @mapping
-    def city(self, record):
-        # res.partner.address imported as dependency
-        # in other version of odoo, this field is a direct mapping
-        if self.backend_record.version != "6.1":
-            return {"city": record.city}
-
-    @mapping
-    def state_id(self, record):
-        # res.partner.address imported as dependency
-        # in other version of odoo, this field is a direct mapping
-        if self.backend_record.version != "6.1":
-            return get_state_from_record(self, record)
+    def country_id(self, record):
+        return {'country_id': 224}
+        #Todo
+        #return get_address_fields_from_record(self.env, record)
 
     @mapping
     def customer(self, record):
         if self.backend_record.version in (
-            "6.1",
-            "7.0",
-            "8.0",
-            "9.0",
-            "10.0",
             "11.0",
             "12.0",
         ):
@@ -160,30 +97,14 @@ class PartnerImportMapper(Component):
 
     @mapping
     def supplier(self, record):
-        if self.backend_record.version in (
-            "6.1",
-            "7.0",
-            "8.0",
-            "9.0",
-            "10.0",
-            "11.0",
-            "12.0",
-        ):
+        if self.backend_record.version in ("11.0", "12.0"):
             return {"supplier_rank": record.supplier}
         else:
             return {"supplier_rank": record.supplier_rank}
 
     @mapping
     def image(self, record):
-        if self.backend_record.version in (
-            "6.1",
-            "7.0",
-            "8.0",
-            "9.0",
-            "10.0",
-            "11.0",
-            "12.0",
-        ):
+        if self.backend_record.version in ("11.0", "12.0"):
             return {"image_1920": record.image if hasattr(record, "image") else False}
         else:
             return {"image_1920": record.image_1920}
@@ -197,11 +118,7 @@ class PartnerImportMapper(Component):
 
     @mapping
     def property_account_payable(self, record):
-        if float(self.backend_record.version) >= 9.0:
-            property_account_payable_id = record.property_account_payable_id
-        else:
-            property_account_payable_id = record.property_account_payable
-
+        property_account_payable_id = record.property_account_payable_id
         if property_account_payable_id:
             binder = self.binder_for("odoo.account.account")
             account = binder.to_internal(property_account_payable_id.id, unwrap=True)
@@ -210,35 +127,31 @@ class PartnerImportMapper(Component):
 
     @mapping
     def property_account_receivable(self, record):
-        if float(self.backend_record.version) >= 9.0:
-            property_account_receivable_id = record.property_account_receivable_id
-        else:
-            property_account_receivable_id = record.property_account_receivable
-
+        property_account_receivable_id = record.property_account_receivable_id
         if property_account_receivable_id:
             binder = self.binder_for("odoo.account.account")
             account = binder.to_internal(property_account_receivable_id.id, unwrap=True)
             if account:
                 return {"property_account_receivable_id": account.id}
 
-    @mapping
-    def property_purchase_currency_id(self, record):
-        property_purchase_currency_id = None
-        if hasattr(record, "property_purchase_currency_id"):
-            property_purchase_currency_id = record.property_purchase_currency_id
-        if not property_purchase_currency_id:
-            if (
-                record.property_product_pricelist_purchase
-                and record.property_product_pricelist_purchase.currency_id
-            ):
-                property_purchase_currency_id = (
-                    record.property_product_pricelist_purchase.currency_id
-                )
-        if property_purchase_currency_id:
-            binder = self.binder_for("odoo.res.currency")
-            currency = binder.to_internal(property_purchase_currency_id.id, unwrap=True)
-            if currency:
-                return {"property_purchase_currency_id": currency.id}
+    # @mapping
+    # def property_purchase_currency_id(self, record):
+    #     property_purchase_currency_id = None
+    #     if hasattr(record, "property_purchase_currency_id"):
+    #         property_purchase_currency_id = record.property_purchase_currency_id
+    #     if not property_purchase_currency_id:
+    #         if (
+    #             record.property_product_pricelist_purchase
+    #             and record.property_product_pricelist_purchase.currency_id
+    #         ):
+    #             property_purchase_currency_id = (
+    #                 record.property_product_pricelist_purchase.currency_id
+    #             )
+    #     if property_purchase_currency_id:
+    #         binder = self.binder_for("odoo.res.currency")
+    #         currency = binder.to_internal(property_purchase_currency_id.id, unwrap=True)
+    #         if currency:
+    #             return {"property_purchase_currency_id": currency.id}
 
 
 class PartnerImporter(Component):
@@ -269,43 +182,43 @@ class PartnerImporter(Component):
                 category_id.id, "odoo.res.partner.category", force=force
             )
 
-        if self.odoo_record.property_account_payable:
+        if self.odoo_record.property_account_payable_id:
             _logger.info("Importing account payable")
             self._import_dependency(
-                self.odoo_record.property_account_payable.id,
+                self.odoo_record.property_account_payable_id.id,
                 "odoo.account.account",
                 force=force,
             )
 
-        if self.odoo_record.property_account_receivable:
+        if self.odoo_record.property_account_receivable_id:
             _logger.info("Importing account receivable")
             self._import_dependency(
-                self.odoo_record.property_account_receivable.id,
+                self.odoo_record.property_account_receivable_id.id,
                 "odoo.account.account",
                 force=force,
             )
 
-        if (
-            hasattr(self.odoo_record, "property_purchase_currency_id")
-            and self.odoo_record.property_purchase_currency_id
-        ):
-            _logger.info("Importing supplier currency")
-            self._import_dependency(
-                self.odoo_record.property_purchase_currency_id.id,
-                "odoo.res.currency",
-                force=force,
-            )
-
-        if (
-            self.odoo_record.property_product_pricelist_purchase
-            and self.odoo_record.property_product_pricelist_purchase.currency_id
-        ):
-            _logger.info("Importing supplier currency")
-            self._import_dependency(
-                self.odoo_record.property_product_pricelist_purchase.currency_id.id,
-                "odoo.res.currency",
-                force=force,
-            )
+        # if (
+        #     hasattr(self.odoo_record, "property_purchase_currency_id")
+        #     and self.odoo_record.property_purchase_currency_id
+        # ):
+        #     _logger.info("Importing supplier currency")
+        #     self._import_dependency(
+        #         self.odoo_record.property_purchase_currency_id.id,
+        #         "odoo.res.currency",
+        #         force=force,
+        #     )
+        #
+        # if (
+        #     self.odoo_record.property_product_pricelist_purchase
+        #     and self.odoo_record.property_product_pricelist_purchase.currency_id
+        # ):
+        #     _logger.info("Importing supplier currency")
+        #     self._import_dependency(
+        #         self.odoo_record.property_product_pricelist_purchase.currency_id.id,
+        #         "odoo.res.currency",
+        #         force=force,
+        #     )
 
         result = super()._import_dependencies(force=force)
         _logger.info("Dependencies imported for external ID %s", self.external_id)

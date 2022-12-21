@@ -7,7 +7,7 @@ from odoo import fields, models
 from odoo.addons.component.core import Component
 
 # pylint: disable=W7950
-from odoo.addons.connector_odoo.models.partner.importer import get_state_from_record
+from odoo.addons.connector_odoo.models.partner.importer import get_address_fields_from_record
 
 _logger = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ class OdooResPartnerAddressReferences(models.Model):
             )
 
     def default_address_contact_values(self, address, main_partner=False):
-        state_country = get_state_from_record(self, address)
+        state_country = get_address_fields_from_record(self.env, address)
         result = {
             "type": address.type if address.type != "default" else "contact",
             "street": address.street,

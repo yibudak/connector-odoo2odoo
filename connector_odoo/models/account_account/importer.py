@@ -65,9 +65,10 @@ class AccountAccountImportMapper(Component):
     def deprecated(self, record):
         return {"deprecated": self.work.origing_account_id.deprecated}
 
-    @mapping
-    def user_type_id(self, record):
-        return {"user_type_id": self.work.origing_account_id.user_type_id.id}
+    # Todo: user_type_id v16'da kalkmış. buna ne yapacağız?
+    # @mapping
+    # def user_type_id(self, record):
+    #     return {"user_type_id": self.work.origing_account_id.user_type_id.id}
 
     @mapping
     def tax_ids(self, record):
@@ -103,16 +104,12 @@ class AccountAccountImporter(Component):
     _inherit = "odoo.importer"
     _apply_on = ["odoo.account.account"]
 
-    def _must_skip(
-        self,
-    ):
+    def _must_skip(self):
         return self.env["account.account"].search(
             [("code", "=", self.odoo_record.code)]
         )
 
-    def _before_import(
-        self,
-    ):
+    def _before_import(self):
         account_id = self.env["account.account"].search(
             [("code", "=", self.odoo_record.code)]
         )

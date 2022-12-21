@@ -8,9 +8,7 @@ from odoo.addons.component.core import Component
 
 class OdooResCurrency(models.Model):
     _name = "odoo.res.currency"
-    _inherit = [
-        "odoo.binding",
-    ]
+    _inherit = ["odoo.binding"]
     _inherits = {"res.currency": "odoo_id"}
     _description = "Odoo Currency"
 

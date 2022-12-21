@@ -20,9 +20,9 @@ class OdooStockMove(models.Model):
                 self.backend_id, self.external_id, force=True
             )
 
-    def import_record(self, backend_id, external_id, force=False, picking_id=False):
+    def import_record(self, backend_id, model, external_id, force=False, picking_id=False):
         return super().import_record(
-            backend_id.with_context(picking_id=picking_id), external_id, force=force
+            backend_id.with_context(picking_id=picking_id), model, external_id, force=force
         )
 
 

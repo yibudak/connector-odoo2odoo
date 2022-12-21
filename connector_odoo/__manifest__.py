@@ -19,7 +19,9 @@
         "connector",
         "connector_base_product",
         "sale",
-        "purchase"
+        "purchase",
+        "product_dimension",
+        "l10n_tr_address",
     ],
     "data": [
         "data/cron.xml",

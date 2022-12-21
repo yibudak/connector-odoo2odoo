@@ -7,13 +7,11 @@ from odoo import fields, models
 from odoo.addons.component.core import Component
 
 
-class OdooProductUOM(models.Model):
-    _name = "odoo.uom.uom"
-    _inherit = [
-        "odoo.binding",
-    ]
-    _inherits = {"uom.uom": "odoo_id"}
-    _description = "Odoo Product UOM"
+class OdooProductTemplateAttributeValue(models.Model):
+    _name = "odoo.product.template.attribute.value"
+    _inherit = ["odoo.binding"]
+    _inherits = {"product.template.attribute.value": "odoo_id"}
+    _description = "Odoo Product Template Attribute Value"
 
     _sql_constraints = [
         (
@@ -23,11 +21,11 @@ class OdooProductUOM(models.Model):
         ),
     ]
 
-    """
-    Product UOM are not fully managed with dependencies etc.
-    User has the responsability to check the names are the same in
-    both instances
-    """
+    bind_ids = fields.One2many(
+        comodel_name="odoo.product.template.attribute.value",
+        inverse_name="odoo_id",
+        string="Odoo Bindings",
+    )
 
     def resync(self):
         if self.backend_id.main_record == "odoo":
@@ -38,18 +36,18 @@ class OdooProductUOM(models.Model):
             )
 
 
-class ProductUoM(models.Model):
-    _inherit = "uom.uom"
+class ProductAttributeValue(models.Model):
+    _inherit = "product.template.attribute.value"
 
     bind_ids = fields.One2many(
-        comodel_name="odoo.uom.uom",
+        comodel_name="odoo.product.template.attribute.value",
         inverse_name="odoo_id",
         string="Odoo Bindings",
     )
 
 
-class ProductUoMAdapter(Component):
-    _name = "odoo.uom.uom.adapter"
+class OdooProductAttributeAdapter(Component):
+    _name = "odoo.product.template.attribute.value.adapter"
     _inherit = "odoo.adapter"
-    _apply_on = "odoo.uom.uom"
-    _odoo_model = "uom.uom"  # "product.uom"
+    _apply_on = "odoo.product.template.attribute.value"
+    _odoo_model = "product.template.attribute.value"
