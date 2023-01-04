@@ -39,6 +39,7 @@ class ProductImportMapper(Component):
     _apply_on = ["odoo.product.product"]
 
     direct = [
+        ("is_published", "is_published"),
         ("description", "description"),
         ("standard_price", "standard_price"),
         ("description_sale", "description_sale"),

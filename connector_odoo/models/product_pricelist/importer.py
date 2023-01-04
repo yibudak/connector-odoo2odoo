@@ -86,6 +86,10 @@ class ProductPricelistImportMapper(Component):
             return {"currency_id": currency.id}
         raise MappingError("No currency found %s" % currency.name)
 
+    @mapping
+    def company_id(self, record):
+        return {"company_id": self.env.user.company_id.id}
+
 
 class ProductPricelistItemBatchImporter(Component):
     """Import the Odoo Product Pricelist Items.
@@ -160,7 +164,7 @@ class ProductPricelistItemImportMapper(Component):
 
     direct = [
         ("applied_on", "applied_on"),
-        ("base", "base"),
+        # ("base", "base"),
         ("compute_price", "compute_price"),
         ("date_end", "date_end"),
         ("date_start", "date_start"),
@@ -214,6 +218,21 @@ class ProductPricelistItemImportMapper(Component):
             binder = self.binder_for("odoo.product.pricelist")
             pricelist = binder.to_internal(record.base_pricelist_id.id, unwrap=True)
             return {"base_pricelist_id": pricelist.id}
+
+    @mapping
+    def base(self, record):
+        base = record.base
+        if base == "-1":
+            pricelist_base = "pricelist"
+        elif base == "list_price":
+            pricelist_base = "standard_price"
+        else:
+            pricelist_base = "sale_price"
+        return {"base": pricelist_base}
+
+    @mapping
+    def company_id(self, record):
+        return {"company_id": self.env.user.company_id.id}
 
     @mapping
     def product_id(self, record):

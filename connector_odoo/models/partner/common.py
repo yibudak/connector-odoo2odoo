@@ -54,6 +54,12 @@ class Partner(models.Model):
         string="Odoo Bindings",
     )
 
+    def unlink(self):
+        for partner in self:
+            if partner.bind_ids:
+                partner.bind_ids.unlink()
+        return super(Partner, self).unlink()
+
 
 class PartnerAdapter(Component):
     _name = "odoo.res.partner.adapter"
@@ -62,7 +68,9 @@ class PartnerAdapter(Component):
 
     _odoo_model = "res.partner"
 
-    def search(self, filters=None, model=None, offset=0, limit=50, order=None): # Todo: limit none olacak debug için 50 yaptım
+    def search(
+        self, filters=None, model=None, offset=0, limit=50, order=None
+    ):  # Todo: limit none olacak debug için 50 yaptım
         """Search records according to some criteria
         and returns a list of ids
 
@@ -74,6 +82,7 @@ class PartnerAdapter(Component):
             str(self.backend_record.external_partner_domain_filter)
         )
         filters += ext_filter or []
+        filters += [("name", "!=", False)]  # Todo: not null constraint hatasını geçtik
         return super(PartnerAdapter, self).search(
             filters=filters, model=model, offset=offset, limit=limit, order=order
         )

@@ -35,9 +35,9 @@ class ProductCategoryBatchImporter(Component):
         base_priority = 10
         for cat in updated_ids:
             cat_id = self.backend_adapter.read(cat)
-            parents = cat_id.parent_path.split('/')
+            parents = cat_id.parent_path.split("/")
             job_options = {"priority": base_priority + len(parents) or 0}
-            self._import_record(cat_id.id, job_options=job_options)
+            self._import_record(cat_id.id, job_options=job_options, force=force)
 
 
 class ProductCategoryImporter(Component):
@@ -51,12 +51,50 @@ class ProductCategoryImporter(Component):
         # import parent category
         # the root category has a 0 parent_id
         if record.parent_id:
-            self._import_dependency(record.parent_id.id, self.model, force=False)
+            self._import_dependency(record.parent_id.id, self.model, force=True)
 
     def _after_import(self, binding, force=False):
         """Hook called at the end of the import"""
+        self._create_public_category(binding)
         binding._parent_store_compute()
         return super()._after_import(binding, force)
+
+    def _create_public_category(self, binding):
+        """Create a public category for the binding"""
+        categ_id = binding.odoo_id
+
+        public_categ_id = self.env["product.public.category"].search(
+            [("origin_categ_id", "=", categ_id.id)]
+        )
+        parent_id = self.env["product.public.category"].search(
+            [("origin_categ_id", "=", categ_id.parent_id.id)]
+        )
+
+        vals = {
+            "name": categ_id.name,
+            "sequence": categ_id.sequence,
+            "origin_categ_id": categ_id.id,
+            "website_id": self.env.user.company_id.website_id.id,
+            "parent_id": parent_id.id or False,
+        }
+
+        if not public_categ_id:
+            public_categ_id = self.env["product.public.category"].create(vals)
+            _logger.info(
+                "created public category %s for odoo product category %s",
+                public_categ_id,
+                binding,
+            )
+        else:
+            public_categ_id.write(vals)
+            _logger.info(
+                "writed public category %s for odoo product category %s",
+                public_categ_id,
+                binding,
+            )
+        public_categ_id._compute_product_tmpls()
+        public_categ_id._parent_store_compute()
+        return True
 
 
 class ProductCategoryImportMapper(Component):
@@ -64,7 +102,12 @@ class ProductCategoryImportMapper(Component):
     _inherit = "odoo.import.mapper"
     _apply_on = "odoo.product.category"
 
-    direct = [("name", "name")]
+    direct = [("name", "name"), ("sequence", "sequence")]
+
+    @mapping
+    def is_published(self, record):
+        # Todo: aynı fieldı v12'ye de ekle ordan al.
+        return {"is_published": False}
 
     @mapping
     def parent_id(self, record):

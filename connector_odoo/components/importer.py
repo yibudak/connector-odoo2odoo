@@ -101,7 +101,7 @@ class OdooImporter(AbstractComponent):
                     usage="record.importer", model_name=binding_model
                 )
             try:
-                importer.run(external_id)
+                importer.run(external_id, force=force)
             except NothingToDoJob:
                 _logger.info(
                     "Dependency import of %s(%s) has been ignored.",
@@ -316,7 +316,7 @@ class DirectBatchImporter(AbstractComponent):
     def _import_record(self, external_id, force=False):
         """Import the record directly"""
         self.model.import_record(
-            self.backend_record, external_id, work=self.work, force=force
+            self.backend_record, external_id, force=force
         )
 
 
@@ -330,7 +330,7 @@ class DelayedBatchImporter(AbstractComponent):
         """Delay the import of the records"""
         delayable = self.model.with_delay(**job_options or {})
         delayable.import_record(
-            self.backend_record, external_id, work=self.work, **kwargs
+            self.backend_record, external_id, **kwargs
         )
 
     # def run(self, filters=None, force=False):

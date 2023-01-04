@@ -49,8 +49,19 @@ class UomMapper(Component):
 
     @mapping
     def category_id(self, record):
-        category_id = record["category_id"]
-        return {"category_id": category_id.id}
+        """UOM category is manually created by user"""
+        manual_categ_mapping = {
+            1: 1,
+            2: 2,
+            3: 3,
+            4: 4,
+            5: 6,
+            7: 7,
+            8: 8,
+        }
+
+        category_id = record["category_id"].id
+        return {"category_id": manual_categ_mapping[category_id]}
 
     @only_create
     @mapping
@@ -83,6 +94,7 @@ class UomMapper(Component):
                 .with_context(lang=lang)
                 .search(
                     [
+                        ("uom_type", "=", "reference"),
                         ("factor", "=", record.factor),
                         ("category_id.name", "=", category_name),
                     ]
@@ -92,10 +104,11 @@ class UomMapper(Component):
                 res.update({"odoo_id": local_uom_id.id})
             else:
                 raise ValidationError(
-                    _("Unable to find Reference UOM with factor %s for"
-                      " category %s. It is possible that the UOM %s was"
-                      " renamed."
-                      % (record.factor, category_name, record.name))
+                    _(
+                        "Unable to find Reference UOM with factor %s for"
+                        " category %s. It is possible that the UOM %s was"
+                        " renamed." % (record.factor, category_name, record.name)
+                    )
                 )
         return res
 

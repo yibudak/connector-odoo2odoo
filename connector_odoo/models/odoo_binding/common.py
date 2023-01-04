@@ -65,16 +65,19 @@ class OdooBinding(models.AbstractModel):
             return importer.run(filters=filters, force=backend.force)
 
     @api.model
-    def import_record(self, backend, external_id, work=False, force=False):
+    def import_record(self, backend, external_id, force=False):
         """Import a Odoo record"""
-        if not work:  # if this method called by batch importer
-            with backend.work_on(self._name) as work:
-                importer = work.component(usage="record.importer")
-                # todo cache model and session
-                return importer.run(external_id, force=force)
-        else:
+        with backend.work_on(self._name) as work:
             importer = work.component(usage="record.importer")
             return importer.run(external_id, force=force)
+        # if not work:  # if this method called by batch importer
+        #     with backend.work_on(self._name) as work:
+        #         importer = work.component(usage="record.importer")
+        #         # todo cache model and session
+        #         return importer.run(external_id, force=force)
+        # else:
+        #     importer = work.component(usage="record.importer")
+        #     return importer.run(external_id, force=force)
 
     @api.model
     def export_batch(self, backend, filters=None):

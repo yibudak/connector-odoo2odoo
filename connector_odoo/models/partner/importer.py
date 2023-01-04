@@ -12,10 +12,47 @@ _logger = logging.getLogger(__name__)
 
 def get_address_fields_from_record(env, record):
     """
-     Return a dict with the address fields of the record.
+    Return a dict with the address fields of the record.
     """
     # Todo : address fields should be different models
-    return True
+    vals = {}
+    local_country_id = env["res.country"]
+    local_state_id = env["res.country.state"]
+    local_neighbour_id = env["address.neighbour"]
+    partner_neighbour_id = record.neighbour_id
+
+    if partner_neighbour_id:
+        local_neighbour_id = env["address.neighbour"].search(
+            [
+                ("name", "ilike", partner_neighbour_id.name),
+                ("region_id.name", "ilike", partner_neighbour_id.region_id.name),
+                (
+                    "region_id.district_id.name",
+                    "ilike",
+                    partner_neighbour_id.region_id.district_id.name,
+                ),
+            ]
+        )
+    else:
+        local_state_id = env["res.country.state"].search(
+            [
+                ("name", "ilike", record.state_id.name),
+                ("country_id.code", "ilike", record.country_id.code),
+            ]
+        )
+
+    vals.update(
+        {
+            "zip": local_neighbour_id.code,
+            "neighbour_id": local_neighbour_id.id or False,
+            "region_id": local_neighbour_id.region_id.id or False,
+            "district_id": local_neighbour_id.district_id.id or False,
+            "state_id": local_neighbour_id.state_id.id or local_state_id.id,
+            "country_id": local_neighbour_id.state_id.country_id.id
+            or local_country_id.id,
+        }
+    )
+    return vals
 
 
 class PartnerBatchImporter(Component):
@@ -31,7 +68,6 @@ class PartnerBatchImporter(Component):
 
     def run(self, filters=None, force=False):
         """Run the synchronization"""
-
         external_ids = self.backend_adapter.search(filters)
         _logger.info(
             "search for odoo partner %s returned %s items", filters, len(external_ids)
@@ -63,6 +99,8 @@ class PartnerImportMapper(Component):
         ("company_type", "company_type"),
         ("sale_warn", "sale_warn"),
         ("sale_warn_msg", "sale_warn_msg"),
+        ("vat", "vat"),
+        ("tax_office_name", "tax_office_name"),
         # Todo : buraya v12 deki eklediğimiz özel fieldları da koy
     ]
 
@@ -72,18 +110,28 @@ class PartnerImportMapper(Component):
             binder = self.binder_for("odoo.res.partner.category")
             return {
                 "category_id": [
-                    (6, 0,
-                     [binder.to_internal(category_id, unwrap=True).id
-                      for category_id in record.category_id.ids],
-                     )
+                    (
+                        6,
+                        0,
+                        [
+                            binder.to_internal(category_id, unwrap=True).id
+                            for category_id in record.category_id.ids
+                        ],
+                    )
                 ]
             }
 
     @mapping
-    def country_id(self, record):
-        return {'country_id': 224}
-        #Todo
-        #return get_address_fields_from_record(self.env, record)
+    def address_fields(self, record):
+        return get_address_fields_from_record(self.env, record)
+
+    @mapping
+    def parent_id(self, record):
+        if record.parent_id:
+            binder = self.binder_for("odoo.res.partner")
+            return {
+                "parent_id": binder.to_internal(record.parent_id.id, unwrap=True).id
+            }
 
     @mapping
     def customer(self, record):

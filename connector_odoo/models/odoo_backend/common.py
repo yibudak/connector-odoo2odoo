@@ -327,10 +327,14 @@ class OdooBackend(models.Model):
             for backend in self:
                 for model_name in (
                     #Todo
-                    # "odoo.uom.uom",
-                    #  "odoo.res.currency",
-                    "odoo.product.attribute",
-                    "odoo.product.attribute.value",
+                    "odoo.product.category",
+                    "odoo.uom.uom",
+                    # "odoo.product.attribute",
+                    # "odoo.product.attribute.value",
+                    # "odoo.res.currency",  # bu rateleri de alıyor.
+                    # "odoo.res.currency.rate",
+
+                    #
                 ):
                     # import directly, do not delay because this
                     # is a fast operation, a direct return is fine
