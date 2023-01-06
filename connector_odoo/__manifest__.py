@@ -22,6 +22,7 @@
         "purchase",
         "product_dimension",
         "l10n_tr_address",
+        "altinkaya_ecommerce",
     ],
     "data": [
         "data/cron.xml",

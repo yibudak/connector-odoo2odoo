@@ -1,17 +1,13 @@
-# Copyright 2013-2017 Camptocamp SA
-# © 2016 Sodexis
-# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html)
-
 from odoo import fields, models
 
 from odoo.addons.component.core import Component
 
 
-class OdooProductTemplateAttributeValue(models.Model):
-    _name = "odoo.product.template.attribute.value"
+class OdooProductTemplateFeatureLine(models.Model):
+    _name = "odoo.product.template.feature.line"
     _inherit = ["odoo.binding"]
-    _inherits = {"product.template.attribute.value": "odoo_id"}
-    _description = "Odoo Product Template Attribute Value"
+    _inherits = {"product.template.feature.line": "odoo_id"}
+    _description = "Odoo Product Template Feature Line"
 
     _sql_constraints = [
         (
@@ -22,7 +18,7 @@ class OdooProductTemplateAttributeValue(models.Model):
     ]
 
     bind_ids = fields.One2many(
-        comodel_name="odoo.product.template.attribute.value",
+        comodel_name="odoo.product.template.feature.line",
         inverse_name="odoo_id",
         string="Odoo Bindings",
     )
@@ -36,18 +32,18 @@ class OdooProductTemplateAttributeValue(models.Model):
             )
 
 
-class ProductAttributeValue(models.Model):
-    _inherit = "product.template.attribute.value"
+class ProductFeatureLine(models.Model):
+    _inherit = "product.template.feature.line"
 
     bind_ids = fields.One2many(
-        comodel_name="odoo.product.template.attribute.value",
+        comodel_name="odoo.product.template.feature.line",
         inverse_name="odoo_id",
         string="Odoo Bindings",
     )
 
 
-class OdooProductAttributeAdapter(Component):
-    _name = "odoo.product.template.attribute.value.adapter"
+class OdooProductFeatureAdapter(Component):
+    _name = "odoo.product.template.feature.line.adapter"
     _inherit = "odoo.adapter"
-    _apply_on = "odoo.product.template.attribute.value"
-    _odoo_model = "product.template.attribute.value"
+    _apply_on = "odoo.product.template.feature.line"
+    _odoo_model = "product.template.feature.line"

@@ -17,7 +17,8 @@ from . import product_product
 from . import product_pricelist
 from . import product_template
 from . import product_image
-# from . import product_template_attribute_line
+from . import product_template_attribute_line
+from . import product_template_feature_line
 from . import uom_uom
 from . import account_account
 from . import sale_order

@@ -107,69 +107,6 @@ class ProductTemplateImportMapper(Component):
         return {"categ_id": cat.id}
 
     @mapping
-    def attribute_line_ids(self, record):
-        res = {"attribute_line_ids": []}
-        attr_line_ids = record.attribute_line_ids
-        if self.backend_record.work_with_variants and attr_line_ids:
-            for attr_line in attr_line_ids:
-                val_list = []
-                attr_id = self.binder_for("odoo.product.attribute").to_internal(
-                    attr_line.attribute_id.id, unwrap=True
-                )
-                for value in attr_line.value_ids:
-                    attr_val = self.binder_for(
-                        "odoo.product.attribute.value"
-                    ).to_internal(value.id, unwrap=True)
-                    if attr_val:
-                        val_list.append(attr_val.id)
-                    else:
-                        raise MappingError(
-                            "Can't find external attribute value %s with"
-                            " odoo_id %s. Sync the attributes first"
-                            % (value.name, value.odoo_id)
-                        )
-                res["attribute_line_ids"].append(
-                    (
-                        0,
-                        0,
-                        {"attribute_id": attr_id.id, "value_ids": [(6, 0, val_list)]},
-                    )
-                )
-        return res
-
-    @mapping
-    def feature_line_ids(self, record):
-        # TODO: BU VE ATTRIBUTE LINE DUPLICATE OLUYOR ONU ÇÖZMEN LAZIM
-        res = {"feature_line_ids": []}
-        feature_lines = record.feature_line_ids
-        if self.backend_record.work_with_variants and feature_lines:
-            for feature_line in feature_lines:
-                val_list = []
-                feature_id = self.binder_for("odoo.product.attribute").to_internal(
-                    feature_line.feature_id.id, unwrap=True
-                )
-                for value in feature_line.value_ids:
-                    feature_val = self.binder_for(
-                        "odoo.product.attribute.value"
-                    ).to_internal(value.id, unwrap=True)
-                    if feature_val:
-                        val_list.append(feature_val.id)
-                    else:
-                        raise MappingError(
-                            "Can't find external attribute value %s with"
-                            " odoo_id %s. Sync the attributes first"
-                            % (value.name, value.odoo_id)
-                        )
-                res["feature_line_ids"].append(
-                    (
-                        0,
-                        0,
-                        {"feature_id": feature_id.id, "value_ids": [(6, 0, val_list)]},
-                    )
-                )
-        return res
-
-    @mapping
     def image(self, record):
         if self.backend_record.version in (
             "6.1",
@@ -180,7 +117,11 @@ class ProductTemplateImportMapper(Component):
             "11.0",
             "12.0",
         ):
-            return {"image_1920": record.image_medium if hasattr(record, "image_medium") else False}
+            return {
+                "image_1920": record.image_medium
+                if hasattr(record, "image_medium")
+                else False
+            }
         else:
             return {"image_1920": record.image_1920}
 
@@ -207,6 +148,7 @@ class ProductTemplateImporter(Component):
 
         categ_id = self.odoo_record.categ_id
         self._import_dependency(categ_id.id, "odoo.product.category", force=force)
+
         return super()._import_dependencies(force=force)
 
     def _get_context(self, data):
@@ -218,8 +160,26 @@ class ProductTemplateImporter(Component):
         if imported_template:
             self._import_website_images()
             self._import_website_attachments(imported_template)
-
+            if self.backend_record.work_with_variants:
+                self._import_attribute_lines()
+                self._import_feature_lines()
         super(ProductTemplateImporter, self)._after_import(binding, force=force)
+
+    def _import_attribute_lines(self):
+        for attr_line in self.odoo_record.attribute_line_ids:
+            self._import_dependency(
+                attr_line.id,
+                "odoo.product.template.attribute.line",
+                force=True,
+            )
+
+    def _import_feature_lines(self):
+        for feature_line in self.odoo_record.feature_line_ids:
+            self._import_dependency(
+                feature_line.id,
+                "odoo.product.template.feature.line",
+                force=True,
+            )
 
     def _import_website_attachments(self, tmpl_id):
         attachment_ids = self.odoo_record.website_attachment_ids
