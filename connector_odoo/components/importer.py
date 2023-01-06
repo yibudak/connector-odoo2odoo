@@ -316,7 +316,7 @@ class DirectBatchImporter(AbstractComponent):
     def _import_record(self, external_id, force=False):
         """Import the record directly"""
         self.model.import_record(
-            self.backend_record, external_id, force=force
+            self.backend_record, external_id, work=self.work, force=force
         )
 
 
@@ -330,7 +330,7 @@ class DelayedBatchImporter(AbstractComponent):
         """Delay the import of the records"""
         delayable = self.model.with_delay(**job_options or {})
         delayable.import_record(
-            self.backend_record, external_id, **kwargs
+            self.backend_record, external_id, work=self.work, **kwargs
         )
 
     # def run(self, filters=None, force=False):

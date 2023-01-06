@@ -42,7 +42,6 @@ class OdooBackend(models.Model):
     def _select_versions(self):
         """Available versions for this backend"""
         return [
-            ("6.1", "Version 6.1.x"),
             ("10.0", "Version 10.0.x"),
             ("11.0", "Version 11.0.x"),
             ("12.0", "Version 12.0.x"),
@@ -330,7 +329,7 @@ class OdooBackend(models.Model):
                     "odoo.product.category",
                     "odoo.uom.uom",
                     # "odoo.product.attribute",
-                    # "odoo.product.attribute.value",
+                    "odoo.product.attribute.value",
                     # "odoo.res.currency",  # bu rateleri de alıyor.
                     # "odoo.res.currency.rate",
 
@@ -339,8 +338,10 @@ class OdooBackend(models.Model):
                     # import directly, do not delay because this
                     # is a fast operation, a direct return is fine
                     # and it is simpler to import them sequentially
+                    imported_ids = self.env[model_name].search([]).mapped("external_id")
+                    # bypass already imported records since this method is manually triggered
                     self.env[model_name].with_context(lang=lang).import_batch(
-                        backend, []
+                        backend, [("id", "not in", imported_ids)]
                     )
             return True
         except BaseException as e:
