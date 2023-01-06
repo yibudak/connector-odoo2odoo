@@ -154,7 +154,7 @@ class ProductImportMapper(Component):
             "11.0",
             "12.0",
         ):
-            return {"image_1920": record.image if hasattr(record, "image") else False}
+            return {"image_1920": record.image_medium if hasattr(record, "image_medium") else False}
         else:
             return {"image_1920": record.image_1920}
 

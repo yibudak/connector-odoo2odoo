@@ -65,7 +65,7 @@ class OdooBinding(models.AbstractModel):
             return importer.run(filters=filters, force=backend.force)
 
     @api.model
-    def import_record(self, backend, external_id, work, force=False):
+    def import_record(self, backend, external_id, work=False, force=False):
         """Import a Odoo record"""
         # with backend.work_on(self._name) as work:
         #     importer = work.component(usage="record.importer")
