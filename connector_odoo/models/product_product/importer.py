@@ -49,7 +49,7 @@ class ProductImportMapper(Component):
         ("purchase_ok", "purchase_ok"),
         ("type", "detailed_type"),
         ("public_description", "public_description"),
-        ("v_cari_urun", "v_cari_urun"),
+        # ("v_cari_urun", "v_cari_urun"),
     ]
 
     @mapping
