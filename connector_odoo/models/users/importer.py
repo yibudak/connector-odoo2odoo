@@ -1,4 +1,5 @@
-# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html)
+# Copyright 2022 Yiğit Budak (https://github.com/yibudak)
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 import ast
 import logging
@@ -60,13 +61,9 @@ class UserImportMapper(Component):
             return {"odoo_id": user.id}
         return {}
 
-    # @mapping
-    # def image(self, record):
-    #     if (self.backend_record.version in (
-    #         '6.1', '7.0', '8.0', '9.0', '10.0', '11.0', '12.0')):
-    #         return {"image_1920": record.image if hasattr(record, 'image') else False}
-    #     else:
-    #         return {"image_1920": record.image_1920}
+    @mapping
+    def image(self, record):
+        return {"image_1920": record.image}
 
 
 class UserImporter(Component):

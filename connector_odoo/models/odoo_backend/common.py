@@ -256,12 +256,21 @@ class OdooBackend(models.Model):
     default_import_stock = fields.Boolean("Import Stock")
     import_stock_from_date = fields.Datetime()
 
+    external_carrier_domain_filter = fields.Char(
+        default="[]",
+        help="""Filter in the Odoo Destination
+        """,
+    )
+    default_import_account = fields.Boolean("Import Account")
+    import_account_from_date = fields.Datetime()
+    import_base_from_date = fields.Datetime()
+
     def get_default_language_code(self):
         lang = (
             self.default_lang_id.code
             or self.env.user.lang
             or self.env.context["lang"]
-            or "en_US"
+            or "tr_TR"
         )
         return lang
 
@@ -325,14 +334,13 @@ class OdooBackend(models.Model):
         try:
             for backend in self:
                 for model_name in (
-                    #Todo
+                    # Todo
                     "odoo.product.category",
                     "odoo.uom.uom",
                     # "odoo.product.attribute",
                     "odoo.product.attribute.value",
                     # "odoo.res.currency",  # bu rateleri de alıyor.
                     # "odoo.res.currency.rate",
-
                     #
                 ):
                     # import directly, do not delay because this
@@ -417,6 +425,48 @@ class OdooBackend(models.Model):
         if not self.default_import_stock:
             return False
         self._import_from_date("odoo.stock.location", "import_stock_from_date")
+        return True
+
+    def import_delivery_carriers(self):
+        self._import_from_date("odoo.delivery.carrier", "import_stock_from_date")
+        return True
+
+    def import_account_groups(self):
+        if not self.default_import_account:
+            return False
+        self._import_from_date("odoo.account.group", "import_account_from_date")
+        return True
+
+    def import_account_accounts(self):
+        if not self.default_import_account:
+            return False
+        self._import_from_date("odoo.account.account", "import_account_from_date")
+        return True
+
+    def import_account_taxes(self):
+        if not self.default_import_account:
+            return False
+        self._import_from_date("odoo.account.tax", "import_account_from_date")
+        return True
+
+    def import_account_fiscal_positions(self):
+        if not self.default_import_account:
+            return False
+        self._import_from_date(
+            "odoo.account.fiscal.position", "import_account_from_date"
+        )
+        return True
+
+    def import_account_payment_terms(self):
+        if not self.default_import_account:
+            return False
+        self._import_from_date(
+            "odoo.account.payment.term", "import_account_from_date"
+        )
+        return True
+
+    def import_res_currency(self):
+        self._import_from_date("odoo.res.currency", "import_base_from_date")
         return True
 
     def import_pickings(self):

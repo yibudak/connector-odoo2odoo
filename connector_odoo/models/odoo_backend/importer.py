@@ -25,3 +25,6 @@ class MetadataBatchImporter(Component):
         "odoo.product.attribute",
         "odoo.product.attribute.value",
     ]
+
+    # Todo: buraya gerek var mı? çünkü bizim için product.attribute.value çok büyük bir
+    # model.

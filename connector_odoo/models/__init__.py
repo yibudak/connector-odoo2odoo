@@ -29,3 +29,9 @@ from . import stock_location
 from . import mapping_models
 from . import stock_picking
 from . import stock_move
+from . import delivery_carrier
+from . import account_group
+from . import account_tax
+from . import account_tax_group
+from . import account_fiscal_position
+from . import account_payment_term

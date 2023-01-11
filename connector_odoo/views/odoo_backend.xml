@@ -181,6 +181,24 @@
 										<button name="import_stock_inventories" type="object" attrs="{'invisible': [('default_import_stock', '!=', True)]}" string="Import Inventory Adjustments" class="oe_highlight oe_inline" nolabel="1" /> </group>
 								</group>
 							</page>
+                            <page string="Import" name="import">
+                                <group string="Base Models">
+                                    <field name="import_base_from_date" />
+                                    <button name="import_res_currency" type="object" string="Import Currency" class="oe_highlight oe_inline" nolabel="1" />
+                                </group>
+                                <group string="Stock">
+                                    <button name="import_delivery_carriers" type="object" string="Import Delivery Carriers" class="oe_highlight oe_inline" nolabel="1" />
+                                </group>
+                                <group string="Account">
+                                    <field name="default_import_account"/>
+                                    <field name="import_account_from_date"/>
+                                    <button name="import_account_groups" type="object" attrs="{'invisible': [('default_import_account', '!=', True)]}" string="Import Account Groups" class="oe_highlight oe_inline" nolabel="1" />
+                                    <button name="import_account_accounts" type="object" attrs="{'invisible': [('default_import_account', '!=', True)]}" string="Import Account Accounts" class="oe_highlight oe_inline" nolabel="1" />
+                                    <button name="import_account_taxes" type="object" attrs="{'invisible': [('default_import_account', '!=', True)]}" string="Import Account Tax" class="oe_highlight oe_inline" nolabel="1" />
+                                    <button name="import_account_fiscal_positions" type="object" attrs="{'invisible': [('default_import_account', '!=', True)]}" string="Import Account Fiscal Positions" class="oe_highlight oe_inline" nolabel="1" />
+                                    <button name="import_account_payment_terms" type="object" attrs="{'invisible': [('default_import_account', '!=', True)]}" string="Import Account Payment Terms" class="oe_highlight oe_inline" nolabel="1" />
+                                </group>
+                            </page>
 						</notebook>
 					</sheet>
 				</form>

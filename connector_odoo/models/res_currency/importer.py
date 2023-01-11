@@ -14,6 +14,20 @@ class ResCurrencyBatchImporter(Component):
     _inherit = "odoo.delayed.batch.importer"
     _apply_on = ["odoo.res.currency"]
 
+    def run(self, filters=None, force=False):
+        """Run the synchronization"""
+
+        external_ids = self.backend_adapter.search(filters)
+        _logger.info(
+            "search for odoo currencies %s returned %s items",
+            filters,
+            len(external_ids),
+        )
+        base_priority = 10
+        for external_id in external_ids:
+            job_options = {"priority": base_priority}
+            self._import_record(external_id, job_options=job_options, force=force)
+
 
 class ResCurrencyMapper(Component):
     _name = "odoo.res.currency.mapper"
@@ -28,13 +42,12 @@ class ResCurrencyMapper(Component):
         ("currency_subunit_label", "currency_subunit_label"),
         ("symbol", "symbol"),
         ("position", "position"),
-        ("position", "position"),
+        ("decimal_places", "decimal_places"),
     ]
 
     @only_create
     @mapping
     def check_res_currency_exists(self, record):
-        # Todo: bu çalışmıyor ki? dict'e odoo_id ekliyor ama yine de create ediyor duplicate oluyor
         res = {}
         currency_id = self.env["res.currency"].search(
             [
@@ -49,12 +62,6 @@ class ResCurrencyMapper(Component):
             res.update({"odoo_id": currency_id.id})
         return res
 
-    @mapping
-    def decimal_places(self, record):
-        if self.backend_record.version == "6.1":
-            return {"decimal_places": record.accuracy}
-        return {"decimal_places": record.decimal_places}
-
 
 class CurrencyImporter(Component):
     """Import Odoo Currency"""
@@ -62,11 +69,6 @@ class CurrencyImporter(Component):
     _name = "odoo.res.currency.importer"
     _inherit = "odoo.importer"
     _apply_on = "odoo.res.currency"
-
-    def run(self, external_id, force=False):
-        """ Run the synchronization """
-        return super().run(external_id, force=False)
-        # Todo: force true. we always need to update the currency rates
 
     def _after_import(self, binding, force=False):
         _logger.info(
