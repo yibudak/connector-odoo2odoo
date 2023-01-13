@@ -16,40 +16,14 @@ class ProductTemlateAttributeLineImporter(Component):
     _inherit = "odoo.importer"
     _apply_on = "odoo.product.template.attribute.line"
 
-    # def _get_binding2(self, binding):
-    #     if binding:
-    #         return binding
-    #     res = super()._get_binding2(binding)
-    #     if not res:
-    #         record = self.odoo_record
-    #         mapper = self.component(usage="import.mapper")
-    #         attr_line = self.env["product.template.attribute.line"].search(
-    #             [
-    #                 ("product_tmpl_id", "=", mapper._get_product_tmpl_id(record)),
-    #                 ("attribute_id", "=", mapper._get_attribute_id(record)),
-    #                 ("value_ids", "=", mapper._get_attribute_value_id(record)),
-    #             ], limit=1
-    #         )
-    #         attr_line
-    #         # res = {}
-    #         # if len(attr_line) > 0:
-    #         #     res.update({"odoo_id": attr_line.id})
-    #     return res
-
-    # def _import_dependencies(self, force=False):
-    #     """Import the dependencies for the record"""
-    #     record = self.odoo_record
-    #     self._import_dependency(
-    #         record.attribute_id.id, "odoo.product.attribute", force=force
-    #     )
-
-    def _after_import(self, binding, force=False):
-        imported_line = self.binder.to_internal(self.external_id)
-        if imported_line:
-            imported_line
-        super(ProductTemlateAttributeLineImporter, self)._after_import(
-            binding, force=force
-        )
+    def _import_dependencies(self, force=False):
+        """Import the dependencies for the record"""
+        record = self.odoo_record
+        if record.value_ids:
+            for value in record.value_ids:
+                self._import_dependency(
+                    value.id, "odoo.product.attribute.value", force=force
+                )
 
 
 class ProductTemplateAttributeLineMapper(Component):
