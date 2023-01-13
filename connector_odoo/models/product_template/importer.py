@@ -7,6 +7,7 @@ import logging
 from odoo.addons.component.core import Component
 from odoo.addons.connector.components.mapper import mapping
 from odoo.addons.connector.exception import MappingError
+from lxml.html.clean import Cleaner
 
 _logger = logging.getLogger(__name__)
 
@@ -59,7 +60,7 @@ class ProductTemplateImportMapper(Component):
         ("purchase_ok", "purchase_ok"),
         ("type", "detailed_type"),
         ("is_published", "is_published"),
-        ("public_description", "public_description"),
+        # ("public_description", "public_description"),
     ]
 
     @mapping
@@ -124,6 +125,21 @@ class ProductTemplateImportMapper(Component):
             }
         else:
             return {"image_1920": record.image_1920}
+
+    @mapping
+    def public_description(self, record):
+        """Sometimes user can edit HTML field with JS editor.
+        This may lead to add some old styles from the main instance.
+        So we are cleaning the HTML before importing it."""
+        vals = {}
+        if record.public_description:
+            cleaner = Cleaner(style=True, remove_unknown_tags=False)
+            vals["public_description"] = cleaner.clean_html(record.public_description)
+        return vals
+
+    @mapping
+    def description_sale(self, record):
+        return {"description_sale": record.short_public_description}
 
 
 class ProductTemplateImporter(Component):

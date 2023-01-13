@@ -53,23 +53,14 @@ class IrAttachmentImportMapper(Component):
     @only_create
     @mapping
     def check_ir_attachment_exists(self, record):
-        # Todo: bu çalışmıyor ki? dict'e odoo_id ekliyor ama yine de create ediyor duplicate oluyor
         res = {}
-
-        # attachment_id = self.env["ir.attachment"].search(
-        #     [("store_fname", "=", record.store_fname)]
-        # )
-        # _logger.info("Attachment found for %s : %s" % (record, attachment_id))
-        # if len(attachment_id) == 1:
-        #     res.update({"odoo_id": attachment_id.id})
+        attachment_id = self.env["ir.attachment"].search(
+            [("store_fname", "=", record.store_fname)]
+        )
+        _logger.info("Attachment found for %s : %s" % (record, attachment_id))
+        if len(attachment_id) == 1:
+            res.update({"odoo_id": attachment_id.id})
         return res
-
-    @mapping
-    def usage(self, record):  # TODO: MIGRATION METHOD. DELETE IT
-        usg = record.usage
-        if usg == "ip67":
-            usg = "ip_certificate"
-        return {"usage": usg}
 
     @mapping
     def company_id(self, record):
@@ -87,10 +78,12 @@ class IrAttachmentImporter(Component):
     _inherit = "odoo.importer"
     _apply_on = ["odoo.ir.attachment"]
 
-    # FIXUP: We shouldn't skip the import. The record could be updated.
+    # # FIXUP: We shouldn't skip the import. The record could be updated.
     # def _must_skip(
     #     self,
     # ):
     #     return self.env["ir.attachment"].search(
     #         [("store_fname", "=", self.odoo_record.store_fname)]
     #     )
+    # NOTE yigit: skip etmek yerine map etmeye çalışıyoruz.
+    # böylece hem duplicate kayıt oluşmuyor hem de update ediyoruz.
