@@ -35,3 +35,6 @@ from . import account_tax
 from . import account_tax_group
 from . import account_fiscal_position
 from . import account_payment_term
+from . import address_district
+from . import address_region
+from . import address_neighbour

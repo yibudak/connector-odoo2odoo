@@ -3,6 +3,7 @@
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
+from odoo.addons.connector_odoo.components.backend_adapter import OdooAPI, OdooLocation
 
 
 class OdooBinding(models.AbstractModel):
@@ -60,7 +61,19 @@ class OdooBinding(models.AbstractModel):
         """Prepare the import of records modified on Odoo"""
         if filters is None:
             filters = {}
-        with backend.work_on(self._name) as work:
+        lang = backend.get_default_language_code()
+        odoo_location = OdooLocation(
+            hostname=backend.hostname,
+            login=backend.login,
+            password=backend.password,
+            database=backend.database,
+            port=backend.port,
+            version=backend.version,
+            protocol=backend.protocol,
+            lang_id=lang,
+        )
+        api = OdooAPI(odoo_location).api
+        with backend.work_on(self._name, api) as work:
             importer = work.component(usage="batch.importer")
             return importer.run(filters=filters, force=backend.force)
 
@@ -88,7 +101,7 @@ class OdooBinding(models.AbstractModel):
             exporter = work.component(usage="batch.exporter")
             return exporter.run(filters=filters)
 
-    def export_record(self, backend, fields=None):
+    def export_record(self, backend, local_id, fields=None):
         """Export a record on Odoo"""
         self.ensure_one()
         with backend.work_on(self._name) as work:

@@ -64,9 +64,7 @@ class OdooPartnerExporter(Component):
 
         if parents:
             parent = parents.filtered(lambda c: c.backend_id == self.backend_record)
-
-            partner = self.binder.to_external(parent, wrap=False)
-            self._export_dependency(partner, "odoo.res.partner")
+            self._export_dependency(parent, "odoo.res.partner")
 
     def _create_data(self, map_record, fields=None, **kwargs):
         """Get the data to pass to :py:meth:`_create`"""
@@ -116,8 +114,28 @@ class PartnerExportMapper(Component):
         return {"customer": True}
 
     @mapping
-    def supplier(self, record):
-        return {"supplier": True}
+    def address_fields(self, record):
+        # Todo fix this function here and import mapper. Temiz değil.
+        vals = {}
+        adapter = self.work.odoo_api.api
+        if record.neighbour_id:
+            remote_neighbour = adapter.env["address.neighbour"].search(
+                [
+                    ("name", "=", record.neighbour_id.name),
+                    # ("region_id.name", "=", record.neighbour_id.region_id.name),
+                ],
+                limit=1,
+            )
+            if remote_neighbour:
+                remote_neighbour = adapter.env["address.neighbour"].browse(
+                    remote_neighbour[0]
+                )
+                vals["neighbour_id"] = remote_neighbour.id
+                vals["region_id"] = remote_neighbour.region_id.id
+                vals["district_id"] = remote_neighbour.region_id.district_id.id
+                vals["state_id"] = remote_neighbour.region_id.district_id.state_id.id
+                vals["country_id"] = remote_neighbour.region_id.district_id.state_id.country_id.id
+        return vals
 
     @only_create
     @mapping
@@ -126,3 +144,11 @@ class PartnerExportMapper(Component):
 
         if external_id:
             return {"external_id": external_id}
+
+    @only_create
+    @mapping
+    def customer_type(self, record):
+        if record.parent_id:
+            return {"company_type": "person"}
+        else:
+            return {"company_type": "company"}

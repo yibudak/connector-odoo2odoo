@@ -50,6 +50,7 @@
         "views/stock_move.xml",
         "views/stock_inventory.xml",
         "views/sale_order.xml",
+        "views/res_company_view.xml",
     ],
     "demo": [],
     "qweb": [],

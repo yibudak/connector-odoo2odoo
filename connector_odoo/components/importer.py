@@ -263,13 +263,20 @@ class OdooImporter(AbstractComponent):
 
         _logger.info("Mapping data ({}: {})".format(self.work.model_name, external_id))
         map_record = self._map_data()
-
-        if binding:
-            record = self._update_data(map_record)
-            self._update(binding, record)
-        else:
-            record = self._create_data(map_record)
-            binding = self._create(record)
+        try:
+            if binding:
+                record = self._update_data(map_record)
+                self._update(binding, record)
+            else:
+                record = self._create_data(map_record)
+                binding = self._create(record)
+        except Exception as e:
+            _logger.error(
+                "An error occurred while connecting the record {}: {}".format(
+                    self.external_id, e
+                )
+            )
+            raise
 
         _logger.info("Binding ({}: {})".format(self.work.model_name, external_id))
         self.binder.bind(self.external_id, binding)
@@ -330,7 +337,7 @@ class DelayedBatchImporter(AbstractComponent):
         """Delay the import of the records"""
         delayable = self.model.with_delay(**job_options or {})
         delayable.import_record(
-            self.backend_record, external_id, work=self.work, **kwargs
+            self.backend_record, external_id, **kwargs
         )
 
     # def run(self, filters=None, force=False):

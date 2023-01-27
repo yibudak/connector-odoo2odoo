@@ -310,22 +310,24 @@ class OdooBackend(models.Model):
             #odoo.addons.component.models.collection.Collection
         """
         self.ensure_one()
-        lang = self.get_default_language_code()
-        odoo_location = OdooLocation(
-            hostname=self.hostname,
-            login=self.login,
-            password=self.password,
-            database=self.database,
-            port=self.port,
-            version=self.version,
-            protocol=self.protocol,
-            lang_id=lang,
-        )
-        with OdooAPI(odoo_location) as odoo_api:
-            _super = super(OdooBackend, self.with_context(lang=lang))
-            # from the components we'll be able to do: self.work.odoo_api
-            with _super.work_on(model_name, odoo_api=odoo_api, **kwargs) as work:
-                yield work
+        _super = super(OdooBackend, self.with_context(lang=lang))
+        with _super.work_on(model_name, odoo_api=odoo_api, **kwargs) as work:
+            yield work
+        # # lang = self.get_default_language_code()
+        # #
+        # # odoo_location = OdooLocation(
+        # #     hostname=self.hostname,
+        # #     login=self.login,
+        # #     password=self.password,
+        # #     database=self.database,
+        # #     port=self.port,
+        # #     version=self.version,
+        # #     protocol=self.protocol,
+        # #     lang_id=lang,
+        # # )
+        # with OdooAPI(odoo_location) as odoo_api:
+        #     # from the components we'll be able to do: self.work.odoo_api
+
 
     def synchronize_basedata(self):
         self.ensure_one()
@@ -467,6 +469,12 @@ class OdooBackend(models.Model):
 
     def import_res_currency(self):
         self._import_from_date("odoo.res.currency", "import_base_from_date")
+        return True
+
+    def import_address_fields(self):
+        # self._import_from_date("odoo.address.district", "import_base_from_date")
+        # self._import_from_date("odoo.address.region", "import_base_from_date")
+        self._import_from_date("odoo.address.neighbour", "import_base_from_date")
         return True
 
     def import_pickings(self):

@@ -40,18 +40,18 @@ def get_address_fields_from_record(env, record):
                 ("country_id.code", "ilike", record.country_id.code),
             ]
         )
-
-    vals.update(
-        {
-            "zip": local_neighbour_id.code,
-            "neighbour_id": local_neighbour_id.id or False,
-            "region_id": local_neighbour_id.region_id.id or False,
-            "district_id": local_neighbour_id.district_id.id or False,
-            "state_id": local_neighbour_id.state_id.id or local_state_id.id,
-            "country_id": local_neighbour_id.state_id.country_id.id
-            or local_country_id.id,
-        }
-    )
+    if local_neighbour_id:
+        vals.update(
+            {
+                "zip": local_neighbour_id.code,
+                "neighbour_id": local_neighbour_id.id or False,
+                "region_id": local_neighbour_id.region_id.id or False,
+                "district_id": local_neighbour_id.district_id.id or False,
+                "state_id": local_neighbour_id.state_id.id or local_state_id.id,
+                "country_id": local_neighbour_id.state_id.country_id.id
+                or local_country_id.id,
+            }
+        )
     return vals
 
 

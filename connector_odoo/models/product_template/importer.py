@@ -54,12 +54,12 @@ class ProductTemplateImportMapper(Component):
         ("weight", "weight"),
         ("standard_price", "standard_price"),
         ("barcode", "barcode"),
-        ("description_sale", "description_sale"),
         ("description_purchase", "description_purchase"),
         ("sale_ok", "sale_ok"),
         ("purchase_ok", "purchase_ok"),
         ("type", "detailed_type"),
         ("is_published", "is_published"),
+        ("short_public_description", "description_sale"),
         # ("public_description", "public_description"),
     ]
 
@@ -134,12 +134,10 @@ class ProductTemplateImportMapper(Component):
         vals = {}
         if record.public_description:
             cleaner = Cleaner(style=True, remove_unknown_tags=False)
-            vals["public_description"] = cleaner.clean_html(record.public_description)
+            vals["public_description"] = (
+                cleaner.clean_html(record.public_description) or ""
+            )
         return vals
-
-    @mapping
-    def description_sale(self, record):
-        return {"description_sale": record.short_public_description}
 
 
 class ProductTemplateImporter(Component):

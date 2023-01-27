@@ -29,21 +29,22 @@ class OdooSaleOrderExporter(Component):
             partner = self.env["odoo.res.partner"].create(
                 {
                     "odoo_id": record_partner.id,
-                    "external_id": 0,
+                    "external_id": 0,  # Todo: check this violates not null constraint
                     "backend_id": self.backend_record.id,
                 }
             )
         return partner
 
     def _export_dependencies(self):
-        # FIXME: This doesn't seem right
         if not self.binding.partner_id:
             return
-        for record_partner in [
-            self.binding.partner_id,
-            self.binding.partner_shipping_id,
-            self.binding.partner_invoice_id,
-        ]:
+
+        partner_records = self.env["res.partner"]
+        partner_fields = ["partner_id", "partner_invoice_id", "partner_shipping_id"]
+        for field in partner_fields:
+            partner_records |= self.binding[field]
+
+        for record_partner in partner_records:
             partner = self._get_partner(record_partner)
             bind_partner = self.binder.to_external(partner, wrap=False)
             if not bind_partner:
@@ -55,7 +56,9 @@ class SaleOrderExportMapper(Component):
     _inherit = "odoo.export.mapper"
     _apply_on = ["odoo.sale.order"]
 
-    direct = []
+    direct = [
+        ("name", "name"),
+    ]
 
     children = [("order_line", "order_line", "odoo.sale.order.line")]
 
@@ -69,24 +72,36 @@ class SaleOrderExportMapper(Component):
     def pricelist_id(self, record):
         binder = self.binder_for("odoo.product.pricelist")
         pricelist_id = binder.to_external(record.pricelist_id, wrap=True)
-        return {"pricelist_id": pricelist_id}
+        return {"pricelist_id": 123}  # Todo
+
+    @mapping
+    def warehouse_id(self, record):
+        binder = self.binder_for("odoo.stock.warehouse")
+        warehouse_id = binder.to_external(record.warehouse_id, wrap=True)
+        return {"warehouse_id": 2}  # Todo
 
     @mapping
     def partner_id(self, record):
         binder = self.binder_for("odoo.res.partner")
         return {
-            "partner_id": binder.to_external(record.partner_id, wrap=True),
+            "partner_id": binder.to_external(
+                record.partner_id,
+                wrap=True,
+            ),
             "partner_invoice_id": binder.to_external(
-                record.partner_invoice_id, wrap=True
+                record.partner_invoice_id,
+                wrap=True,
             ),
             "partner_shipping_id": binder.to_external(
-                record.partner_shipping_id, wrap=True
+                record.partner_shipping_id,
+                wrap=True,
             ),
         }
 
     @mapping
     def client_order_ref(self, record):
-        return {"client_order_ref": record.name}
+        # Todo: müşterinin satınalma numarası için bir field yapılacak
+        return {"client_order_ref": "E-commerce sale"}
 
 
 class SaleOrderLineExportMapper(Component):
