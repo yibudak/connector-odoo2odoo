@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="view_res_company_default_backend_id" model="ir.ui.view">
+        <field name="name">res.company.default.backend.id</field>
+        <field name="model">res.company</field>
+        <field name="inherit_id" ref="base.view_company_form"/>
+        <field name="arch" type="xml">
+            <field name="favicon" position="after">
+                <field name="default_odoo_backend_id"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>
