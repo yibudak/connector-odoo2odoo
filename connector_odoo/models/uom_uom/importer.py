@@ -22,7 +22,7 @@ class UomBatchImporter(Component):
         external_ids = self.backend_adapter.search(
             filters,
         )
-        _logger.info(
+        _logger.debug(
             "search for odoo uom %s returned %s items", filters, len(external_ids)
         )
         for external_id in external_ids:
@@ -75,7 +75,7 @@ class UomMapper(Component):
             or self.env.context["lang"]
             or "en_US"
         )
-        _logger.info("CHECK ONLY CREATE UOM %s with lang %s" % (record["name"], lang))
+        _logger.debug("CHECK ONLY CREATE UOM %s with lang %s" % (record["name"], lang))
 
         local_uom_id = (
             self.env["uom.uom"]
@@ -84,7 +84,7 @@ class UomMapper(Component):
                 [("name", "=", record.name), ("category_id.name", "=", category_name)]
             )
         )
-        _logger.info("UOM found for %s : %s" % (record, local_uom_id))
+        _logger.debug("UOM found for %s : %s" % (record, local_uom_id))
         if len(local_uom_id) == 1:
             res.update({"odoo_id": local_uom_id.id})
         # If not found test if UOM was renamed and is "reference" for its category

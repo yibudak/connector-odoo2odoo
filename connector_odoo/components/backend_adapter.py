@@ -114,7 +114,7 @@ class OdooAPI(object):
                 else:
                     self._api.env.context["lang"] = self._location.lang_id
 
-            _logger.info(
+            _logger.debug(
                 "Created a new Odoo API instance and logged In with context %s"
                 % self._api.env.context
                 if hasattr(self._api, "env")

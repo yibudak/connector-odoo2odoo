@@ -25,7 +25,7 @@ class BatchUomExporter(Component):
                 ("backend_id", "=", self.backend_record.id),
             ]
         )
-        _logger.info(
+        _logger.debug(
             "search for odoo UoM %s returned %s items",
             filters,
             len(o_ids),

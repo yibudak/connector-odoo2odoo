@@ -19,7 +19,7 @@ class StockLocationBatchImporter(Component):
         external_ids = self.backend_adapter.search(
             filters,
         )
-        _logger.info(
+        _logger.debug(
             "search for odoo Location %s returned %s items",
             filters,
             len(external_ids),
@@ -39,15 +39,15 @@ class StockLocationImporter(Component):
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
         # import parent
-        _logger.info("Importing dependencies for external ID %s", self.external_id)
+        _logger.debug("Importing dependencies for external ID %s", self.external_id)
         if self.odoo_record.location_id:
-            _logger.info("Importing location parent")
+            _logger.debug("Importing location parent")
             self._import_dependency(
                 self.odoo_record.location_id.id, "odoo.stock.location", force=force
             )
 
         result = super()._import_dependencies(force=force)
-        _logger.info("Dependencies imported for external ID %s", self.external_id)
+        _logger.debug("Dependencies imported for external ID %s", self.external_id)
         return result
 
 

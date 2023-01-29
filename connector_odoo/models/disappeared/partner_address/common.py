@@ -62,7 +62,7 @@ class OdooResPartnerAddressReferences(models.Model):
         return result
 
     def import_address(self, backend_record, address_id, partner_external_id):
-        _logger.info("Obtaining address {}".format(address_id))
+        _logger.debug("Obtaining address {}".format(address_id))
         address_model = backend_record.get_connection().api.get("res.partner.address")
         main_partner = (
             self.env["odoo.res.partner"]

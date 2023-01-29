@@ -103,7 +103,7 @@ class OdooImporter(AbstractComponent):
             try:
                 importer.run(external_id, force=force)
             except NothingToDoJob:
-                _logger.info(
+                _logger.debug(
                     "Dependency import of %s(%s) has been ignored.",
                     binding_model._name,
                     external_id,
@@ -215,19 +215,19 @@ class OdooImporter(AbstractComponent):
             self.work.model_name,
             external_id,
         )
-        _logger.info("Initializating {}".format(lock_name))
+        _logger.debug("Initializating {}".format(lock_name))
         self.external_id = external_id
         binding = self._get_binding()
         must_continue = self._init_import(binding, external_id)
         if not must_continue:
-            _logger.info(
+            _logger.debug(
                 "({}: {}) must no be imported!".format(
                     self.work.model_name, external_id
                 )
             )
             return
 
-        _logger.info("Reading data for {}".format(lock_name))
+        _logger.debug("Reading data for {}".format(lock_name))
 
         try:
             self.odoo_record = self._get_odoo_data()
@@ -237,31 +237,31 @@ class OdooImporter(AbstractComponent):
         binding = self._get_binding2(binding)  # Todo experimental daha iyisini yaparsın
 
         if self._must_skip():
-            _logger.info(
+            _logger.debug(
                 "({}: {}) It must be skipped".format(self.work.model_name, external_id)
             )
             return
 
         if not force and self._is_uptodate(binding):
-            _logger.info("Already up-to-date")
+            _logger.debug("Already up-to-date")
             return _("Already up-to-date.")
 
         # Keep a lock on this import until the transaction is committed
         # The lock is kept since we have detected that the informations
         # will be updated into Odoo
         self.advisory_lock_or_retry(lock_name)
-        _logger.info("Resource {} locked".format(lock_name))
+        _logger.debug("Resource {} locked".format(lock_name))
         if not binding:
             binding = self._get_binding_odoo_id_changed(binding)
         self._before_import()
 
         # import the missing linked resources
-        _logger.info(
+        _logger.debug(
             "Importing dependencies ({}: {})".format(self.work.model_name, external_id)
         )
         self._import_dependencies(force=force)
 
-        _logger.info("Mapping data ({}: {})".format(self.work.model_name, external_id))
+        _logger.debug("Mapping data ({}: {})".format(self.work.model_name, external_id))
         map_record = self._map_data()
         try:
             if binding:
@@ -278,16 +278,16 @@ class OdooImporter(AbstractComponent):
             )
             raise
 
-        _logger.info("Binding ({}: {})".format(self.work.model_name, external_id))
+        _logger.debug("Binding ({}: {})".format(self.work.model_name, external_id))
         self.binder.bind(self.external_id, binding)
 
-        _logger.info(
+        _logger.debug(
             "Check if after import process must be executed ({}: {})".format(
                 self.work.model_name, external_id
             )
         )
         self._after_import(binding, force)
-        _logger.info("Finished ({}: {})!".format(self.work.model_name, external_id))
+        _logger.debug("Finished ({}: {})!".format(self.work.model_name, external_id))
 
 
 class BatchImporter(AbstractComponent):

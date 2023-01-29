@@ -27,7 +27,7 @@ class SaleOrderBatchImporter(Component):
         """Run the synchronization"""
 
         updated_ids = self.backend_adapter.search(filters)
-        _logger.info(
+        _logger.debug(
             "search for odoo sale orders %s returned %s items",
             filters,
             len(updated_ids),
@@ -179,7 +179,7 @@ class SaleOrderLineBatchImporter(Component):
         """Run the synchronization"""
 
         updated_ids = self.backend_adapter.search(filters)
-        _logger.info(
+        _logger.debug(
             "search for odoo sale orders %s returned %s items",
             filters,
             len(updated_ids),

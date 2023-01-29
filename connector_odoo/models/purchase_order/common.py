@@ -83,7 +83,7 @@ class OdooPurchaseOrder(models.Model):
             self.queue_job_ids = [(6, 0, [job_id.id])]
 
     def _set_state(self):
-        _logger.info("Setting state for %s", self)
+        _logger.debug("Setting state for %s", self)
         # All data was imported. Solve the state problem and all is done
         self._set_pickings_state()
         self._set_purchase_state()
@@ -155,7 +155,7 @@ class PurchaseOrderListener(Component):
 
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_sale_order_confirm(self, record):
-        _logger.info("Not implemented yet. Ignoring on_sale_order_confirm  %s", record)
+        _logger.debug("Not implemented yet. Ignoring on_sale_order_confirm  %s", record)
 
 
 class OdooPurchaseOrderLine(models.Model):

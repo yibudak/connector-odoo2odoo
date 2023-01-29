@@ -27,7 +27,7 @@ class ProductCategoryBatchImporter(Component):
         """Run the synchronization"""
 
         updated_ids = self.backend_adapter.search(filters)
-        _logger.info(
+        _logger.debug(
             "search for odoo product categories %s returned %s items",
             filters,
             len(updated_ids),
@@ -80,14 +80,14 @@ class ProductCategoryImporter(Component):
 
         if not public_categ_id:
             public_categ_id = self.env["product.public.category"].create(vals)
-            _logger.info(
+            _logger.debug(
                 "created public category %s for odoo product category %s",
                 public_categ_id,
                 binding,
             )
         else:
             public_categ_id.write(vals)
-            _logger.info(
+            _logger.debug(
                 "writed public category %s for odoo product category %s",
                 public_categ_id,
                 binding,

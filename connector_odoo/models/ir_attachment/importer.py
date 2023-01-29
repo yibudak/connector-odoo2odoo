@@ -21,7 +21,7 @@ class IrAttachmentBatchImporter(Component):
         """Run the synchronization"""
 
         external_ids = self.backend_adapter.search(filters)
-        _logger.info(
+        _logger.debug(
             "search for odoo Attachment %s returned %s items",
             filters,
             len(external_ids),
@@ -57,7 +57,7 @@ class IrAttachmentImportMapper(Component):
         attachment_id = self.env["ir.attachment"].search(
             [("store_fname", "=", record.store_fname)]
         )
-        _logger.info("Attachment found for %s : %s" % (record, attachment_id))
+        _logger.debug("Attachment found for %s : %s" % (record, attachment_id))
         if len(attachment_id) == 1:
             res.update({"odoo_id": attachment_id.id})
         return res

@@ -24,7 +24,7 @@ class AccountAccountBatchImporter(Component):
         """Run the synchronization"""
 
         external_ids = self.backend_adapter.search(filters)
-        _logger.info(
+        _logger.debug(
             "search for odoo Account Account %s returned %s items",
             filters,
             len(external_ids),

@@ -55,7 +55,7 @@ class CurrencyRateImporter(Component):
             [("currency_id", "=", external_id)], order="id desc"
         )
         total = len(rate_ids)
-        _logger.info(
+        _logger.debug(
             "{} Currency rates found for external currency {}".format(
                 total, external_id
             )
@@ -64,7 +64,7 @@ class CurrencyRateImporter(Component):
             i = 0
             for rate_id in rate_ids:
                 i += 1
-                _logger.info(
+                _logger.debug(
                     "Sending currency rate {} of {} to be processed as a new job".format(
                         i, total
                     )

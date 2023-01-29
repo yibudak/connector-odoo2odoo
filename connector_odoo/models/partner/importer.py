@@ -69,7 +69,7 @@ class PartnerBatchImporter(Component):
     def run(self, filters=None, force=False):
         """Run the synchronization"""
         external_ids = self.backend_adapter.search(filters)
-        _logger.info(
+        _logger.debug(
             "search for odoo partner %s returned %s items", filters, len(external_ids)
         )
         for external_id in external_ids:
@@ -211,27 +211,27 @@ class PartnerImporter(Component):
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
         # import parent
-        _logger.info("Importing dependencies for external ID %s", self.external_id)
+        _logger.debug("Importing dependencies for external ID %s", self.external_id)
         if self.odoo_record.parent_id:
-            _logger.info("Importing parent")
+            _logger.debug("Importing parent")
             self._import_dependency(
                 self.odoo_record.parent_id.id, "odoo.res.partner", force=force
             )
 
         if self.odoo_record.user_id:
-            _logger.info("Importing user")
+            _logger.debug("Importing user")
             self._import_dependency(
                 self.odoo_record.user_id.id, "odoo.res.users", force=force
             )
 
-        _logger.info("Importing categories")
+        _logger.debug("Importing categories")
         for category_id in self.odoo_record.category_id:
             self._import_dependency(
                 category_id.id, "odoo.res.partner.category", force=force
             )
 
         if self.odoo_record.property_account_payable_id:
-            _logger.info("Importing account payable")
+            _logger.debug("Importing account payable")
             self._import_dependency(
                 self.odoo_record.property_account_payable_id.id,
                 "odoo.account.account",
@@ -239,7 +239,7 @@ class PartnerImporter(Component):
             )
 
         if self.odoo_record.property_account_receivable_id:
-            _logger.info("Importing account receivable")
+            _logger.debug("Importing account receivable")
             self._import_dependency(
                 self.odoo_record.property_account_receivable_id.id,
                 "odoo.account.account",
@@ -250,7 +250,7 @@ class PartnerImporter(Component):
         #     hasattr(self.odoo_record, "property_purchase_currency_id")
         #     and self.odoo_record.property_purchase_currency_id
         # ):
-        #     _logger.info("Importing supplier currency")
+        #     _logger.debug("Importing supplier currency")
         #     self._import_dependency(
         #         self.odoo_record.property_purchase_currency_id.id,
         #         "odoo.res.currency",
@@ -261,7 +261,7 @@ class PartnerImporter(Component):
         #     self.odoo_record.property_product_pricelist_purchase
         #     and self.odoo_record.property_product_pricelist_purchase.currency_id
         # ):
-        #     _logger.info("Importing supplier currency")
+        #     _logger.debug("Importing supplier currency")
         #     self._import_dependency(
         #         self.odoo_record.property_product_pricelist_purchase.currency_id.id,
         #         "odoo.res.currency",
@@ -269,12 +269,12 @@ class PartnerImporter(Component):
         #     )
 
         result = super()._import_dependencies(force=force)
-        _logger.info("Dependencies imported for external ID %s", self.external_id)
+        _logger.debug("Dependencies imported for external ID %s", self.external_id)
         return result
 
     def _after_import(self, binding, force=False):
         if self.backend_record.version == "6.1":
-            _logger.info(
+            _logger.debug(
                 "OpenERP detected, importing adresses for external ID %s",
                 self.external_id,
             )

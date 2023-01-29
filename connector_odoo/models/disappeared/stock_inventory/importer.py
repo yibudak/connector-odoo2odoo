@@ -25,7 +25,7 @@ class StockInventoryDisappearedBatchImporter(Component):
         )
         external_ids = inventory_model.search(filters)
 
-        _logger.info(
+        _logger.debug(
             "search for odoo stock inventory %s returned %s items",
             filters,
             len(external_ids),
@@ -46,7 +46,7 @@ class StockInventoryDisappearedImporter(Component):
         return False
 
     def import_stock_inventory(self, backend_record, inventory_id):
-        _logger.info("Obtaining stock inventory {}".format(inventory_id))
+        _logger.debug("Obtaining stock inventory {}".format(inventory_id))
         inventory_model = backend_record.get_connection().api.get("stock.inventory")
 
         inventory = inventory_model.browse(inventory_id)
@@ -100,7 +100,7 @@ class StockInventoryDisappearedImporter(Component):
         }
 
     def after_import_stock_inventory(self, backend_record, binding, inventory):
-        _logger.info("After import stock inventory {}".format(binding.external_id))
+        _logger.debug("After import stock inventory {}".format(binding.external_id))
         if inventory.move_ids:
             delayed_line_ids = []
             for line_id in inventory.move_ids:

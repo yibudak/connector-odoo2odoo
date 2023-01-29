@@ -61,34 +61,14 @@ class OdooBinding(models.AbstractModel):
         """Prepare the import of records modified on Odoo"""
         if filters is None:
             filters = {}
-        lang = backend.get_default_language_code()
-        odoo_location = OdooLocation(
-            hostname=backend.hostname,
-            login=backend.login,
-            password=backend.password,
-            database=backend.database,
-            port=backend.port,
-            version=backend.version,
-            protocol=backend.protocol,
-            lang_id=lang,
-        )
-        api = OdooAPI(odoo_location).api
-        with backend.work_on(self._name, api) as work:
+        with backend.work_on(self._name) as work:
             importer = work.component(usage="batch.importer")
             return importer.run(filters=filters, force=backend.force)
 
     @api.model
-    def import_record(self, backend, external_id, work=False, force=False):
+    def import_record(self, backend, external_id, force=False):
         """Import a Odoo record"""
-        # with backend.work_on(self._name) as work:
-        #     importer = work.component(usage="record.importer")
-        #     return importer.run(external_id, force=force)
-        if not work:  # if this method called by batch importer
-            with backend.work_on(self._name) as work:
-                importer = work.component(usage="record.importer")
-                # todo cache model and session
-                return importer.run(external_id, force=force)
-        else:
+        with backend.work_on(self._name) as work:
             importer = work.component(usage="record.importer")
             return importer.run(external_id, force=force)
 

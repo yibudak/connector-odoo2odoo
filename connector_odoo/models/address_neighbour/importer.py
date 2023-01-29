@@ -20,13 +20,13 @@ class AddressNeighbourBatchImporter(Component):
         """Run the synchronization"""
 
         external_ids = self.backend_adapter.search(filters)
-        _logger.info(
+        _logger.debug(
             "search for odoo Address Neighbour %s returned %s items",
             filters,
             len(external_ids),
         )
         base_priority = 10
-        for external_id in external_ids[:50]:
+        for external_id in external_ids:
             job_options = {"priority": base_priority}
             self._import_record(external_id, job_options=job_options, force=force)
 

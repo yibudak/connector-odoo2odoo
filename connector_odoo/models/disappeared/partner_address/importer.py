@@ -22,7 +22,7 @@ class PartnerAddressDisappearedBatchImporter(Component):
         """Run the synchronization"""
 
         external_ids = self.backend_adapter.search(filters)
-        _logger.info(
+        _logger.debug(
             "search for odoo partner address %s returned %s items",
             filters,
             len(external_ids),
@@ -43,7 +43,7 @@ class PartnerAddressDisappearedImporter(Component):
             [("partner_id", "=", external_id)], order="id"
         )
         total = len(address_ids)
-        _logger.info(
+        _logger.debug(
             "{} Addresses found for external partner {}".format(total, external_id)
         )
         if address_ids:
@@ -53,7 +53,7 @@ class PartnerAddressDisappearedImporter(Component):
                 # in large number of records
                 # Jobs function only can be on models.Model, not in this class
                 i += 1
-                _logger.info(
+                _logger.debug(
                     "Sending address {} of {} to be processed as a new job".format(
                         i, total
                     )

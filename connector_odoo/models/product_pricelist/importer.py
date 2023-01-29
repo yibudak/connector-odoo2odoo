@@ -27,7 +27,7 @@ class ProductPricelistBatchImporter(Component):
         """Run the synchronization"""
 
         updated_ids = self.backend_adapter.search(filters)
-        _logger.info(
+        _logger.debug(
             "search for odoo product pricelist %s returned %s items",
             filters,
             len(updated_ids),
@@ -109,7 +109,7 @@ class ProductPricelistItemBatchImporter(Component):
         """Run the synchronization"""
 
         updated_ids = self.backend_adapter.search(filters)
-        _logger.info(
+        _logger.debug(
             "search for odoo product pricelist %s returned %s items",
             filters,
             len(updated_ids),

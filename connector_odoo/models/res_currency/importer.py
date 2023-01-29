@@ -18,7 +18,7 @@ class ResCurrencyBatchImporter(Component):
         """Run the synchronization"""
 
         external_ids = self.backend_adapter.search(filters)
-        _logger.info(
+        _logger.debug(
             "search for odoo currencies %s returned %s items",
             filters,
             len(external_ids),
@@ -71,7 +71,7 @@ class CurrencyImporter(Component):
     _apply_on = "odoo.res.currency"
 
     def _after_import(self, binding, force=False):
-        _logger.info(
+        _logger.debug(
             "Importing Currency rates for external ID %s",
             self.external_id,
         )
