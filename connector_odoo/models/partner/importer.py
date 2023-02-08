@@ -10,49 +10,49 @@ from odoo.addons.connector.components.mapper import mapping
 _logger = logging.getLogger(__name__)
 
 
-def get_address_fields_from_record(env, record):
-    """
-    Return a dict with the address fields of the record.
-    """
-    # Todo : address fields should be different models
-    vals = {}
-    local_country_id = env["res.country"]
-    local_state_id = env["res.country.state"]
-    local_neighbour_id = env["address.neighbour"]
-    partner_neighbour_id = record.neighbour_id
-
-    if partner_neighbour_id:
-        local_neighbour_id = env["address.neighbour"].search(
-            [
-                ("name", "ilike", partner_neighbour_id.name),
-                ("region_id.name", "ilike", partner_neighbour_id.region_id.name),
-                (
-                    "region_id.district_id.name",
-                    "ilike",
-                    partner_neighbour_id.region_id.district_id.name,
-                ),
-            ]
-        )
-    else:
-        local_state_id = env["res.country.state"].search(
-            [
-                ("name", "ilike", record.state_id.name),
-                ("country_id.code", "ilike", record.country_id.code),
-            ]
-        )
-    if local_neighbour_id:
-        vals.update(
-            {
-                "zip": local_neighbour_id.code,
-                "neighbour_id": local_neighbour_id.id or False,
-                "region_id": local_neighbour_id.region_id.id or False,
-                "district_id": local_neighbour_id.district_id.id or False,
-                "state_id": local_neighbour_id.state_id.id or local_state_id.id,
-                "country_id": local_neighbour_id.state_id.country_id.id
-                or local_country_id.id,
-            }
-        )
-    return vals
+# def get_address_fields_from_record(env, record):
+#     """
+#     Return a dict with the address fields of the record.
+#     """
+#     # Todo : address fields should be different models
+#     vals = {}
+#     local_country_id = env["res.country"]
+#     local_state_id = env["res.country.state"]
+#     local_neighbour_id = env["address.neighbour"]
+#     partner_neighbour_id = record.neighbour_id
+#
+#     if partner_neighbour_id:
+#         local_neighbour_id = env["address.neighbour"].search(
+#             [
+#                 ("name", "ilike", partner_neighbour_id.name),
+#                 ("region_id.name", "ilike", partner_neighbour_id.region_id.name),
+#                 (
+#                     "region_id.district_id.name",
+#                     "ilike",
+#                     partner_neighbour_id.region_id.district_id.name,
+#                 ),
+#             ]
+#         )
+#     else:
+#         local_state_id = env["res.country.state"].search(
+#             [
+#                 ("name", "ilike", record.state_id.name),
+#                 ("country_id.code", "ilike", record.country_id.code),
+#             ]
+#         )
+#     if local_neighbour_id:
+#         vals.update(
+#             {
+#                 "zip": local_neighbour_id.code,
+#                 "neighbour_id": local_neighbour_id.id or False,
+#                 "region_id": local_neighbour_id.region_id.id or False,
+#                 "district_id": local_neighbour_id.district_id.id or False,
+#                 "state_id": local_neighbour_id.state_id.id or local_state_id.id,
+#                 "country_id": local_neighbour_id.state_id.country_id.id
+#                 or local_country_id.id,
+#             }
+#         )
+#     return vals
 
 
 class PartnerBatchImporter(Component):
@@ -123,7 +123,35 @@ class PartnerImportMapper(Component):
 
     @mapping
     def address_fields(self, record):
-        return get_address_fields_from_record(self.env, record)
+        # Todo fix this function here and import mapper. Temiz değil.
+        vals = {}
+        neighbour = record.neighbour_id
+        if neighbour:
+            local_neighbour = self.env["odoo.address.neighbour"].search(
+                [("external_id", "=", record.neighbour_id.id)], limit=1
+            )
+            if local_neighbour:
+                vals["neighbour_id"] = local_neighbour.id
+                vals["region_id"] = local_neighbour.region_id.id
+                vals["district_id"] = local_neighbour.region_id.district_id.id
+        return vals
+
+    @mapping
+    def country_id(self, record):
+        local_country_id = self.env["res.country"].search(
+            [("code", "=", record.country_id.code)]
+        )
+        return {"country_id": local_country_id.id}
+
+    @mapping
+    def state_id(self, record):
+        local_state_id = self.env["res.country.state"].search(
+            [
+                ("name", "ilike", record.state_id.name),
+                ("country_id.code", "=", record.country_id.code),
+            ]
+        )
+        return {"state_id": local_state_id.id}
 
     @mapping
     def parent_id(self, record):
@@ -150,12 +178,13 @@ class PartnerImportMapper(Component):
         else:
             return {"supplier_rank": record.supplier_rank}
 
-    @mapping
-    def image(self, record):
-        if self.backend_record.version in ("11.0", "12.0"):
-            return {"image_1920": record.image if hasattr(record, "image") else False}
-        else:
-            return {"image_1920": record.image_1920}
+    # TODO: this slows down the import. should we really import the image?
+    # @mapping
+    # def image(self, record):
+    #     if self.backend_record.version in ("11.0", "12.0"):
+    #         return {"image_1920": record.image if hasattr(record, "image") else False}
+    #     else:
+    #         return {"image_1920": record.image_1920}
 
     @mapping
     def user_id(self, record):
@@ -212,11 +241,12 @@ class PartnerImporter(Component):
         """Import the dependencies for the record"""
         # import parent
         _logger.debug("Importing dependencies for external ID %s", self.external_id)
-        if self.odoo_record.parent_id:
-            _logger.debug("Importing parent")
-            self._import_dependency(
-                self.odoo_record.parent_id.id, "odoo.res.partner", force=force
-            )
+        # TODO FIX: cursor hatasını burası veriyor olabilir
+        # if self.odoo_record.parent_id:
+        #     _logger.debug("Importing parent")
+        #     self._import_dependency(
+        #         self.odoo_record.parent_id.id, "odoo.res.partner", force=force
+        #     )
 
         if self.odoo_record.user_id:
             _logger.debug("Importing user")
@@ -272,13 +302,10 @@ class PartnerImporter(Component):
         _logger.debug("Dependencies imported for external ID %s", self.external_id)
         return result
 
-    def _after_import(self, binding, force=False):
-        if self.backend_record.version == "6.1":
-            _logger.debug(
-                "OpenERP detected, importing adresses for external ID %s",
-                self.external_id,
-            )
-            self.env["odoo.res.partner.address.disappeared"].with_delay().import_record(
-                self.backend_record, self.external_id
-            )
-        return super()._after_import(binding, force)
+    # def _after_import(self, binding, force=False):
+    #     if self.backend_record.version == "6.1":
+    #         _logger.debug(
+    #             "OpenERP detected, importing adresses for external ID %s",
+    #             self.external_id,
+    #         )
+    #     return super()._after_import(binding, force)

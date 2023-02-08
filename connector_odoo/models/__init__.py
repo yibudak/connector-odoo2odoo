@@ -6,7 +6,7 @@ from . import odoo_backend
 from . import res_currency_rate
 from . import res_currency
 from . import res_company
-from . import disappeared
+# from . import disappeared
 from . import partner_category
 from . import partner
 from . import users

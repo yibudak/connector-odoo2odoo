@@ -22,7 +22,12 @@ class ProductAttributeMapper(Component):
     _inherit = "odoo.import.mapper"
     _apply_on = "odoo.product.attribute"
 
-    direct = [("name", "name"), ("create_variant", "create_variant")]
+    direct = [
+        ("name", "name"),
+        ("create_variant", "create_variant"),
+        ("allow_filling", "allow_filling"),
+        ("visibility", "visibility"),
+    ]
 
     @only_create
     @mapping

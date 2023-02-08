@@ -75,7 +75,7 @@ class OdooAPI(object):
                 )
             except odoorpc.error.RPCError as e:
                 _logger.exception(e)
-                raise UserError(e) from e
+                raise UserError(str(e)) from e
         else:
             try:
                 api.login(
@@ -199,7 +199,7 @@ class GenericAdapter(AbstractComponent):
         ext_model = model or self._odoo_model
 
         try:
-            odoo_api = self.work.odoo_api.api
+            odoo_api = self.work.odoo_api
         except AttributeError as e:
             raise AttributeError(
                 "You must provide a odoo_api attribute with a "
@@ -235,7 +235,7 @@ class GenericAdapter(AbstractComponent):
             arguments.append(attributes)
 
         try:
-            odoo_api = self.work.odoo_api.api
+            odoo_api = self.work.odoo_api
         except AttributeError as e:
             raise AttributeError(
                 "You must provide a odoo_api attribute with a "
@@ -254,7 +254,7 @@ class GenericAdapter(AbstractComponent):
     def create(self, data):
         ext_model = self._odoo_model
         try:
-            odoo_api = self.work.odoo_api.api
+            odoo_api = self.work.odoo_api
         except AttributeError as e:
             raise AttributeError(
                 "You must provide a odoo_api attribute with a "
@@ -272,7 +272,7 @@ class GenericAdapter(AbstractComponent):
         arguments = [int(id)]
         # ext_model = self._odoo_model
         try:
-            odoo_api = self.work.odoo_api.api
+            odoo_api = self.work.odoo_api
         except AttributeError as e:
             raise AttributeError(
                 "You must provide a odoo_api attribute with a "

@@ -13,15 +13,6 @@
                     <field name="bind_ids" readonly="1" nolabel="1" />
                 </group>
             </xpath>
-            <xpath expr="//notebook/page[@name='connector']" position="inside">
-                <group string="Odoo Bindings (Address Dissapeared)">
-                    <field
-                        name="bind_address_dissapeared_ids"
-                        readonly="1"
-                        nolabel="1"
-                    />
-                </group>
-            </xpath>
         </field>
     </record>
 
@@ -68,47 +59,6 @@
         </field>
     </record>
 
-    <record id="odoo_res_partner_address_disappeared_tree_view" model="ir.ui.view">
-        <field name="name">odoo.res.partner.address.disappeared.tree</field>
-        <field name="model">odoo.res.partner.address.disappeared</field>
 
-        <field name="arch" type="xml">
-            <tree>
-                <field name="display_name" />
-                <field name="odoo_id" />
-                <field name="backend_id" />
-                <field name="external_id" />
-                <button name="resync" type="object" string="Resync" />
-            </tree>
-        </field>
-    </record>
-
-    <record id="odoo_res_partner_address_disappeared_form_view" model="ir.ui.view">
-        <field name="name">odoo.res.partner.address.disappeared.form</field>
-        <field name="model">odoo.res.partner.address.disappeared</field>
-
-        <field name="arch" type="xml">
-            <form>
-                <header>
-                    <button name="resync" type="object" string="Resync" />
-                </header>
-                <sheet>
-
-                    <div class="oe_title">
-
-                        <h1>
-                            <field name="name" readonly="1" />
-                        </h1>
-                        <group>
-                            <field name="odoo_id" readonly="0" />
-                            <field name="backend_id" readonly="1" />
-                            <field name="external_id" readonly="0" />
-                        </group>
-                    </div>
-                </sheet>
-
-            </form>
-        </field>
-    </record>
 
 </odoo>

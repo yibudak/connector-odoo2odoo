@@ -297,29 +297,29 @@ class OdooBackend(models.Model):
         self.ensure_one()
         self.write({"state": "draft"})
 
-    @contextmanager
-    def work_on(self, model_name, **kwargs):
-        """
-        Place the connexion here regarding the documentation
-        http://odoo-connector.com/api/api_components.html\
-            #odoo.addons.component.models.collection.Collection
-        """
-        self.ensure_one()
-        lang = self.get_default_language_code()
-        odoo_location = OdooLocation(
-            hostname=self.hostname,
-            login=self.login,
-            password=self.password,
-            database=self.database,
-            port=self.port,
-            version=self.version,
-            protocol=self.protocol,
-            lang_id=lang,
-        )
-        with OdooAPI(odoo_location) as odoo_api:
-            _super = super(OdooBackend, self.with_context(lang=lang))
-            with _super.work_on(model_name, odoo_api=odoo_api, **kwargs) as work:
-                yield work
+    # @contextmanager
+    # def work_on(self, model_name, **kwargs):
+    #     """
+    #     Place the connexion here regarding the documentation
+    #     http://odoo-connector.com/api/api_components.html\
+    #         #odoo.addons.component.models.collection.Collection
+    #     """
+    #     self.ensure_one()
+    #     lang = self.get_default_language_code()
+    #     odoo_location = OdooLocation(
+    #         hostname=self.hostname,
+    #         login=self.login,
+    #         password=self.password,
+    #         database=self.database,
+    #         port=self.port,
+    #         version=self.version,
+    #         protocol=self.protocol,
+    #         lang_id=lang,
+    #     )
+    #     with OdooAPI(odoo_location) as odoo_api:
+    #         _super = super(OdooBackend, self.with_context(lang=lang))
+    #         with _super.work_on(model_name, odoo_api=odoo_api, **kwargs) as work:
+    #             yield work
 
     def synchronize_basedata(self):
         self.ensure_one()
@@ -463,8 +463,8 @@ class OdooBackend(models.Model):
 
     def import_address_fields(self):
         # self._import_from_date("odoo.address.district", "import_base_from_date")
-        # self._import_from_date("odoo.address.region", "import_base_from_date")
-        self._import_from_date("odoo.address.neighbour", "import_base_from_date")
+        self._import_from_date("odoo.address.region", "import_base_from_date")
+        # self._import_from_date("odoo.address.neighbour", "import_base_from_date")
         return True
 
     def import_pickings(self):
@@ -474,12 +474,13 @@ class OdooBackend(models.Model):
         return True
 
     def import_stock_inventories(self):
-        if not self.default_import_stock:
-            return False
-        self._import_from_date(
-            "odoo.stock.inventory.disappeared", "import_stock_from_date"
-        )
-        return True
+        raise UserError(_("Not implemented yet"))
+        # if not self.default_import_stock:
+        #     return False
+        # self._import_from_date(
+        #     "odoo.stock.inventory.disappeared", "import_stock_from_date"
+        # )
+        # return True
 
     def _import_from_date(self, model, from_date_field):
         import_start_time = datetime.now()

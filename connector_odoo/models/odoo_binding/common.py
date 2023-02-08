@@ -4,6 +4,24 @@
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 from odoo.addons.connector_odoo.components.backend_adapter import OdooAPI, OdooLocation
+from odoo.tools import config
+
+
+def _get_api_conn():
+    """Return a connection to the Odoo API. Need to set parameters in the
+    configuration file. We should do this to avoid authentication on every RPC call"""
+    odoo_location = OdooLocation(
+        hostname=config["odoo_host"],
+        login=config["odoo_login"],
+        password=config["odoo_passwd"],
+        database=config["odoo_dbname"],
+        port=config["odoo_port"],
+        version=config["odoo_version"],
+        protocol=config["odoo_protocol"],
+        lang_id=config["odoo_lang"],
+    )
+    connection = OdooAPI(odoo_location)
+    return connection.api
 
 
 class OdooBinding(models.AbstractModel):
@@ -35,6 +53,8 @@ class OdooBinding(models.AbstractModel):
         )
     ]
 
+    _api_conn = _get_api_conn()
+
     @api.constrains("backend_id", "external_id")
     def unique_backend_external_id(self):
         if self.external_id > 0:
@@ -62,6 +82,7 @@ class OdooBinding(models.AbstractModel):
         if filters is None:
             filters = {}
         with backend.work_on(self._name) as work:
+            setattr(work, "odoo_api", self._api_conn)
             importer = work.component(usage="batch.importer")
             return importer.run(filters=filters, force=backend.force)
 
@@ -69,6 +90,7 @@ class OdooBinding(models.AbstractModel):
     def import_record(self, backend, external_id, force=False):
         """Import a Odoo record"""
         with backend.work_on(self._name) as work:
+            setattr(work, "odoo_api", self._api_conn)
             importer = work.component(usage="record.importer")
             return importer.run(external_id, force=force)
 
