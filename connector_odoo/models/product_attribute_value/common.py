@@ -12,7 +12,7 @@ class OdooProductAttributeValue(models.Model):
     _inherit = ["odoo.binding"]
     _inherits = {"product.attribute.value": "odoo_id"}
     _description = "Odoo Product Attribute Value"
-
+    _legacy_import = False
     _sql_constraints = [
         (
             "external_id",

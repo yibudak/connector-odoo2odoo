@@ -20,7 +20,7 @@ class AddressRegionBatchImporter(Component):
         """Run the synchronization"""
 
         external_ids = self.backend_adapter.search(filters)
-        _logger.debug(
+        _logger.info(
             "search for odoo Address Region %s returned %s items",
             filters,
             len(external_ids),
@@ -58,7 +58,7 @@ class AddressRegionImportMapper(Component):
             )
         )
         if region_record:
-            _logger.debug(
+            _logger.info(
                 "Address Region found for %s : %s" % (record, region_record)
             )
             res.update({"odoo_id": region_record.id})

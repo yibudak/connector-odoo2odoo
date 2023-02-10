@@ -27,7 +27,7 @@ class SaleOrderBatchImporter(Component):
         """Run the synchronization"""
 
         updated_ids = self.backend_adapter.search(filters)
-        _logger.debug(
+        _logger.info(
             "search for odoo sale orders %s returned %s items",
             filters,
             len(updated_ids),
@@ -127,7 +127,7 @@ class SaleOrderImportMapper(Component):
     @mapping
     def odoo_id(self, record):
         order = self.env["sale.order"].search([("name", "=", record.name)])
-        _logger.debug("found sale order %s for record %s" % (record.name, record))
+        _logger.info("found sale order %s for record %s" % (record.name, record))
         if len(order) == 1:
             return {"odoo_id": order.id}
 
@@ -179,7 +179,7 @@ class SaleOrderLineBatchImporter(Component):
         """Run the synchronization"""
 
         updated_ids = self.backend_adapter.search(filters)
-        _logger.debug(
+        _logger.info(
             "search for odoo sale orders %s returned %s items",
             filters,
             len(updated_ids),

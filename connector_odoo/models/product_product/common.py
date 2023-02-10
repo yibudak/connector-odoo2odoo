@@ -17,7 +17,7 @@ class OdooProductProduct(models.Model):
     _inherit = "odoo.binding"
     _inherits = {"product.product": "odoo_id"}
     _description = "External Odoo Product"
-
+    _legacy_import = False
     _sql_constraints = [
         (
             "external_id",

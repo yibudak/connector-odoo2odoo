@@ -22,7 +22,7 @@ class StockWarehouseBatchImporter(Component):
         external_ids = self.backend_adapter.search(
             filters,
         )
-        _logger.debug(
+        _logger.info(
             "search for odoo Warehouse %s returned %s items",
             filters,
             len(external_ids),
@@ -100,7 +100,7 @@ class WarehouseMapper(Component):
         else:
             code = record.code
         warehouse_id = self.env["stock.warehouse"].search([("code", "=", code)])
-        _logger.debug("Warehouse found for %s : %s" % (record, warehouse_id))
+        _logger.info("Warehouse found for %s : %s" % (record, warehouse_id))
         if len(warehouse_id) == 1:
             res.update({"odoo_id": warehouse_id.id})
         else:

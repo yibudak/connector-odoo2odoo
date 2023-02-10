@@ -23,7 +23,7 @@ class ProductImageBatchImporter(Component):
         external_ids = self.backend_adapter.search(
             filters, model="base_multi_image.image"
         )
-        _logger.debug(
+        _logger.info(
             "search for odoo product images %s returned %s items",
             filters,
             len(external_ids),

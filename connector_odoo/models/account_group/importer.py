@@ -24,7 +24,7 @@ class AccountGroupBatchImporter(Component):
         """Run the synchronization"""
 
         external_ids = self.backend_adapter.search(filters)
-        _logger.debug(
+        _logger.info(
             "search for odoo Account Group %s returned %s items",
             filters,
             len(external_ids),
@@ -55,7 +55,7 @@ class AccountGroupImportMapper(Component):
         if len(prefix) > 1:
             domain.append(("code_prefix_end", "=", prefix[1]))
         account_id = self.env["account.group"].search(domain)
-        _logger.debug("Account Group found for %s : %s" % (record, account_id))
+        _logger.info("Account Group found for %s : %s" % (record, account_id))
         if len(account_id) == 1:
             res.update({"odoo_id": account_id.id})
         return res

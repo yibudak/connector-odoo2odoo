@@ -16,7 +16,7 @@ class OdooProductCategory(models.Model):
     _inherit = "odoo.binding"
     _inherits = {"product.category": "odoo_id"}
     _description = "Odoo Product Category"
-
+    _legacy_import = False
     odoo_parent_id = fields.Many2one(
         comodel_name="odoo.product.category",
         string="Ext. Odoo Parent Category",

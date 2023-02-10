@@ -25,7 +25,7 @@ class ProductBatchImporter(Component):
     def run(self, filters=None, force=False):
         """Run the synchronization"""
         external_ids = self.backend_adapter.search(filters)
-        _logger.debug(
+        _logger.info(
             "search for odoo products %s returned %s items", filters, len(external_ids)
         )
         for external_id in external_ids:
@@ -198,7 +198,7 @@ class ProductImporter(Component):
         #     order="id",
         # )
         # total = len(attachment_ids)
-        # _logger.debug(
+        # _logger.info(
         #     "{} Attachment found for external product {}".format(
         #         total, self.odoo_record.id
         #     )

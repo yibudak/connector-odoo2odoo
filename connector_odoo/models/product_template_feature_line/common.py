@@ -8,7 +8,7 @@ class OdooProductTemplateFeatureLine(models.Model):
     _inherit = ["odoo.binding"]
     _inherits = {"product.template.feature.line": "odoo_id"}
     _description = "Odoo Product Template Feature Line"
-
+    _legacy_import = False
     _sql_constraints = [
         (
             "external_id",

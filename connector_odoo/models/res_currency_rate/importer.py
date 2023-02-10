@@ -31,7 +31,7 @@ class ResCurrencyRateMapper(Component):
         res = {}
 
         rate_id = self.env["res.currency.rate"].search([("name", "=", record.name)])
-        _logger.debug("Res currency rate found for %s : %s" % (record, rate_id))
+        _logger.info("Res currency rate found for %s : %s" % (record, rate_id))
         if len(rate_id) == 1:
             res.update({"odoo_id": rate_id.id})
         return res
@@ -55,7 +55,7 @@ class CurrencyRateImporter(Component):
             [("currency_id", "=", external_id)], order="id desc"
         )
         total = len(rate_ids)
-        _logger.debug(
+        _logger.info(
             "{} Currency rates found for external currency {}".format(
                 total, external_id
             )
@@ -64,7 +64,7 @@ class CurrencyRateImporter(Component):
             i = 0
             for rate_id in rate_ids:
                 i += 1
-                _logger.debug(
+                _logger.info(
                     "Sending currency rate {} of {} to be processed as a new job".format(
                         i, total
                     )

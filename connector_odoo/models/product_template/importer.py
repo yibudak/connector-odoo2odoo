@@ -27,7 +27,7 @@ class ProductTemplateBatchImporter(Component):
         """Run the synchronization"""
 
         external_ids = self.backend_adapter.search(filters)
-        _logger.debug(
+        _logger.info(
             "search for odoo products template %s returned %s items",
             filters,
             len(external_ids),

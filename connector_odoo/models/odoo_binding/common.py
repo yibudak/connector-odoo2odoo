@@ -4,24 +4,42 @@
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 from odoo.addons.connector_odoo.components.backend_adapter import OdooAPI, OdooLocation
+from odoo.addons.connector_odoo.components.legacy_adapter import LegacyOdooAPI
 from odoo.tools import config
 
 
 def _get_api_conn():
     """Return a connection to the Odoo API. Need to set parameters in the
     configuration file. We should do this to avoid authentication on every RPC call"""
-    odoo_location = OdooLocation(
-        hostname=config["odoo_host"],
-        login=config["odoo_login"],
-        password=config["odoo_passwd"],
-        database=config["odoo_dbname"],
-        port=config["odoo_port"],
-        version=config["odoo_version"],
-        protocol=config["odoo_protocol"],
-        lang_id=config["odoo_lang"],
-    )
-    connection = OdooAPI(odoo_location)
-    return connection.api
+    host = config["odoo_host"]
+    port = config["odoo_port"]
+    dbname = config["odoo_dbname"]
+    username = config["odoo_login"]
+    password = config["odoo_passwd"]
+    lang = config["odoo_lang"]
+    try:
+        odoo_location = OdooLocation(
+            hostname=host,
+            login=username,
+            password=password,
+            database=dbname,
+            port=port,
+            version=config["odoo_version"],
+            protocol=config["odoo_protocol"],
+            lang_id=lang,
+        )
+        connection = OdooAPI(odoo_location).api
+    except:
+        connection = None
+
+    protocol = "https" if config["odoo_protocol"] == "jsonrpc+ssl" else "http"
+    try:
+        legacy_api = LegacyOdooAPI(
+            f"{protocol}://{host}:{port}", dbname, password, username, lang
+        )
+    except:
+        legacy_api = None
+    return connection, legacy_api
 
 
 class OdooBinding(models.AbstractModel):
@@ -53,7 +71,7 @@ class OdooBinding(models.AbstractModel):
         )
     ]
 
-    _api_conn = _get_api_conn()
+    _api_conn, _legacy_api_conn = _get_api_conn()
 
     @api.constrains("backend_id", "external_id")
     def unique_backend_external_id(self):
@@ -76,13 +94,22 @@ class OdooBinding(models.AbstractModel):
     def resync(self):
         return self.with_delay().export_record(self.backend_id)
 
+    def set_connectors(self, work_context):
+        """This method set the connectors to the work context.
+        If any connector is not set, it will be created.
+        """
+        # Todo: check if the connector is already set or not
+        setattr(work_context, "odoo_api", self._api_conn)
+        setattr(work_context, "legacy_api", self._legacy_api_conn)
+        return True
+
     @api.model
     def import_batch(self, backend, filters=None):
         """Prepare the import of records modified on Odoo"""
         if filters is None:
             filters = {}
         with backend.work_on(self._name) as work:
-            setattr(work, "odoo_api", self._api_conn)
+            self.set_connectors(work)
             importer = work.component(usage="batch.importer")
             return importer.run(filters=filters, force=backend.force)
 
@@ -90,9 +117,17 @@ class OdooBinding(models.AbstractModel):
     def import_record(self, backend, external_id, force=False):
         """Import a Odoo record"""
         with backend.work_on(self._name) as work:
-            setattr(work, "odoo_api", self._api_conn)
+            self.set_connectors(work)
             importer = work.component(usage="record.importer")
             return importer.run(external_id, force=force)
+
+    @api.model
+    def import_record_legacy(self, backend, external_id, data=None, force=False):
+        """Import a Odoo record"""
+        with backend.work_on(self._name) as work:
+            self.set_connectors(work)
+            importer = work.component(usage="record.importer")
+            return importer.run_legacy(external_id, data=data, force=force)
 
     @api.model
     def export_batch(self, backend, filters=None):

@@ -12,7 +12,7 @@ class OdooIrAttachment(models.Model):
     _inherit = "odoo.binding"
     _inherits = {"ir.attachment": "odoo_id"}
     _description = "External Odoo Attachment"
-
+    _legacy_import = False
     _sql_constraints = [
         (
             "external_id",

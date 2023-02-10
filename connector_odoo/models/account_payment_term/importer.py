@@ -24,7 +24,7 @@ class AccountPaymentTermBatchImporter(Component):
         """Run the synchronization"""
 
         external_ids = self.backend_adapter.search(filters)
-        _logger.debug(
+        _logger.info(
             "search for odoo Account Group %s returned %s items",
             filters,
             len(external_ids),
@@ -62,7 +62,7 @@ class AccountPaymentTermImportMapper(Component):
             )
         )
         if pt_record:
-            _logger.debug(
+            _logger.info(
                 "Account Fiscal Position found for %s : %s" % (record, pt_record)
             )
             res.update({"odoo_id": pt_record.id})

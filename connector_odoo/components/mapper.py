@@ -30,8 +30,9 @@ class OdooImportMapper(AbstractComponent):
     @mapping
     def odoo_id(self, record):
         """Value is assigned to odoo_id so as not to duplicate records already imported"""
+        model_id = record["id"] if self.options.legacy else record.id
         binder = self.binder_for()
-        res_id = binder.to_internal(record.id, unwrap=True)
+        res_id = binder.to_internal(model_id, unwrap=True)
         return {"odoo_id": res_id.id if res_id else None}
 
     @mapping
@@ -40,7 +41,6 @@ class OdooImportMapper(AbstractComponent):
 
     def _map_direct(self, record, from_attr, to_attr):
         """Apply the ``direct`` mappings.
-
         :param record: record to convert from a source to a target
         :param from_attr: name of the source attribute or a callable
         :type from_attr: callable | str
@@ -50,7 +50,11 @@ class OdooImportMapper(AbstractComponent):
         if callable(from_attr):
             return from_attr(self, record, to_attr)
 
-        value = record[from_attr] if hasattr(record, from_attr) else False
+        if isinstance(record, dict):  # legacy API
+            value = record.get(from_attr, False)
+        else:
+            value = record[from_attr] if hasattr(record, from_attr) else False
+
         if not value:
             return False
 

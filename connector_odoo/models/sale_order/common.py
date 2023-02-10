@@ -17,7 +17,7 @@ class OdooSaleOrder(models.Model):
     _inherit = "odoo.binding"
     _inherits = {"sale.order": "odoo_id"}
     _description = "External Odoo Sale Order"
-
+    _legacy_import = False
     backend_amount_total = fields.Float()
     backend_amount_tax = fields.Float()
     backend_state = fields.Char()
@@ -83,7 +83,7 @@ class OdooSaleOrder(models.Model):
             )
 
     def _set_state(self):
-        _logger.debug("Setting state for %s", self)
+        _logger.info("Setting state for %s", self)
         # All data was imported. Solve the state problem and all is done
         self._set_pickings_state()
         self._set_sale_state()
@@ -153,7 +153,7 @@ class SaleOrderListener(Component):
 
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_sale_order_confirm(self, record):
-        _logger.debug("Not implemented yet. Ignoring on_sale_order_confirm  %s", record)
+        _logger.info("Not implemented yet. Ignoring on_sale_order_confirm  %s", record)
 
 
 class OdooSaleOrderLine(models.Model):
@@ -161,7 +161,7 @@ class OdooSaleOrderLine(models.Model):
     _inherit = "odoo.binding"
     _inherits = {"sale.order.line": "odoo_id"}
     _description = "External Odoo Sale Order Line"
-
+    _legacy_import = False
     def resync(self):
         if self.backend_id.main_record == "odoo":
             return self.with_delay().export_record(self.backend_id)

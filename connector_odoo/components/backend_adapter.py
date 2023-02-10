@@ -13,12 +13,12 @@ _logger = logging.getLogger(__name__)
 try:
     import odoorpc
 except ImportError:
-    _logger.debug("Cannot import 'odoorpc' Lib")
+    _logger.info("Cannot import 'odoorpc' Lib")
 
 # try:
 #     import oerplib
 # except ImportError:
-#     _logger.debug("Cannot import 'oerplib' Lib")
+#     _logger.info("Cannot import 'oerplib' Lib")
 
 
 class OdooLocation(object):
@@ -101,20 +101,20 @@ class OdooAPI(object):
                     host=self._location.hostname,
                     port=self._location.port,
                     protocol=self._location.protocol,
-                    timeout=150,
+                    timeout=10,
                 )
 
             self._api_login(api)
             self._api = api
 
-            _logger.debug("Associated lang %s to location" % self._location.lang_id)
+            _logger.info("Associated lang %s to location" % self._location.lang_id)
             if self._location.lang_id:
                 if self._location.version in ("6.1",):
                     self._api.context["lang"] = self._location.lang_id
                 else:
                     self._api.env.context["lang"] = self._location.lang_id
 
-            _logger.debug(
+            _logger.info(
                 "Created a new Odoo API instance and logged In with context %s"
                 % self._api.env.context
                 if hasattr(self._api, "env")
@@ -136,7 +136,7 @@ class OdooAPI(object):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        _logger.debug(traceback)
+        _logger.info(traceback)
 
 
 class OdooCRUDAdapter(AbstractComponent):

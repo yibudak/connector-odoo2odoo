@@ -20,7 +20,7 @@ class AddressNeighbourBatchImporter(Component):
         """Run the synchronization"""
 
         external_ids = self.backend_adapter.search(filters)
-        _logger.debug(
+        _logger.info(
             "search for odoo Address Neighbour %s returned %s items",
             filters,
             len(external_ids),
@@ -60,7 +60,7 @@ class AddressNeighbourImportMapper(Component):
             )
         )
         if neighbour_record:
-            _logger.debug(
+            _logger.info(
                 "Address Neighbour found for %s : %s" % (record, neighbour_record)
             )
             res.update({"odoo_id": neighbour_record.id})

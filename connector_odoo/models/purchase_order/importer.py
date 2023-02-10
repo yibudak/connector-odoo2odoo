@@ -30,7 +30,7 @@ class PurchaseOrderBatchImporter(Component):
         """Run the synchronization"""
 
         updated_ids = self.backend_adapter.search(filters)
-        _logger.debug(
+        _logger.info(
             "search for odoo purchase orders %s returned %s items",
             filters,
             len(updated_ids),
@@ -130,7 +130,7 @@ class PurchaseOrderImportMapper(Component):
                 ("name", "=", record.name),
             ]
         )
-        _logger.debug("found purchase order %s for record %s" % (record.name, record))
+        _logger.info("found purchase order %s for record %s" % (record.name, record))
         if len(order) == 1:
             return {"odoo_id": order.id}
         return {}
@@ -187,7 +187,7 @@ class PurchaseOrderLineBatchImporter(Component):
         """Run the synchronization"""
 
         updated_ids = self.backend_adapter.search(filters)
-        _logger.debug(
+        _logger.info(
             "search for odoo purchase orders %s returned %s items",
             filters,
             len(updated_ids),

@@ -17,7 +17,7 @@ class OdooStockLocation(models.Model):
     ]
     _inherits = {"stock.location": "odoo_id"}
     _description = "Odoo Location"
-
+    _legacy_import = False
     _sql_constraints = [
         (
             "external_id",

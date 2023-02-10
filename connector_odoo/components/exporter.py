@@ -165,7 +165,7 @@ class OdooExporter(AbstractComponent):
         try:
             self.env.cr.execute(sql, (self.binding.id,), log_exceptions=False)
         except psycopg2.OperationalError as err:
-            _logger.debug(
+            _logger.info(
                 "A concurrent job is already exporting the same "
                 "record (%s with id %s). Job delayed later.",
                 self.model._name,

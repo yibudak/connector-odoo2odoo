@@ -24,7 +24,7 @@ class AccountFiscalPositionBatchImporter(Component):
         """Run the synchronization"""
 
         external_ids = self.backend_adapter.search(filters)
-        _logger.debug(
+        _logger.info(
             "search for odoo Account Group %s returned %s items",
             filters,
             len(external_ids),
@@ -62,7 +62,7 @@ class AccountFiscalPositionImportMapper(Component):
             )
         )
         if fp_record:
-            _logger.debug(
+            _logger.info(
                 "Account Fiscal Position found for %s : %s" % (record, fp_record)
             )
             res.update({"odoo_id": fp_record.id})

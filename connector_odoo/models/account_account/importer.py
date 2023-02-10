@@ -24,7 +24,7 @@ class AccountAccountBatchImporter(Component):
         """Run the synchronization"""
 
         external_ids = self.backend_adapter.search(filters)
-        _logger.debug(
+        _logger.info(
             "search for odoo Account Account %s returned %s items",
             filters,
             len(external_ids),
@@ -52,7 +52,7 @@ class AccountAccountImportMapper(Component):
     def check_account_account_exists(self, record):
         res = {}
         account_id = self.env["account.account"].search([("code", "=", record.code)])
-        _logger.debug("Account Account found for %s : %s" % (record, account_id))
+        _logger.info("Account Account found for %s : %s" % (record, account_id))
         if len(account_id) == 1:
             res.update({"odoo_id": account_id.id})
         return res

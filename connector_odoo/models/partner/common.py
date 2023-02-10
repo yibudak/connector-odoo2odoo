@@ -17,6 +17,7 @@ class OdooPartner(models.Model):
     _inherit = "odoo.binding"
     _inherits = {"res.partner": "odoo_id"}
     _description = "External Odoo Partner"
+    _legacy_import = True
 
     _sql_constraints = [
         (
@@ -69,8 +70,8 @@ class PartnerAdapter(Component):
     _odoo_model = "res.partner"
 
     def search(
-        self, filters=None, model=None, offset=0, limit=50, order=None
-    ):  # Todo: limit none olacak debug için 50 yaptım
+        self, filters=None, model=None, offset=0, limit=5000, order=None
+    ):  # Todo: limit none olacak debug için 5 yaptım
         """Search records according to some criteria
         and returns a list of ids
 

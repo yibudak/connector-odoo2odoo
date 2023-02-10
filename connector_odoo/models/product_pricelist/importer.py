@@ -27,7 +27,7 @@ class ProductPricelistBatchImporter(Component):
         """Run the synchronization"""
 
         updated_ids = self.backend_adapter.search(filters)
-        _logger.debug(
+        _logger.info(
             "search for odoo product pricelist %s returned %s items",
             filters,
             len(updated_ids),
@@ -69,7 +69,7 @@ class ProductPricelistImportMapper(Component):
         # multiple pricelist with the same name will be allowed and not
         # duplicated
         pricelist = self.env["product.pricelist"].search([("name", "=", record.name)])
-        _logger.debug("found pricelist %s for record %s" % (pricelist.name, record))
+        _logger.info("found pricelist %s for record %s" % (pricelist.name, record))
         if len(pricelist) == 1:
             return {"odoo_id": pricelist.id}
         return {}
@@ -81,7 +81,7 @@ class ProductPricelistImportMapper(Component):
         currency = self.env["res.currency"].search(
             [("name", "=", record.currency_id.name)]
         )
-        _logger.debug("found currency %s for record %s" % (currency.name, record))
+        _logger.info("found currency %s for record %s" % (currency.name, record))
         if len(currency) == 1:
             return {"currency_id": currency.id}
         raise MappingError("No currency found %s" % currency.name)
@@ -109,7 +109,7 @@ class ProductPricelistItemBatchImporter(Component):
         """Run the synchronization"""
 
         updated_ids = self.backend_adapter.search(filters)
-        _logger.debug(
+        _logger.info(
             "search for odoo product pricelist %s returned %s items",
             filters,
             len(updated_ids),
@@ -192,7 +192,7 @@ class ProductPricelistItemImportMapper(Component):
             ('date_start', '=', record.date_start),
             ('date_end', '=', record.date_end),
         ])
-        _logger.debug(
+        _logger.info(
             'found pricelist %s for record %s' % (pricelist.name, record))
         if len(pricelist) == 1:
             return {'odoo_id': pricelist.id}

@@ -24,7 +24,7 @@ class AccountTaxGroupBatchImporter(Component):
         """Run the synchronization"""
 
         external_ids = self.backend_adapter.search(filters)
-        _logger.debug(
+        _logger.info(
             "search for odoo Account Tax Group %s returned %s items",
             filters,
             len(external_ids),
@@ -56,7 +56,7 @@ class AccountTaxGroupGroupImportMapper(Component):
             .search([("name", "=", record.name)], limit=1)
         )
         if group_record:
-            _logger.debug(
+            _logger.info(
                 "Account Tax Group found for %s : %s" % (record, group_record)
             )
             res.update({"odoo_id": group_record.id})
