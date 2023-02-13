@@ -122,12 +122,12 @@ class OdooBinding(models.AbstractModel):
             return importer.run(external_id, force=force)
 
     @api.model
-    def import_record_legacy(self, backend, external_id, data=None, force=False):
+    def import_record_legacy(self, backend, external_id, force=False):
         """Import a Odoo record"""
         with backend.work_on(self._name) as work:
             self.set_connectors(work)
             importer = work.component(usage="record.importer")
-            return importer.run_legacy(external_id, data=data, force=force)
+            return importer.run_legacy(external_id, force=force)
 
     @api.model
     def export_batch(self, backend, filters=None):

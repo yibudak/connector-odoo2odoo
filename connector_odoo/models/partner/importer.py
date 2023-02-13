@@ -29,45 +29,15 @@ class PartnerBatchImporter(Component):
             "search for odoo partner %s returned %s items", filters, len(external_ids)
         )
         _model = self.work.model_name.lstrip("odoo.")
-        batch_data = self.work.legacy_api.search_read(
+        batch_records = self.work.legacy_api.search_read(
             _model,
             [[("id", "in", external_ids)]],
-            {
-                "fields": [
-                    "write_date",
-                    "id",
-                    "name",
-                    "street",
-                    "street2",
-                    "city",
-                    "zip",
-                    "phone",
-                    "mobile",
-                    "email",
-                    "website",
-                    "lang",
-                    "ref",
-                    "comment",
-                    "company_type",
-                    "sale_warn",
-                    "sale_warn_msg",
-                    "vat",
-                    "tax_office_name",
-                    "category_id",
-                    "neighbour_id",
-                    "user_id",
-                    "country_id",
-                    "state_id",
-                    "parent_id",
-                    "property_account_payable_id",
-                    "property_account_receivable_id",
-                ]
-            },  # Todo: maybe we can filter fields here
+            {"fields": ["id", "parent_id"]},
         )
-        for single_data in batch_data:
-            job_options = {"priority": 15}
+        for single_record in batch_records:
+            job_options = {"priority": 99 if single_record.get("parent_id") else 1}
             self._import_record_legacy(
-                single_data["id"], single_data, job_options=job_options, force=force
+                single_record["id"], job_options=job_options, force=force
             )
 
 
@@ -90,6 +60,7 @@ class PartnerImportMapper(Component):
         ("lang", "lang"),
         ("ref", "ref"),
         ("comment", "comment"),
+        ("ranking", "ranking"),
         ("company_type", "company_type"),
         ("sale_warn", "sale_warn"),
         ("sale_warn_msg", "sale_warn_msg"),
@@ -122,15 +93,16 @@ class PartnerImportMapper(Component):
         if not record.get("vat"):
             return vals
 
-        partner_id = self.env["res.partner"].search(
+        odoo_partner_id = self.env["odoo.res.partner"].search(
             [
+                ("external_id", "=", record["id"]),
                 ("name", "=", record["name"]),
                 ("vat", "=", record["vat"]),
             ]
         )
-        _logger.info("Res partner found for %s : %s" % (record, partner_id))
-        if len(partner_id) == 1:
-            vals.update({"odoo_id": partner_id.id})
+        _logger.info("Res partner found for %s : %s" % (record, odoo_partner_id))
+        if len(odoo_partner_id) == 1:
+            vals.update({"odoo_id": odoo_partner_id.odoo_id.id})
         return vals
 
     @mapping
@@ -192,8 +164,6 @@ class PartnerImportMapper(Component):
             ).id
         return vals
 
-    # TODO: import customer ranks
-
     # TODO: this slows down the import. should we really import the image?
     # @mapping
     # def image(self, record):
@@ -253,12 +223,41 @@ class PartnerImporter(Component):
     _inherits = "AbstractModel"
     _apply_on = ["odoo.res.partner"]
     _legacy_import = True
+    _import_fields = [
+        "write_date",
+        "id",
+        "name",
+        "street",
+        "street2",
+        "city",
+        "zip",
+        "phone",
+        "mobile",
+        "email",
+        "website",
+        "lang",
+        "ref",
+        "comment",
+        "company_type",
+        "sale_warn",
+        "sale_warn_msg",
+        "vat",
+        "tax_office_name",
+        "category_id",
+        "neighbour_id",
+        "user_id",
+        "country_id",
+        "state_id",
+        "parent_id",
+        "ranking",
+        "property_account_payable_id",
+        "property_account_receivable_id",
+    ]
 
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
         # import parent
         _logger.info("Importing dependencies for external ID %s", self.external_id)
-        # TODO FIX: cursor hatasını burası veriyor olabilir
         if self.odoo_record["parent_id"]:
             _logger.info("Importing parent")
             self._import_dependency(

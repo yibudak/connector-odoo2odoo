@@ -101,7 +101,7 @@ class OdooAPI(object):
                     host=self._location.hostname,
                     port=self._location.port,
                     protocol=self._location.protocol,
-                    timeout=10,
+                    timeout=15,
                 )
 
             self._api_login(api)

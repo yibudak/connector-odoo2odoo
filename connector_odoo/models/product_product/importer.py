@@ -30,7 +30,9 @@ class ProductBatchImporter(Component):
         )
         for external_id in external_ids:
             job_options = {"priority": 15}
-            self._import_record(external_id, job_options=job_options, force=force)
+            self._import_record(
+                external_id, job_options=job_options, force=force
+            )
 
 
 class ProductImportMapper(Component):
@@ -48,7 +50,9 @@ class ProductImportMapper(Component):
         ("sale_ok", "sale_ok"),
         ("purchase_ok", "purchase_ok"),
         ("type", "detailed_type"),
+        ("is_published", "is_published"),
         ("public_description", "public_description"),
+        ("v_cari_urun", "v_cari_urun"),
     ]
 
     @mapping
@@ -96,6 +100,15 @@ class ProductImportMapper(Component):
         return {"uom_id": uom.id, "uom_po_id": uom.id}
 
     @mapping
+    def v_cari_urun(self, record):
+        vals = {}
+        if record["v_cari_urun"]:
+            binder = self.binder_for("odoo.res.partner")
+            partner = binder.to_internal(record["v_cari_urun"][0], unwrap=True)
+            vals.update({"v_cari_urun": partner.id})
+        return vals
+
+    @mapping
     def dimensions(self, record):
         binder = self.binder_for("odoo.uom.uom")
         uom = binder.to_internal(record.dimensional_uom_id.id, unwrap=True)
@@ -111,15 +124,6 @@ class ProductImportMapper(Component):
     @mapping
     def price(self, record):
         return {"sale_price": record.attr_price}
-
-    @mapping
-    def v_cari_urun(self, record):
-        vals = {}
-        if record.v_cari_urun:
-            binder = self.binder_for("odoo.res.partner")
-            partner = binder.to_internal(record.v_cari_urun.id, unwrap=True)
-            vals.update({"v_cari_urun": partner.id})
-        return vals
 
     @mapping
     def default_code(self, record):
@@ -150,19 +154,17 @@ class ProductImportMapper(Component):
         return {"categ_id": cat.id}
 
     @mapping
-    def is_published(self, record):
-        return {
-            "is_published": True
-        }
-
-    @mapping
     def image(self, record):
         if self.backend_record.version in (
             "10.0",
             "11.0",
             "12.0",
         ):
-            return {"image_1920": record.image_medium if hasattr(record, "image_medium") else False}
+            return {
+                "image_1920": record.image_medium
+                if hasattr(record, "image_medium")
+                else False
+            }
         else:
             return {"image_1920": record.image_1920}
 

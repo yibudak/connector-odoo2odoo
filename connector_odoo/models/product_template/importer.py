@@ -48,7 +48,6 @@ class ProductTemplateImportMapper(Component):
     _inherit = "odoo.import.mapper"
     _apply_on = ["odoo.product.template"]
 
-    # TODO :     categ, special_price => minimal_price
     direct = [
         ("description", "description"),
         ("weight", "weight"),
@@ -60,7 +59,7 @@ class ProductTemplateImportMapper(Component):
         ("type", "detailed_type"),
         ("is_published", "is_published"),
         ("short_public_description", "description_sale"),
-        # ("public_description", "public_description"), # handled in function
+        # ("public_description", "public_description"),
     ]
 
     @mapping
@@ -179,7 +178,7 @@ class ProductTemplateImporter(Component):
                 self._import_feature_lines(force=force)
         super(ProductTemplateImporter, self)._after_import(binding, force=force)
 
-    def _import_attribute_lines(self, force):
+    def _import_attribute_lines(self, force=False):
         for attr_line in self.odoo_record.attribute_line_ids:
             self._import_dependency(
                 attr_line.id,
@@ -187,7 +186,7 @@ class ProductTemplateImporter(Component):
                 force=force,
             )
 
-    def _import_feature_lines(self, force):
+    def _import_feature_lines(self, force=False):
         for feature_line in self.odoo_record.feature_line_ids:
             self._import_dependency(
                 feature_line.id,

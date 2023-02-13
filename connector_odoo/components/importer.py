@@ -43,7 +43,7 @@ class OdooImporter(AbstractComponent):
         if legacy:
             _model = self.work.model_name.lstrip("odoo.")
             odoo_data = self.work.legacy_api.read(
-                _model, [self.external_id], {"fields": []}
+                _model, [self.external_id], {"fields": self._import_fields}
             )
             if len(odoo_data) != 1:
                 raise IDMissingInBackend(
@@ -63,11 +63,11 @@ class OdooImporter(AbstractComponent):
         it is already up-to-date in Odoo"""
         assert self.odoo_record
         if legacy:
-            odoo_date = self.odoo_record["write_date"]
+            odoo_date = fields.Datetime.from_string(self.odoo_record["write_date"])
         else:
             odoo_date = self.odoo_record.write_date
-        if not hasattr(self.odoo_record, "write_date") or not odoo_date:
-            return  # no update date on Odoo, always import it.
+            if not hasattr(self.odoo_record, "write_date") or not odoo_date:
+                return  # no update date on Odoo, always import it.
         if not binding:
             return  # it does not exist so it should not be skipped
         sync = binding.sync_date
@@ -189,7 +189,8 @@ class OdooImporter(AbstractComponent):
         return binding
 
     def _get_context(self, data):
-        return {}
+        """Build the initial context for CRUD methods."""
+        return {"lang": self.backend_record.default_lang_id.code}
 
     def _update_data(self, map_record, **kwargs):
         return map_record.values(legacy=self.legacy, **kwargs)
@@ -307,7 +308,7 @@ class OdooImporter(AbstractComponent):
         self._after_import(binding, force)
         _logger.info("Finished ({}: {})!".format(self.work.model_name, external_id))
 
-    def run_legacy(self, external_id, data=None, force=False):
+    def run_legacy(self, external_id, force=False):
         """Run the synchronization
         :param external_id: identifier of the record on Odoo
         :param data: dictionary with the data to import
@@ -315,8 +316,8 @@ class OdooImporter(AbstractComponent):
         """
         self.legacy = True
         self.external_id = external_id
-        if not data:
-            data = self._get_odoo_data(legacy=True)
+
+        data = self._get_odoo_data(legacy=True)
 
         lock_name = "import({}, {}, {}, {})".format(
             self.backend_record._name,
@@ -426,12 +427,12 @@ class DirectBatchImporter(AbstractComponent):
         """Import the record directly"""
         self.model.import_record(self.backend_record, external_id, force=force)
 
-    def _import_record_legacy(self, external_id, data=None, **kwargs):
+    def _import_record_legacy(self, external_id, **kwargs):
         """Import the record directly with the legacy API.
         In this case, the data is already fetched by the adapter.
         """
         self.model.import_record_legacy(
-            self.backend_record, external_id, data=data, **kwargs
+            self.backend_record, external_id, **kwargs
         )
 
 
@@ -446,11 +447,11 @@ class DelayedBatchImporter(AbstractComponent):
         delayable = self.model.with_delay(**job_options or {})
         delayable.import_record(self.backend_record, external_id, **kwargs)
 
-    def _import_record_legacy(self, external_id, data=None, job_options=None, **kwargs):
+    def _import_record_legacy(self, external_id, job_options=None, **kwargs):
         """Delay the import of the records with the legacy API.
         In this case, the data is already fetched by the adapter.
         """
         delayable = self.model.with_delay(**job_options or {})
         delayable.import_record_legacy(
-            self.backend_record, external_id, data=data, **kwargs
+            self.backend_record, external_id, **kwargs
         )
