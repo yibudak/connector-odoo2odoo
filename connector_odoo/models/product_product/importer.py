@@ -49,7 +49,6 @@ class ProductImportMapper(Component):
         ("purchase_ok", "purchase_ok"),
         ("type", "detailed_type"),
         ("public_description", "public_description"),
-        # ("v_cari_urun", "v_cari_urun"),
     ]
 
     @mapping
@@ -114,6 +113,15 @@ class ProductImportMapper(Component):
         return {"sale_price": record.attr_price}
 
     @mapping
+    def v_cari_urun(self, record):
+        vals = {}
+        if record.v_cari_urun:
+            binder = self.binder_for("odoo.res.partner")
+            partner = binder.to_internal(record.v_cari_urun.id, unwrap=True)
+            vals.update({"v_cari_urun": partner.id})
+        return vals
+
+    @mapping
     def default_code(self, record):
         code = record.default_code
         if not code:
@@ -176,15 +184,15 @@ class ProductImporter(Component):
     def _import_dependencies(self, force=False):
         if self.backend_record.work_with_variants:
             product_tmpl_id = self.odoo_record.product_tmpl_id
-            tmpl_binder = self.binder_for("odoo.product.template")
-            odoo_product_tmpl_id = tmpl_binder.to_internal(
-                product_tmpl_id.id, unwrap=True
+            self._import_dependency(
+                product_tmpl_id.id, "odoo.product.template", force=force
             )
 
-            if not odoo_product_tmpl_id:
-                self._import_dependency(
-                    product_tmpl_id.id, "odoo.product.template", force=force
-                )
+        if self.odoo_record.v_cari_urun:
+            partner_id = self.odoo_record.v_cari_urun
+            self._import_dependency(
+                partner_id.id, "odoo.res.partner", force=force
+            )
 
         return super()._import_dependencies(force=force)
 

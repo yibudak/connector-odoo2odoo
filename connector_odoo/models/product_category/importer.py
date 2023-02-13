@@ -51,7 +51,7 @@ class ProductCategoryImporter(Component):
         # import parent category
         # the root category has a 0 parent_id
         if record.parent_id:
-            self._import_dependency(record.parent_id.id, self.model, force=True)
+            self._import_dependency(record.parent_id.id, self.model, force=force)
 
     def _after_import(self, binding, force=False):
         """Hook called at the end of the import"""
