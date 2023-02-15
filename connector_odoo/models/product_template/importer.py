@@ -171,8 +171,8 @@ class ProductTemplateImporter(Component):
     def _after_import(self, binding, force=False):
         imported_template = self.binder.to_internal(self.external_id)
         if imported_template:
-            self._import_website_images()
-            self._import_website_attachments(imported_template)
+            self._import_website_images(force=force)
+            self._import_website_attachments(imported_template, force=force)
             if self.backend_record.work_with_variants:
                 self._import_attribute_lines(force=force)
                 self._import_feature_lines(force=force)
@@ -180,26 +180,28 @@ class ProductTemplateImporter(Component):
 
     def _import_attribute_lines(self, force=False):
         for attr_line in self.odoo_record.attribute_line_ids:
-            self._import_dependency(
+            self.env["odoo.product.template.attribute.line"].with_delay().import_record(
+                self.backend_record,
                 attr_line.id,
-                "odoo.product.template.attribute.line",
                 force=force,
             )
+        return True
 
     def _import_feature_lines(self, force=False):
         for feature_line in self.odoo_record.feature_line_ids:
-            self._import_dependency(
+            self.env["odoo.product.template.feature.line"].with_delay().import_record(
+                self.backend_record,
                 feature_line.id,
-                "odoo.product.template.feature.line",
                 force=force,
             )
+        return True
 
-    def _import_website_attachments(self, tmpl_id):
+    def _import_website_attachments(self, tmpl_id, force=False):
         attachment_ids = self.odoo_record.website_attachment_ids
         if attachment_ids:
             for attachment_id in attachment_ids:
                 self.env["odoo.ir.attachment"].with_delay().import_record(
-                    self.backend_record, attachment_id.id
+                    self.backend_record, attachment_id.id, force=force
                 )
             imported_attachments = self.env["ir.attachment"].search(
                 [
@@ -214,12 +216,12 @@ class ProductTemplateImporter(Component):
             )
         return True
 
-    def _import_website_images(self):
+    def _import_website_images(self, force):
         image_ids = self.odoo_record.image_ids
         if image_ids:
             for image_id in image_ids:
                 self.env["odoo.product.image"].with_delay().import_record(
-                    self.backend_record, image_id.id
+                    self.backend_record, image_id.id, force=force
                 )
                 # Todo: imageların hepsi import olmuyor.
         return True

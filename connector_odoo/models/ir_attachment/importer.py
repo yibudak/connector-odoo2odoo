@@ -78,6 +78,15 @@ class IrAttachmentImporter(Component):
     _inherit = "odoo.importer"
     _apply_on = ["odoo.ir.attachment"]
 
+    def _get_binding_with_data(self, binding):
+        """Match the attachment with hashed store_fname."""
+        binding = super(IrAttachmentImporter, self)._get_binding_with_data(binding)
+        if not binding:
+            binding = self.model.search(
+                [("store_fname", "=", self.odoo_record.store_fname)]
+            )
+        return binding
+
     # # FIXUP: We shouldn't skip the import. The record could be updated.
     # def _must_skip(
     #     self,

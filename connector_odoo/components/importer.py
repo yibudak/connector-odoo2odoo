@@ -170,8 +170,10 @@ class OdooImporter(AbstractComponent):
     def _get_binding(self):
         return self.binder.to_internal(self.external_id)
 
-    def _get_binding2(self, binding):
-        return binding  # Todo fix
+    def _get_binding_with_data(self, binding):
+        """This method is used to get the binding with cached odoo_record data.
+        Need to inherit in model specific importer"""
+        return binding
 
     # pylint: disable=W8121
     def _create_data(self, map_record, **kwargs):
@@ -254,7 +256,7 @@ class OdooImporter(AbstractComponent):
         except IDMissingInBackend:
             return _("Record does no longer exist in Odoo")
 
-        binding = self._get_binding2(binding)  # Todo experimental daha iyisini yaparsın
+        binding = self._get_binding_with_data(binding)  # Todo experimental daha iyisini yaparsın
         if self._must_skip():
             _logger.info(
                 "({}: {}) It must be skipped".format(self.work.model_name, external_id)
