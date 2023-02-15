@@ -40,7 +40,7 @@ class ProductImageImportMapper(Component):
 
     direct = [
         ("image_main", "image_1920"),
-        ("name", "name"),
+        # ("name", "name"), # We need to handle missing names
         # ("name", "name"),
         # ("description", "description"),
         # ("type", "type"),
@@ -51,6 +51,13 @@ class ProductImageImportMapper(Component):
         # ("index_content", "index_content"),
         # ("usage", "usage"),
     ]
+
+    @mapping
+    def name(self, record):
+        if record.name:
+            return {"name": record.name}
+        else:
+            return {"name": "Product Image"}
 
     @only_create
     @mapping

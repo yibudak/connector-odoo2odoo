@@ -196,6 +196,12 @@ class ProductImporter(Component):
                 partner_id.id, "odoo.res.partner", force=force
             )
 
+        if self.odoo_record.attribute_value_ids:
+            for attr_value in self.odoo_record.attribute_value_ids:
+                self._import_dependency(
+                    attr_value.id, "odoo.product.attribute.value", force=force
+                )
+
         return super()._import_dependencies(force=force)
 
     def _after_import(self, binding, force=False):
