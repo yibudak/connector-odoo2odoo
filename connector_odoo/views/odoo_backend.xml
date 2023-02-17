@@ -184,7 +184,7 @@
                             <page string="Import" name="import">
                                 <group string="Base Models">
                                     <field name="import_base_from_date" />
-                                    <button name="import_res_currency" type="object" string="Import Currency" class="oe_highlight oe_inline" nolabel="1" />
+                                    <button name="import_res_currency_rate" type="object" string="Import Currency" class="oe_highlight oe_inline" nolabel="1" />
                                     <button name="import_address_fields" type="object" string="Import Address Fields" class="oe_highlight oe_inline" nolabel="1" />
                                 </group>
                                 <group string="Stock">

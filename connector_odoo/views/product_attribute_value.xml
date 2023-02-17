@@ -10,6 +10,7 @@
           <field name="backend_id" />
           <field name="odoo_id" />
           <field name="external_id" />
+          <button name="resync" type="object" string="Resync" />
         </tree>
       </field>
     </record>

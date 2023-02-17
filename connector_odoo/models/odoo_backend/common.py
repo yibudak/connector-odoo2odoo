@@ -457,8 +457,8 @@ class OdooBackend(models.Model):
         self._import_from_date("odoo.account.payment.term", "import_account_from_date")
         return True
 
-    def import_res_currency(self):
-        self._import_from_date("odoo.res.currency", "import_base_from_date")
+    def import_res_currency_rate(self):
+        self._import_from_date("odoo.res.currency.rate", "import_base_from_date")
         return True
 
     def import_address_fields(self):

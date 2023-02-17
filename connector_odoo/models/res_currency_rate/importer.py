@@ -14,6 +14,20 @@ class ResCurrencyRateBatchImporter(Component):
     _inherit = "odoo.delayed.batch.importer"
     _apply_on = ["odoo.res.currency.rate"]
 
+    def run(self, filters=None, force=False):
+        """Run the synchronization"""
+
+        external_ids = self.backend_adapter.search(filters)
+        _logger.info(
+            "search for odoo currency rates %s returned %s items",
+            filters,
+            len(external_ids),
+        )
+        base_priority = 10
+        for external_id in external_ids:
+            job_options = {"priority": base_priority}
+            self._import_record(external_id, job_options=job_options, force=force)
+
 
 class ResCurrencyRateMapper(Component):
     _name = "odoo.res.currency.rate.mapper"
@@ -25,12 +39,16 @@ class ResCurrencyRateMapper(Component):
         ("rate", "rate"),
     ]
 
-    @only_create
     @mapping
     def check_currency_rate_exists(self, record):
         res = {}
 
-        rate_id = self.env["res.currency.rate"].search([("name", "=", record.name)])
+        rate_id = self.env["res.currency.rate"].search(
+            [
+                ("name", "=", record.name),
+                ("currency_id", "=", record.currency_id.id),
+            ]
+        )
         _logger.info("Res currency rate found for %s : %s" % (record, rate_id))
         if len(rate_id) == 1:
             res.update({"odoo_id": rate_id.id})
@@ -49,31 +67,8 @@ class CurrencyRateImporter(Component):
     _inherit = "odoo.importer"
     _apply_on = "odoo.res.currency.rate"
 
-    def _init_import(self, binding, external_id):
-        currency_rate = self.work.odoo_api.api.env["res.currency.rate"]
-        rate_ids = currency_rate.search(
-            [("currency_id", "=", external_id)], order="id desc"
+    def _import_dependencies(self, force=False):
+        self._import_dependency(
+            self.odoo_record.currency_id.id, "odoo.res.currency", force=force
         )
-        total = len(rate_ids)
-        _logger.info(
-            "{} Currency rates found for external currency {}".format(
-                total, external_id
-            )
-        )
-        if rate_ids:
-            i = 0
-            for rate_id in rate_ids:
-                i += 1
-                _logger.info(
-                    "Sending currency rate {} of {} to be processed as a new job".format(
-                        i, total
-                    )
-                )
-                self.env["odoo.res.currency.rate"].with_delay().import_rate(
-                    currency_rate,
-                    self.backend_record,
-                    rate_id,
-                    external_id
-                )
-        super()._init_import(binding, external_id)
-        return False
+        return super()._import_dependencies(force=force)
