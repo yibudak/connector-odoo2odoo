@@ -83,6 +83,14 @@ class ProductTemplate(models.Model):
         for record in self:
             record.product_bind_ids = record.product_variant_ids.mapped("bind_ids")
 
+    def action_fix_main_image(self):
+        """This method fixes main image of the all the products."""
+        for product in self.search([]):
+            variant_img = fields.first(product.product_template_image_ids)
+            if variant_img:
+                product.image_1920 = variant_img.image_1920
+        return True
+
 
 class ProductTemplateAdapter(Component):
     _name = "odoo.product.template.adapter"

@@ -35,12 +35,10 @@ class ProductTemplateBatchImporter(Component):
         for external_id in external_ids:
             # TODO : get the parent_left of the category so that we change
             #   the priority
-            prod_id = self.backend_adapter.read(external_id)
-            cat_id = self.backend_adapter.read(
-                prod_id.categ_id.id, model="product.category"
-            )
-            job_options = {"priority": 15 + cat_id.parent_left or 0}
-            self._import_record(external_id, job_options=job_options)
+            # prod_id = self.backend_adapter.read(external_id)
+            # cat_id = prod_id.categ_id
+            job_options = {"priority": 15}
+            self._import_record(external_id, job_options=job_options, force=force)
 
 
 class ProductTemplateImportMapper(Component):
@@ -156,11 +154,12 @@ class ProductTemplateImporter(Component):
 
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
-        uom_id = self.odoo_record.uom_id
-        self._import_dependency(uom_id.id, "odoo.uom.uom", force=force)
-
-        categ_id = self.odoo_record.categ_id
-        self._import_dependency(categ_id.id, "odoo.product.category", force=force)
+        # Todo yigit: this causes concurrency issues
+        # uom_id = self.odoo_record.uom_id
+        # self._import_dependency(uom_id.id, "odoo.uom.uom", force=force)
+        #
+        # categ_id = self.odoo_record.categ_id
+        # self._import_dependency(categ_id.id, "odoo.product.category", force=force)
 
         return super()._import_dependencies(force=force)
 

@@ -368,7 +368,7 @@ class OdooBackend(models.Model):
     def import_product_product(self):
         if not self.default_import_product:
             return False
-        self._import_from_date("odoo.product.product", "import_product_from_date")
+        self._import_from_date("odoo.product.template", "import_product_from_date")
         return True
 
     def import_product_template(self):

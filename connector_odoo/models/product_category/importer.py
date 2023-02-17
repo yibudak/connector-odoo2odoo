@@ -102,12 +102,11 @@ class ProductCategoryImportMapper(Component):
     _inherit = "odoo.import.mapper"
     _apply_on = "odoo.product.category"
 
-    direct = [("name", "name"), ("sequence", "sequence")]
-
-    @mapping
-    def is_published(self, record):
-        # Todo: aynı fieldı v12'ye de ekle ordan al.
-        return {"is_published": False}
+    direct = [
+        ("name", "name"),
+        ("sequence", "sequence"),
+        ("is_published", "is_published"),
+    ]
 
     @mapping
     def parent_id(self, record):
