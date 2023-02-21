@@ -110,8 +110,9 @@ class ProductCategoryImportMapper(Component):
 
     @mapping
     def parent_id(self, record):
+        vals = {"parent_id": False, "odoo_parent_id": False}
         if not record.parent_id:
-            return
+            return vals
         binder = self.binder_for()
         parent_binding = binder.to_internal(record.parent_id.id)
 
@@ -122,4 +123,5 @@ class ProductCategoryImportMapper(Component):
             )
 
         parent = parent_binding.odoo_id
-        return {"parent_id": parent.id, "odoo_parent_id": parent_binding.id}
+        vals.update({"parent_id": parent.id, "odoo_parent_id": parent_binding.id})
+        return vals
