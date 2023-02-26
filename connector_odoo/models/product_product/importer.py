@@ -3,7 +3,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html)
 
 import logging
-
+import random
 from odoo.addons.component.core import Component
 from odoo.addons.connector.components.mapper import mapping, only_create
 from odoo.addons.connector.exception import MappingError
@@ -28,6 +28,9 @@ class ProductBatchImporter(Component):
         _logger.info(
             "search for odoo products %s returned %s items", filters, len(external_ids)
         )
+        # We shuffle the list of products to avoid to have the same
+        # priority for all the products
+        random.shuffle(external_ids)
         for external_id in external_ids:
             job_options = {"priority": 15}
             self._import_record(
@@ -52,7 +55,6 @@ class ProductImportMapper(Component):
         ("type", "detailed_type"),
         ("is_published", "is_published"),
         ("public_description", "public_description"),
-        ("v_cari_urun", "v_cari_urun"),
     ]
 
     @mapping
@@ -102,9 +104,10 @@ class ProductImportMapper(Component):
     @mapping
     def v_cari_urun(self, record):
         vals = {}
-        if record["v_cari_urun"]:
+        v_cari_urun = record["v_cari_urun"]
+        if v_cari_urun:
             binder = self.binder_for("odoo.res.partner")
-            partner = binder.to_internal(record["v_cari_urun"][0], unwrap=True)
+            partner = binder.to_internal(v_cari_urun.id, unwrap=True)
             vals.update({"v_cari_urun": partner.id})
         return vals
 

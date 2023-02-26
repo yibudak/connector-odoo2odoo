@@ -34,11 +34,10 @@ class ProductPricelistBatchImporter(Component):
         )
         base_priority = 10
         for pricelist in updated_ids:
-            pricelist_id = self.backend_adapter.read(pricelist)
             job_options = {
-                "priority": base_priority + pricelist_id.parent_left or 0,
+                "priority": base_priority,
             }
-            self._import_record(pricelist_id.id, job_options=job_options)
+            self._import_record(pricelist, job_options=job_options)
 
 
 class ProductPricelistImporter(Component):
@@ -107,19 +106,19 @@ class ProductPricelistItemBatchImporter(Component):
 
     def run(self, filters=None, force=False):
         """Run the synchronization"""
-
+        filters += [("pricelist_id", "=", 123)]
         updated_ids = self.backend_adapter.search(filters)
         _logger.info(
-            "search for odoo product pricelist %s returned %s items",
+            "search for odoo product pricelist item %s returned %s items",
             filters,
             len(updated_ids),
         )
         for pricelist in updated_ids:
-            pricelist_id = self.backend_adapter.read(pricelist)
+            # pricelist_id = self.backend_adapter.read(pricelist)
             job_options = {
                 "priority": 10,
             }
-            self._import_record(pricelist_id.id, job_options=job_options)
+            self._import_record(pricelist, job_options=job_options)
 
 
 class ProductPricelistItemImporter(Component):

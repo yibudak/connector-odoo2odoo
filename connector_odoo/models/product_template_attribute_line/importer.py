@@ -18,12 +18,13 @@ class ProductTemlateAttributeLineImporter(Component):
 
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
-        record = self.odoo_record
-        if record.value_ids:
-            for value in record.value_ids:
-                self._import_dependency(
-                    value.id, "odoo.product.attribute.value", force=force
-                )
+        # Todo yigit: check if needed
+        # record = self.odoo_record
+        # if record.value_ids:
+        #     for value in record.value_ids:
+        #         self._import_dependency(
+        #             value.id, "odoo.product.attribute.value", force=force
+        #         )
 
 
 class ProductTemplateAttributeLineMapper(Component):
@@ -38,6 +39,10 @@ class ProductTemplateAttributeLineMapper(Component):
     #     ("required", "required"),
     #     ("use_in_pricing", "use_in_pricing"),
     # ]
+
+    def _get_product_tmpl_id(self, record):
+        binder = self.binder_for("odoo.product.template")
+        return binder.to_internal(record.product_tmpl_id.id, unwrap=True).id
 
     def _get_attribute_id(self, record):
         binder = self.binder_for("odoo.product.attribute")
@@ -59,11 +64,21 @@ class ProductTemplateAttributeLineMapper(Component):
     def attribute_value_id(self, record):
         return {"value_ids": [(6, 0, self._get_attribute_value_id(record))]}
 
-    def _get_product_tmpl_id(self, record):
-        binder = self.binder_for("odoo.product.template")
-        return binder.to_internal(record.product_tmpl_id.id, unwrap=True).id
-
     @only_create
     @mapping
     def product_tmpl_id(self, record):
         return {"product_tmpl_id": self._get_product_tmpl_id(record)}
+
+    # @only_create
+    # @mapping
+    # def check_existing(self, record):
+    #     vals = {}
+    #     attr_id = self.env["product.template.attribute.line"].search(
+    #         [
+    #             ("product_tmpl_id", "=", self._get_product_tmpl_id(record)),
+    #             ("attribute_id", "=", self._get_attribute_id(record)),
+    #         ]
+    #     )
+    #     if attr_id:
+    #         vals["odoo_id"] = attr_id.id
+    #     return vals

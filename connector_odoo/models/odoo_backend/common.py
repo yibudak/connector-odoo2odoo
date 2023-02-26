@@ -331,11 +331,8 @@ class OdooBackend(models.Model):
                     # Todo
                     "odoo.product.category",
                     "odoo.uom.uom",
-                    # "odoo.product.attribute",
-                    "odoo.product.attribute.value",
-                    # "odoo.res.currency",  # bu rateleri de alıyor.
-                    # "odoo.res.currency.rate",
-                    #
+                    "odoo.product.attribute.value",  # this gets attributes too
+                    "odoo.res.currency.rate",  # this gets currencies too
                 ):
                     # import directly, do not delay because this
                     # is a fast operation, a direct return is fine
@@ -368,7 +365,7 @@ class OdooBackend(models.Model):
     def import_product_product(self):
         if not self.default_import_product:
             return False
-        self._import_from_date("odoo.product.template", "import_product_from_date")
+        self._import_from_date("odoo.product.product", "import_product_from_date")
         return True
 
     def import_product_template(self):

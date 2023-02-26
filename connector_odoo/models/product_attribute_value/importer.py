@@ -23,8 +23,8 @@ class ProductAttributeValueImporter(Component):
             record.attribute_id.id, "odoo.product.attribute", force=force
         )
 
-    def _must_skip(self):
-        return self.model.search([("external_id", "=", self.external_id)])
+    # def _must_skip(self):
+    #     return self.model.search([("external_id", "=", self.external_id)])
 
 
 class ProductAttributeValueMapper(Component):

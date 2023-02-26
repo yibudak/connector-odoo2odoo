@@ -94,6 +94,9 @@ class ProductTemplateImportMapper(Component):
 
     @mapping
     def category(self, record):
+        """This method is used to map the category of the product,
+        also it will map the public category of the product."""
+        vals = {}
         categ_id = record["categ_id"]
         binder = self.binder_for("odoo.product.category")
 
@@ -102,7 +105,14 @@ class ProductTemplateImportMapper(Component):
             raise MappingError(
                 "Can't find external category with odoo_id %s." % categ_id.odoo_id
             )
-        return {"categ_id": cat.id}
+        vals["categ_id"] = cat.id
+        public_category = self.env["product.public.category"].search(
+            [("origin_categ_id", "=", cat.id)], limit=1
+        )
+        if public_category:
+            vals["public_categ_ids"] = [(4, public_category.id)]
+
+        return vals
 
     @mapping
     def image(self, record):
@@ -171,7 +181,8 @@ class ProductTemplateImporter(Component):
         imported_template = self.binder.to_internal(self.external_id)
         if imported_template:
             self._import_website_images(force=force)
-            self._import_website_attachments(imported_template, force=force)
+            # Todo yigit: enable here
+            # self._import_website_attachments(imported_template, force=force)
             if self.backend_record.work_with_variants:
                 self._import_attribute_lines(force=force)
                 self._import_feature_lines(force=force)
