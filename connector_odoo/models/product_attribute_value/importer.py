@@ -34,6 +34,7 @@ class ProductAttributeValueMapper(Component):
 
     direct = [
         ("name", "name"),
+        ("numeric_value", "numeric_value"),
     ]
 
     def get_attribute_id(self, record):
