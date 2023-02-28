@@ -182,7 +182,7 @@ class ProductTemplateImporter(Component):
         if imported_template:
             self._import_website_images(force=force)
             # Todo yigit: enable here
-            # self._import_website_attachments(imported_template, force=force)
+            self._import_website_attachments(imported_template, force=force)
             if self.backend_record.work_with_variants:
                 self._import_attribute_lines(force=force)
                 self._import_feature_lines(force=force)

@@ -362,10 +362,22 @@ class OdooBackend(models.Model):
         # )
         return True
 
+    def _get_backend(self):
+        """
+        Get the backend to use for the import. Usually we use this method
+        for cron jobs that are not linked to a specific backend.
+        """
+        self.ensure_one()
+        backend = self
+        if not backend:
+            backend = self.env["res.company"].browse(1).default_odoo_backend_id
+        return backend
+
     def import_product_product(self):
-        if not self.default_import_product:
+        backend = self._get_backend()
+        if not backend.default_import_product:
             return False
-        self._import_from_date("odoo.product.product", "import_product_from_date")
+        backend._import_from_date("odoo.product.product", "import_product_from_date")
         return True
 
     def import_product_template(self):
