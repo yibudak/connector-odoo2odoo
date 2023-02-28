@@ -106,6 +106,8 @@ class ProductCategoryImportMapper(Component):
         ("name", "name"),
         ("sequence", "sequence"),
         ("is_published", "is_published"),
+        ("pricelist_discount_scales", "pricelist_discount_scales"),
+        ("show_in_pricelist", "show_in_pricelist"),
     ]
 
     @mapping

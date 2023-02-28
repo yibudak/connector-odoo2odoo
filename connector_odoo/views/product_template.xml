@@ -13,7 +13,7 @@
             <group string="Odoo Bindings">
                 <field name="bind_ids" readonly="1" nolabel="1" />
             </group>
-
+            <button name="action_fix_main_image" type="object" string="Fix Main Image" class="oe_highlight"/>
             <group string="Child Odoo Bindings">
                 <field name="product_bind_ids" readonly="1" nolabel="1" />
             </group>

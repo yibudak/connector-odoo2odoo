@@ -89,6 +89,7 @@ class ProductTemplate(models.Model):
             variant_img = fields.first(product.product_template_image_ids)
             if variant_img:
                 product.image_1920 = variant_img.image_1920
+                product.image_1024 = variant_img.image_1024
         return True
 
 
