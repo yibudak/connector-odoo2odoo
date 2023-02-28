@@ -367,7 +367,6 @@ class OdooBackend(models.Model):
         Get the backend to use for the import. Usually we use this method
         for cron jobs that are not linked to a specific backend.
         """
-        self.ensure_one()
         backend = self
         if not backend:
             backend = self.env["res.company"].browse(1).default_odoo_backend_id
