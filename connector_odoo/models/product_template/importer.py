@@ -57,6 +57,7 @@ class ProductTemplateImportMapper(Component):
         ("type", "detailed_type"),
         ("is_published", "is_published"),
         ("short_public_description", "description_sale"),
+        ("website_sequence", "website_sequence"),
         # ("public_description", "public_description"),
     ]
 
