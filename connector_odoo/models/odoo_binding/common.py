@@ -73,6 +73,12 @@ class OdooBinding(models.AbstractModel):
 
     _api_conn, _legacy_api_conn = _get_api_conn()
 
+    @property
+    def odoo_api(self):
+        if getattr(self, "_api_conn", None) is None:
+            self._api_conn, self._legacy_api_conn = _get_api_conn()
+        return self._api_conn
+
     @api.constrains("backend_id", "external_id")
     def unique_backend_external_id(self):
         if self.external_id > 0:
@@ -142,6 +148,7 @@ class OdooBinding(models.AbstractModel):
         """Export a record on Odoo"""
         self.ensure_one()
         with backend.work_on(self._name) as work:
+            self.set_connectors(work)
             exporter = work.component(usage="record.exporter")
             return exporter.run(self)
 

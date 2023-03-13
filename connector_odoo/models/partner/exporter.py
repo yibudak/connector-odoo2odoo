@@ -117,7 +117,7 @@ class PartnerExportMapper(Component):
     def address_fields(self, record):
         # Todo fix this function here and import mapper. Temiz değil.
         vals = {}
-        adapter = self.work.odoo_api.api
+        adapter = self.work.odoo_api
         if record.neighbour_id:
             remote_neighbour = adapter.env["address.neighbour"].search(
                 [

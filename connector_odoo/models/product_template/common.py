@@ -88,8 +88,7 @@ class ProductTemplate(models.Model):
         for product in self.search([]):
             variant_img = fields.first(product.product_template_image_ids)
             if variant_img:
-                product.image_1920 = variant_img.image_1920
-                product.image_1024 = variant_img.image_1024
+                product.write({"image_1920": variant_img.image_1920})
         return True
 
 

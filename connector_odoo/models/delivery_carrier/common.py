@@ -24,6 +24,26 @@ class OdooDeliveryCarrier(models.Model):
         ),
     ]
 
+    def _get_external_rate(self, order):
+        """
+        Get external rate for order
+        endpoint res: {
+            "currency_name": order.currency_id.name,
+            external_product_id: quantity
+        }
+        """
+        odoo_order = self.env["odoo.sale.order"].search(
+            [("odoo_id", "=", order.id)]
+        )
+
+        if not (odoo_order and self.odoo_api):
+            return None
+
+        external_carrier = self.odoo_api.env["delivery.carrier"].browse(
+            self.external_id
+        )
+        return external_carrier.rate_endpoint(odoo_order.external_id)
+
     def name_get(self):
         result = []
         for op in self:
