@@ -162,6 +162,7 @@ class OdooSaleOrderLine(models.Model):
     _inherits = {"sale.order.line": "odoo_id"}
     _description = "External Odoo Sale Order Line"
     _legacy_import = False
+
     def resync(self):
         if self.backend_id.main_record == "odoo":
             return self.with_delay().export_record(self.backend_id)

@@ -55,7 +55,7 @@ class PurchaseOrderExportMapper(Component):
         ("date_order", "date_order"),
     ]
 
-    children = [("order_line", "order_line", "odoo.purchase.order.line")]
+    # children = [("order_line", "order_line", "odoo.purchase.order.line")]
 
     @mapping
     def partner_id(self, record):
@@ -83,8 +83,8 @@ class PurchaseOrderLineExportMapper(Component):
         }
 
 
-class PurchaseOrderExportMapChild(ExportMapChild):
-    _model_name = "odoo.purchase.order"
-
-    def format_items(self, items_values):
-        return [(0, 0, item) for item in items_values]
+# class PurchaseOrderExportMapChild(ExportMapChild):
+#     _model_name = "odoo.purchase.order"
+#
+#     def format_items(self, items_values):
+#         return [(0, 0, item) for item in items_values]

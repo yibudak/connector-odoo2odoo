@@ -75,7 +75,14 @@ class OdooBaseExporter(AbstractComponent):
         """
         self.binding = binding
 
-        self.external_id = self.binder.to_external(self.binding, wrap=True)
+        self.external_id = self.binder.to_external(self.binding, wrap=False)
+
+        # if not self.external_id:
+        #     # Todo: this is added to double check if the binding is not
+        #     # created in the meantime. you can also set the wrap=False in
+        #     # the to_external method
+        #     self.external_id = self.binding.external_id
+
         try:
             should_import = self._should_import()
         except IDMissingInBackend:

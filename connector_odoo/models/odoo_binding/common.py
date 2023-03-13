@@ -144,7 +144,7 @@ class OdooBinding(models.AbstractModel):
             exporter = work.component(usage="batch.exporter")
             return exporter.run(filters=filters)
 
-    def export_record(self, backend, local_id, fields=None):
+    def export_record(self, backend, local_id=None, fields=None):
         """Export a record on Odoo"""
         self.ensure_one()
         with backend.work_on(self._name) as work:

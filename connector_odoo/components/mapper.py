@@ -73,3 +73,9 @@ class OdooExportMapper(AbstractComponent):
     _name = "odoo.export.mapper"
     _inherit = ["base.odoo.connector", "base.export.mapper"]
     _usage = "export.mapper"
+
+
+# class OdooExportChildMapper(AbstractComponent):
+#     _name = "odoo.child.export"
+#     _inherit = ["base.odoo.connector", "base.map.child"]
+#     _usage = "export.map.child"

@@ -58,6 +58,7 @@ class SaleOrderExportMapper(Component):
 
     direct = [
         ("name", "name"),
+        ("state", "state"),
     ]
 
     children = [("order_line", "order_line", "odoo.sale.order.line")]
@@ -72,7 +73,7 @@ class SaleOrderExportMapper(Component):
     def pricelist_id(self, record):
         binder = self.binder_for("odoo.product.pricelist")
         pricelist_id = binder.to_external(record.pricelist_id, wrap=True)
-        return {"pricelist_id": 123}  # Todo
+        return {"pricelist_id": pricelist_id or 123}  # 123: Genel Fiyat Listesi
 
     @mapping
     def warehouse_id(self, record):
@@ -127,4 +128,7 @@ class SaleOrderExportMapChild(ExportMapChild):
     _model_name = "odoo.sale.order"
 
     def format_items(self, items_values):
+        self
+        items_values
+        print("yifit")
         return [(0, 0, item) for item in items_values]
