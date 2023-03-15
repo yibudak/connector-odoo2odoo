@@ -83,7 +83,7 @@ class IrAttachmentImporter(Component):
         binding = super(IrAttachmentImporter, self)._get_binding_with_data(binding)
         if not binding:
             binding = self.model.search(
-                [("store_fname", "=", self.odoo_record.store_fname)]
+                [("store_fname", "=", self.odoo_record.store_fname)], limit=1
             )
         return binding
 

@@ -3,6 +3,7 @@
 
 import logging
 
+from odoo.exceptions import ValidationError
 from odoo.addons.component.core import Component
 from odoo.addons.connector.components.mapper import mapping, only_create
 
@@ -18,13 +19,12 @@ class ProductTemlateAttributeLineImporter(Component):
 
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
-        # Todo yigit: check if needed
-        # record = self.odoo_record
-        # if record.value_ids:
-        #     for value in record.value_ids:
-        #         self._import_dependency(
-        #             value.id, "odoo.product.attribute.value", force=force
-        #         )
+        record = self.odoo_record
+        if record.value_ids:
+            for value in record.value_ids:
+                self._import_dependency(
+                    value.id, "odoo.product.attribute.value", force=force
+                )
 
 
 class ProductTemplateAttributeLineMapper(Component):
@@ -52,8 +52,13 @@ class ProductTemplateAttributeLineMapper(Component):
         binder = self.binder_for("odoo.product.attribute.value")
         vals = []
         for value in record.value_ids:
-            local_attribute_value_id = binder.to_internal(value.id, unwrap=True).id
-            vals.append(local_attribute_value_id)
+            local_attribute_value_id = binder.to_internal(value.id, unwrap=True)
+            if local_attribute_value_id:
+                vals.append(local_attribute_value_id.id)
+            else:
+                ValidationError(
+                    "Attribute value %s is not imported yet" % value.name
+                )
         return vals
 
     @mapping
@@ -69,16 +74,16 @@ class ProductTemplateAttributeLineMapper(Component):
     def product_tmpl_id(self, record):
         return {"product_tmpl_id": self._get_product_tmpl_id(record)}
 
-    # @only_create
-    # @mapping
-    # def check_existing(self, record):
-    #     vals = {}
-    #     attr_id = self.env["product.template.attribute.line"].search(
-    #         [
-    #             ("product_tmpl_id", "=", self._get_product_tmpl_id(record)),
-    #             ("attribute_id", "=", self._get_attribute_id(record)),
-    #         ]
-    #     )
-    #     if attr_id:
-    #         vals["odoo_id"] = attr_id.id
-    #     return vals
+    @only_create
+    @mapping
+    def check_existing(self, record):
+        vals = {}
+        attr_id = self.env["product.template.attribute.line"].search(
+            [
+                ("product_tmpl_id", "=", self._get_product_tmpl_id(record)),
+                ("attribute_id", "=", self._get_attribute_id(record)),
+            ]
+        )
+        if attr_id:
+            vals["odoo_id"] = attr_id.id
+        return vals

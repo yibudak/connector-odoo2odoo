@@ -61,6 +61,7 @@
 									<group string="General ">
 										<field name="local_product_domain_filter" string="Local Product Filter" />
 										<field name="external_product_domain_filter" string="Ext. Product Filter" />
+                                        <field name="external_product_template_domain_filter" string="Ext. Product Template Filter" />
 										<field name="local_uom_uom_domain_filter" string="Local UOM Filter" />
 										<field name="external_uom_uom_domain_filter" string="Ext. UOM Filter" />
 										<field name="external_product_pricelist_domain_filter" string="Local Product Filter" />
@@ -76,9 +77,15 @@
 										</group>
 										<group>
 											<div attrs="{'invisible': [('default_import_product', '!=', True)]}">
-												<button name="import_product_product" type="object" string="Import Product" class="oe_highlight oe_inline" help="Import Product" nolabel="1" /> </div>
+												<button name="import_product_product" type="object" string="Import Product.Product" class="oe_highlight oe_inline" help="Import Product variant" nolabel="1" /> </div>
 											<div attrs="{'invisible': [('default_import_product', '!=', True)]}">
 												<field name="import_product_from_date" class="oe_inline" nolabel="1" /> </div>
+										</group>
+                                        <group>
+											<div attrs="{'invisible': [('default_import_product', '!=', True)]}">
+												<button name="import_product_template" type="object" string="Import Product.Template" class="oe_highlight oe_inline" help="Import Product template" nolabel="1" /> </div>
+											<div attrs="{'invisible': [('default_import_product', '!=', True)]}">
+												<field name="import_product_template_from_date" class="oe_inline" nolabel="1" /> </div>
 										</group>
 										<group>
 											<div attrs="{'invisible': [('default_import_product', '!=', True)]}">

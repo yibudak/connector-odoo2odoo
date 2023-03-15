@@ -166,6 +166,11 @@ class OdooBackend(models.Model):
         default="[]",
         help="Filter in the Odoo Destination",
     )
+    external_product_template_domain_filter = fields.Char(
+        string="External Product domain filter",
+        default="[]",
+        help="Filter in the Odoo Destination",
+    )
     local_uom_uom_domain_filter = fields.Char(
         string="Local UOM domain filter",
         default="[]",
@@ -187,6 +192,7 @@ class OdooBackend(models.Model):
     )
     default_import_product = fields.Boolean("Import products")
     import_product_from_date = fields.Datetime()
+    import_product_template_from_date = fields.Datetime()
     import_partner_from_date = fields.Datetime()
     import_user_from_date = fields.Datetime()
     import_categories_from_date = fields.Datetime()
@@ -380,9 +386,12 @@ class OdooBackend(models.Model):
         return True
 
     def import_product_template(self):
-        if not self.default_import_product:
+        backend = self._get_backend()
+        if not backend.default_import_product:
             return False
-        self._import_from_date("odoo.product.template", "import_product_from_date")
+        backend._import_from_date(
+            "odoo.product.template", "import_product_template_from_date"
+        )
         return True
 
     def import_partner(self):
