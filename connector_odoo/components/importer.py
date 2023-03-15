@@ -42,7 +42,7 @@ class OdooImporter(AbstractComponent):
         """Return the raw Odoo data for ``self.external_id``"""
         if legacy:
             _model = self.work.model_name.lstrip("odoo.")
-            odoo_data = self.work.legacy_api.read(
+            odoo_data = self.work.legacy_odoo_api.read(
                 _model, [self.external_id], {"fields": self._import_fields}
             )
             if len(odoo_data) != 1:
@@ -115,7 +115,7 @@ class OdooImporter(AbstractComponent):
                 )
                 # Todo: maybe we should use a context manager
                 setattr(importer.work, "odoo_api", self.work.odoo_api)
-                setattr(importer.work, "legacy_api", self.work.legacy_api)
+                setattr(importer.work, "legacy_odoo_api", self.work.legacy_odoo_api)
             try:
                 if binder.model._legacy_import:
                     importer.run_legacy(external_id, force=force)

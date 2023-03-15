@@ -61,7 +61,7 @@ class OdooConnector2(object):
     def _get_legacy_odoo_api(self):
         protocol = "https" if config["odoo_protocol"] == "jsonrpc+ssl" else "http"
         try:
-            legacy_api = LegacyOdooAPI(
+            legacy_odoo_api = LegacyOdooAPI(
                 f"{protocol}://{self.host}:{self.port}",
                 self.dbname,
                 self.password,
@@ -69,5 +69,5 @@ class OdooConnector2(object):
                 self.lang,
             )
         except:
-            legacy_api = None
-        return legacy_api
+            legacy_odoo_api = None
+        return legacy_odoo_api

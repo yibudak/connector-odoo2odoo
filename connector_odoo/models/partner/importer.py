@@ -29,7 +29,7 @@ class PartnerBatchImporter(Component):
             "search for odoo partner %s returned %s items", filters, len(external_ids)
         )
         _model = self.work.model_name.lstrip("odoo.")
-        batch_records = self.work.legacy_api.search_read(
+        batch_records = self.work.legacy_odoo_api.search_read(
             _model,
             [[("id", "in", external_ids)]],
             {"fields": ["id", "parent_id"]},
@@ -137,7 +137,7 @@ class PartnerImportMapper(Component):
         vals = {}
         if not record["state_id"]:
             return vals
-        state_id = self.work.legacy_api.read(
+        state_id = self.work.legacy_odoo_api.read(
             "res.country.state",
             [record["state_id"][0]],
             {"fields": ["name", "country_id"]},
