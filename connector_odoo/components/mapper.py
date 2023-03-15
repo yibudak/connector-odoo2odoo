@@ -33,6 +33,12 @@ class OdooImportMapper(AbstractComponent):
         model_id = record.id
         binder = self.binder_for()
         res_id = binder.to_internal(model_id, unwrap=True)
+
+        # If the record is not found with traditional way,
+        # We try to get it with `_get_binding_with_data` method.
+        if not res_id and self.options.get("binding"):
+            res_id = self.options["binding"].odoo_id
+
         return {"odoo_id": res_id.id if res_id else None}
 
     @mapping
