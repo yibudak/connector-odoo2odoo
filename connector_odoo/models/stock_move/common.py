@@ -11,7 +11,7 @@ class OdooStockMove(models.Model):
     _inherit = "odoo.binding"
     _inherits = {"stock.move": "odoo_id"}
     _description = "External Odoo Stock Move"
-    _legacy_import = False
+
     def resync(self):
         if self.backend_id.main_record == "odoo":
             return self.with_delay().export_record(self.backend_id)

@@ -36,38 +36,23 @@ class OdooImporter(AbstractComponent):
         super(OdooImporter, self).__init__(work_context)
         self.external_id = None
         self.odoo_record = None
-        self.legacy = False
 
-    def _get_odoo_data(self, legacy=False):
+    def _get_odoo_data(self):
         """Return the raw Odoo data for ``self.external_id``"""
-        if legacy:
-            _model = self.work.model_name.lstrip("odoo.")
-            odoo_data = self.work.legacy_odoo_api.read(
-                _model, [self.external_id], {"fields": self._import_fields}
-            )
-            if len(odoo_data) != 1:
-                raise IDMissingInBackend(
-                    "No record found for ID %s:%s" % (_model, self.external_id)
-                )
-            data = odoo_data[0]
-        else:
-            data = self.backend_adapter.read(self.external_id)
+        data = self.backend_adapter.read(self.external_id)
         return data
 
     def _before_import(self):
         """Hook called before the import, when we have the Odoo
         data"""
 
-    def _is_uptodate(self, binding, legacy=False):
+    def _is_uptodate(self, binding):
         """Return True if the import should be skipped because
         it is already up-to-date in Odoo"""
         assert self.odoo_record
-        if legacy:
-            odoo_date = fields.Datetime.from_string(self.odoo_record["write_date"])
-        else:
-            odoo_date = self.odoo_record.write_date
-            if not hasattr(self.odoo_record, "write_date") or not odoo_date:
-                return  # no update date on Odoo, always import it.
+        odoo_date = self.odoo_record.write_date
+        if not hasattr(self.odoo_record, "write_date") or not odoo_date:
+            return  # no update date on Odoo, always import it.
         if not binding:
             return  # it does not exist so it should not be skipped
         sync = binding.sync_date
@@ -113,14 +98,8 @@ class OdooImporter(AbstractComponent):
                 importer = self.component(
                     usage="record.importer", model_name=binding_model
                 )
-                # Todo: maybe we should use a context manager
-                setattr(importer.work, "odoo_api", self.work.odoo_api)
-                setattr(importer.work, "legacy_odoo_api", self.work.legacy_odoo_api)
             try:
-                if binder.model._legacy_import:
-                    importer.run_legacy(external_id, force=force)
-                else:
-                    importer.run(external_id, force=force)
+                importer.run(external_id, force=force)
             except NothingToDoJob:
                 _logger.info(
                     "Dependency import of %s(%s) has been ignored.",
@@ -177,7 +156,7 @@ class OdooImporter(AbstractComponent):
 
     # pylint: disable=W8121
     def _create_data(self, map_record, **kwargs):
-        return map_record.values(for_create=True, legacy=self.legacy, **kwargs)
+        return map_record.values(for_create=True, **kwargs)
 
     def _create(self, data):
         """Create the Odoo record"""
@@ -195,7 +174,7 @@ class OdooImporter(AbstractComponent):
         return {"lang": self.backend_record.default_lang_id.code}
 
     def _update_data(self, map_record, **kwargs):
-        return map_record.values(legacy=self.legacy, **kwargs)
+        return map_record.values(**kwargs)
 
     def _update(self, binding, data):
         """Update an Odoo record"""
@@ -310,90 +289,6 @@ class OdooImporter(AbstractComponent):
         self._after_import(binding, force)
         _logger.info("Finished ({}: {})!".format(self.work.model_name, external_id))
 
-    def run_legacy(self, external_id, force=False):
-        """Run the synchronization
-        :param external_id: identifier of the record on Odoo
-        :param data: dictionary with the data to import
-        :param force: force the importation
-        """
-        self.legacy = True
-        self.external_id = external_id
-
-        data = self._get_odoo_data(legacy=True)
-
-        lock_name = "import({}, {}, {}, {})".format(
-            self.backend_record._name,
-            self.backend_record.id,
-            self.work.model_name,
-            external_id,
-        )
-        _logger.info("Initializating {}".format(lock_name))
-        binding = self._get_binding()
-        self.odoo_record = data
-        must_continue = self._init_import(binding, external_id)
-        if not must_continue:
-            _logger.info(
-                "({}: {}) must no be imported!".format(
-                    self.work.model_name, external_id
-                )
-            )
-            return
-
-        _logger.info("Reading data for {}".format(lock_name))
-
-        if self._must_skip():
-            _logger.info(
-                "({}: {}) It must be skipped".format(self.work.model_name, external_id)
-            )
-            return
-
-        if not force and self._is_uptodate(binding, legacy=True):
-            _logger.info("Already up-to-date")
-            return _("Already up-to-date.")
-
-        # Keep a lock on this import until the transaction is committed
-        # The lock is kept since we have detected that the informations
-        # will be updated into Odoo
-        self.advisory_lock_or_retry(lock_name)
-        _logger.info("Resource {} locked".format(lock_name))
-        if not binding:
-            binding = self._get_binding_odoo_id_changed(binding)
-        self._before_import()
-
-        # import the missing linked resources
-        _logger.info(
-            "Importing dependencies ({}: {})".format(self.work.model_name, external_id)
-        )
-        self._import_dependencies(force=force)
-
-        _logger.info("Mapping data ({}: {})".format(self.work.model_name, external_id))
-        map_record = self._map_data()
-        try:
-            if binding:
-                record = self._update_data(map_record)
-                self._update(binding, record)
-            else:
-                record = self._create_data(map_record)
-                binding = self._create(record)
-        except Exception as e:
-            _logger.error(
-                "An error occurred while connecting the record {}: {}".format(
-                    self.external_id, e
-                )
-            )
-            raise
-
-        _logger.info("Binding ({}: {})".format(self.work.model_name, external_id))
-        self.binder.bind(self.external_id, binding)
-
-        _logger.info(
-            "Check if after import process must be executed ({}: {})".format(
-                self.work.model_name, external_id
-            )
-        )
-        self._after_import(binding, force)
-        _logger.info("Finished ({}: {})!".format(self.work.model_name, external_id))
-
 
 class BatchImporter(AbstractComponent):
     """The role of a BatchImporter is to search for a list of
@@ -429,14 +324,6 @@ class DirectBatchImporter(AbstractComponent):
         """Import the record directly"""
         self.model.import_record(self.backend_record, external_id, force=force)
 
-    def _import_record_legacy(self, external_id, **kwargs):
-        """Import the record directly with the legacy API.
-        In this case, the data is already fetched by the adapter.
-        """
-        self.model.import_record_legacy(
-            self.backend_record, external_id, **kwargs
-        )
-
 
 class DelayedBatchImporter(AbstractComponent):
     """Delay import of the records"""
@@ -448,12 +335,3 @@ class DelayedBatchImporter(AbstractComponent):
         """Delay the import of the records"""
         delayable = self.model.with_delay(**job_options or {})
         delayable.import_record(self.backend_record, external_id, **kwargs)
-
-    def _import_record_legacy(self, external_id, job_options=None, **kwargs):
-        """Delay the import of the records with the legacy API.
-        In this case, the data is already fetched by the adapter.
-        """
-        delayable = self.model.with_delay(**job_options or {})
-        delayable.import_record_legacy(
-            self.backend_record, external_id, **kwargs
-        )

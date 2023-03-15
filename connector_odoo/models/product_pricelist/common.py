@@ -17,7 +17,6 @@ class OdooProductPricelist(models.Model):
     _inherit = "odoo.binding"
     _inherits = {"product.pricelist": "odoo_id"}
     _description = "Odoo Product Pricelist"
-    _legacy_import = False
     _sql_constraints = [
         (
             "external_id",
@@ -57,7 +56,6 @@ class OdooProductPricelistItem(models.Model):
     _inherit = "odoo.binding"
     _inherits = {"product.pricelist.item": "odoo_id"}
     _description = "Odoo Product Pricelist Item"
-    _legacy_import = False
     def resync(self):
         if self.backend_id.main_record == "odoo":
             return self.with_delay().export_record(self.backend_id)

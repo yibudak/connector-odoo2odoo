@@ -5,6 +5,7 @@ import ast
 import logging
 
 from odoo.addons.component.core import Component
+from odoo.exceptions import ValidationError
 from odoo.addons.connector.components.mapper import mapping, only_create
 
 # from odoo.addons.connector.exception import MappingError
@@ -117,19 +118,22 @@ class PartnerExportMapper(Component):
     def address_fields(self, record):
         # Todo fix this function here and import mapper. Temiz değil.
         vals = {}
-        adapter = self.work.odoo_api
+        adapter = self.work.odoo_api.api
         if record.neighbour_id:
+            odoo_neighbour = self.env["odoo.address.neighbour"].search(
+                [("odoo_id", "=", record.neighbour_id.id)]
+            )
+            if not odoo_neighbour:
+                raise ValidationError(
+                    "Neighbour %s not found in Odoo" % record.neighbour_id.name
+                )
             remote_neighbour = adapter.env["address.neighbour"].search(
                 [
-                    ("name", "=", record.neighbour_id.name),
-                    # ("region_id.name", "=", record.neighbour_id.region_id.name),
+                    ("id", "=", odoo_neighbour.external_id),
                 ],
                 limit=1,
             )
             if remote_neighbour:
-                remote_neighbour = adapter.env["address.neighbour"].browse(
-                    remote_neighbour[0]
-                )
                 vals["neighbour_id"] = remote_neighbour.id
                 vals["region_id"] = remote_neighbour.region_id.id
                 vals["district_id"] = remote_neighbour.region_id.district_id.id

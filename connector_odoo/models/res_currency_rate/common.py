@@ -15,7 +15,6 @@ class OdooResCurrencyRate(models.Model):
     _inherit = ["odoo.binding"]
     _inherits = {"res.currency.rate": "odoo_id"}
     _description = "Odoo Currency rate"
-    _legacy_import = False
     _sql_constraints = [
         (
             "external_id",

@@ -12,7 +12,6 @@ class OdooAddressRegion(models.Model):
     _inherit = "odoo.binding"
     _inherits = {"address.region": "odoo_id"}
     _description = "External Odoo Address District"
-    _legacy_import = False
     _sql_constraints = [
         (
             "external_id",

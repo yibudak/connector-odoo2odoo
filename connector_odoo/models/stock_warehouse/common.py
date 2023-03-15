@@ -17,7 +17,6 @@ class OdooStockWarehouse(models.Model):
     ]
     _inherits = {"stock.warehouse": "odoo_id"}
     _description = "Odoo Warehouse"
-    _legacy_import = False
     _sql_constraints = [
         (
             "external_id",

@@ -12,7 +12,6 @@ class OdooAccountFiscalPosition(models.Model):
     _inherit = "odoo.binding"
     _inherits = {"account.fiscal.position": "odoo_id"}
     _description = "External Odoo Account Account"
-    _legacy_import = False
     _sql_constraints = [
         (
             "external_id",

@@ -74,16 +74,16 @@ class ProductTemplateAttributeLineMapper(Component):
     def product_tmpl_id(self, record):
         return {"product_tmpl_id": self._get_product_tmpl_id(record)}
 
-    @only_create
-    @mapping
-    def check_existing(self, record):
-        vals = {}
-        attr_id = self.env["product.template.attribute.line"].search(
-            [
-                ("product_tmpl_id", "=", self._get_product_tmpl_id(record)),
-                ("attribute_id", "=", self._get_attribute_id(record)),
-            ]
-        )
-        if attr_id:
-            vals["odoo_id"] = attr_id.id
-        return vals
+    # @only_create
+    # @mapping
+    # def check_existing(self, record):
+    #     vals = {}
+    #     attr_id = self.env["product.template.attribute.line"].search(
+    #         [
+    #             ("product_tmpl_id", "=", self._get_product_tmpl_id(record)),
+    #             ("attribute_id", "=", self._get_attribute_id(record)),
+    #         ]
+    #     )
+    #     if attr_id:
+    #         vals["odoo_id"] = attr_id.id
+    #     return vals

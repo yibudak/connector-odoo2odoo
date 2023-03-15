@@ -17,7 +17,6 @@ class OdooSaleOrder(models.Model):
     _inherit = "odoo.binding"
     _inherits = {"sale.order": "odoo_id"}
     _description = "External Odoo Sale Order"
-    _legacy_import = False
     backend_amount_total = fields.Float()
     backend_amount_tax = fields.Float()
     backend_state = fields.Char()
@@ -161,7 +160,6 @@ class OdooSaleOrderLine(models.Model):
     _inherit = "odoo.binding"
     _inherits = {"sale.order.line": "odoo_id"}
     _description = "External Odoo Sale Order Line"
-    _legacy_import = False
 
     def resync(self):
         if self.backend_id.main_record == "odoo":

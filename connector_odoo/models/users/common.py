@@ -15,7 +15,6 @@ class OdooUser(models.Model):
     _inherit = "odoo.binding"
     _inherits = {"res.users": "odoo_id"}
     _description = "External Odoo User"
-    _legacy_import = True
     _sql_constraints = [
         (
             "external_id",

@@ -12,7 +12,6 @@ class OdooAddressNeighbour(models.Model):
     _inherit = "odoo.binding"
     _inherits = {"address.neighbour": "odoo_id"}
     _description = "External Odoo Address District"
-    _legacy_import = False # Todo yigit: should be implemented
     _sql_constraints = [
         (
             "external_id",

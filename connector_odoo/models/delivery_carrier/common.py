@@ -15,7 +15,6 @@ class OdooDeliveryCarrier(models.Model):
     _inherit = "odoo.binding"
     _inherits = {"delivery.carrier": "odoo_id"}
     _description = "External Odoo Delivery Carrier"
-    _legacy_import = False
     _sql_constraints = [
         (
             "external_id",

@@ -18,7 +18,6 @@ class OdooProductImage(models.Model):
     _inherit = "odoo.binding"
     _inherits = {"product.image": "odoo_id"}
     _description = "External Odoo Product Images"
-    _legacy_import = False
     _sql_constraints = [
         (
             "external_id",

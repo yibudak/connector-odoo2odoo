@@ -14,7 +14,6 @@ class OdooProductUOM(models.Model):
     ]
     _inherits = {"uom.uom": "odoo_id"}
     _description = "Odoo Product UOM"
-    _legacy_import = False
     _sql_constraints = [
         (
             "external_id",

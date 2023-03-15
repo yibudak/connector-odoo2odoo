@@ -303,29 +303,37 @@ class OdooBackend(models.Model):
         self.ensure_one()
         self.write({"state": "draft"})
 
-    # @contextmanager
-    # def work_on(self, model_name, **kwargs):
-    #     """
-    #     Place the connexion here regarding the documentation
-    #     http://odoo-connector.com/api/api_components.html\
-    #         #odoo.addons.component.models.collection.Collection
-    #     """
-    #     self.ensure_one()
-    #     lang = self.get_default_language_code()
-    #     odoo_location = OdooLocation(
-    #         hostname=self.hostname,
-    #         login=self.login,
-    #         password=self.password,
-    #         database=self.database,
-    #         port=self.port,
-    #         version=self.version,
-    #         protocol=self.protocol,
-    #         lang_id=lang,
-    #     )
-    #     with OdooAPI(odoo_location) as odoo_api:
-    #         _super = super(OdooBackend, self.with_context(lang=lang))
-    #         with _super.work_on(model_name, odoo_api=odoo_api, **kwargs) as work:
-    #             yield work
+    @contextmanager
+    def work_on(self, model_name, **kwargs):
+        """
+        Place the connexion here regarding the documentation
+        http://odoo-connector.com/api/api_components.html\
+            #odoo.addons.component.models.collection.Collection
+        """
+        self.ensure_one()
+        lang = self.get_default_language_code()
+        odoo_location = OdooLocation(
+            hostname=self.hostname,
+            login=self.login,
+            password=self.password,
+            database=self.database,
+            port=self.port,
+            version=self.version,
+            protocol=self.protocol,
+            lang_id=lang,
+        )
+        # legacy_odoo_api = LegacyOdooAPI(
+        #     f"{protocol}://{self.host}:{self.port}",
+        #     self.dbname,
+        #     self.password,
+        #     self.username,
+        #     self.lang,
+        # )
+        with OdooAPI(odoo_location) as odoo_api:
+            _super = super(OdooBackend, self.with_context(lang=lang))
+            # from the components we'll be able to do: self.work.odoo_api
+            with _super.work_on(model_name, odoo_api=odoo_api, **kwargs) as work:
+                yield work
 
     def synchronize_basedata(self):
         self.ensure_one()

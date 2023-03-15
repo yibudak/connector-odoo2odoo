@@ -11,7 +11,6 @@ class OdooResCurrency(models.Model):
     _inherit = ["odoo.binding"]
     _inherits = {"res.currency": "odoo_id"}
     _description = "Odoo Currency"
-    _legacy_import = False
     _sql_constraints = [
         (
             "external_id",

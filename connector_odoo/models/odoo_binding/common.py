@@ -2,9 +2,6 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
-from .connector import OdooConnector2
-
-connector = OdooConnector2()
 
 
 class OdooBinding(models.AbstractModel):
@@ -57,22 +54,12 @@ class OdooBinding(models.AbstractModel):
     def resync(self):
         return self.with_delay().export_record(self.backend_id)
 
-    def set_connectors(self, work_context):
-        """This method set the connectors to the work context.
-        If any connector is not set, it will be created.
-        """
-        # Todo: check if the connector is already set or not
-        setattr(work_context, "odoo_api", connector.odoo_api)
-        setattr(work_context, "legacy_odoo_api", connector.legacy_odoo_api)
-        return True
-
     @api.model
     def import_batch(self, backend, filters=None):
         """Prepare the import of records modified on Odoo"""
         if filters is None:
             filters = {}
         with backend.work_on(self._name) as work:
-            self.set_connectors(work)
             importer = work.component(usage="batch.importer")
             return importer.run(filters=filters, force=backend.force)
 
@@ -80,17 +67,8 @@ class OdooBinding(models.AbstractModel):
     def import_record(self, backend, external_id, force=False):
         """Import a Odoo record"""
         with backend.work_on(self._name) as work:
-            self.set_connectors(work)
             importer = work.component(usage="record.importer")
             return importer.run(external_id, force=force)
-
-    @api.model
-    def import_record_legacy(self, backend, external_id, force=False):
-        """Import a Odoo record"""
-        with backend.work_on(self._name) as work:
-            self.set_connectors(work)
-            importer = work.component(usage="record.importer")
-            return importer.run_legacy(external_id, force=force)
 
     @api.model
     def export_batch(self, backend, filters=None):
@@ -105,7 +83,6 @@ class OdooBinding(models.AbstractModel):
         """Export a record on Odoo"""
         self.ensure_one()
         with backend.work_on(self._name) as work:
-            self.set_connectors(work)
             exporter = work.component(usage="record.exporter")
             return exporter.run(self)
 

@@ -16,7 +16,6 @@ class OdooPartnerCategory(models.Model):
     _inherit = "odoo.binding"
     _inherits = {"res.partner.category": "odoo_id"}
     _description = "External Odoo Partner Category"
-    _legacy_import = False
     _sql_constraints = [
         (
             "external_id",

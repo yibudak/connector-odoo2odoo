@@ -30,7 +30,7 @@ class OdooImportMapper(AbstractComponent):
     @mapping
     def odoo_id(self, record):
         """Value is assigned to odoo_id so as not to duplicate records already imported"""
-        model_id = record["id"] if self.options.legacy else record.id
+        model_id = record.id
         binder = self.binder_for()
         res_id = binder.to_internal(model_id, unwrap=True)
         return {"odoo_id": res_id.id if res_id else None}
@@ -49,12 +49,7 @@ class OdooImportMapper(AbstractComponent):
         """
         if callable(from_attr):
             return from_attr(self, record, to_attr)
-
-        if isinstance(record, dict):  # legacy API
-            value = record.get(from_attr, False)
-        else:
-            value = record[from_attr] if hasattr(record, from_attr) else False
-
+        value = record[from_attr] if hasattr(record, from_attr) else False
         if not value:
             return False
 

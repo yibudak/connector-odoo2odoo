@@ -18,7 +18,6 @@ class OdooStockPicking(models.Model):
     ]
     _inherits = {"stock.picking": "odoo_id"}
     _description = "Odoo Picking"
-    _legacy_import = False
     backend_state = fields.Char()
 
     _sql_constraints = [

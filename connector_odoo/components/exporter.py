@@ -319,8 +319,6 @@ class OdooExporter(AbstractComponent):
 
         if not rel_binder.to_external(binding, wrap=wrap):
             exporter = self.component(usage=component_usage, model_name=binding_model)
-            setattr(exporter.work, "odoo_api", self.work.odoo_api)
-            setattr(exporter.work, "legacy_odoo_api", self.work.legacy_odoo_api)
             exporter.run(binding)
 
     def _export_dependencies(self):

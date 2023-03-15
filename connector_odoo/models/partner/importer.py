@@ -20,32 +20,22 @@ class PartnerBatchImporter(Component):
     _name = "odoo.res.partner.batch.importer"
     _inherit = "odoo.delayed.batch.importer"
     _apply_on = ["odoo.res.partner"]
-    _legacy_import = True
 
     def run(self, filters=None, force=False):
-        """Run the synchronization with LEGACY API"""
+        """Run the synchronization"""
         external_ids = self.backend_adapter.search(filters)
-        _logger.info(
+        _logger.debug(
             "search for odoo partner %s returned %s items", filters, len(external_ids)
         )
-        _model = self.work.model_name.lstrip("odoo.")
-        batch_records = self.work.legacy_odoo_api.search_read(
-            _model,
-            [[("id", "in", external_ids)]],
-            {"fields": ["id", "parent_id"]},
-        )
-        for single_record in batch_records:
-            job_options = {"priority": 99 if single_record.get("parent_id") else 1}
-            self._import_record_legacy(
-                single_record["id"], job_options=job_options, force=force
-            )
+        for external_id in external_ids:
+            job_options = {"priority": 15}
+            self._import_record(external_id, job_options=job_options)
 
 
 class PartnerImportMapper(Component):
     _name = "odoo.res.partner.import.mapper"
     _inherit = "odoo.import.mapper"
     _apply_on = ["odoo.res.partner"]
-    _legacy_import = True
 
     direct = [
         ("name", "name"),
@@ -137,7 +127,7 @@ class PartnerImportMapper(Component):
         vals = {}
         if not record["state_id"]:
             return vals
-        state_id = self.work.legacy_odoo_api.read(
+        state_id = self.work.odoo_api.api.read(
             "res.country.state",
             [record["state_id"][0]],
             {"fields": ["name", "country_id"]},
@@ -222,7 +212,6 @@ class PartnerImporter(Component):
     _inherit = "odoo.importer"
     _inherits = "AbstractModel"
     _apply_on = ["odoo.res.partner"]
-    _legacy_import = True
     _import_fields = [
         "write_date",
         "id",
