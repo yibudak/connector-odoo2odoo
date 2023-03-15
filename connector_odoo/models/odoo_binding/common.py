@@ -7,16 +7,17 @@ from odoo.addons.connector_odoo.components.backend_adapter import OdooAPI, OdooL
 from odoo.addons.connector_odoo.components.legacy_adapter import LegacyOdooAPI
 from odoo.tools import config
 
+host = config["odoo_host"]
+port = config["odoo_port"]
+dbname = config["odoo_dbname"]
+username = config["odoo_login"]
+password = config["odoo_passwd"]
+lang = config["odoo_lang"]
 
-def _get_api_conn():
+
+def _get_odoo_api():
     """Return a connection to the Odoo API. Need to set parameters in the
     configuration file. We should do this to avoid authentication on every RPC call"""
-    host = config["odoo_host"]
-    port = config["odoo_port"]
-    dbname = config["odoo_dbname"]
-    username = config["odoo_login"]
-    password = config["odoo_passwd"]
-    lang = config["odoo_lang"]
     try:
         odoo_location = OdooLocation(
             hostname=host,
@@ -28,10 +29,13 @@ def _get_api_conn():
             protocol=config["odoo_protocol"],
             lang_id=lang,
         )
-        connection = OdooAPI(odoo_location).api
+        odoo_api = OdooAPI(odoo_location).api
     except:
-        connection = None
+        odoo_api = None
+    return odoo_api
 
+
+def _get_legacy_odoo_api():
     protocol = "https" if config["odoo_protocol"] == "jsonrpc+ssl" else "http"
     try:
         legacy_api = LegacyOdooAPI(
@@ -39,7 +43,7 @@ def _get_api_conn():
         )
     except:
         legacy_api = None
-    return connection, legacy_api
+    return legacy_api
 
 
 class OdooBinding(models.AbstractModel):
@@ -71,13 +75,20 @@ class OdooBinding(models.AbstractModel):
         )
     ]
 
-    _api_conn, _legacy_api_conn = _get_api_conn()
+    _odoo_api = None
+    _legacy_odoo_api = None
 
     @property
     def odoo_api(self):
         if getattr(self, "_api_conn", None) is None:
-            self._api_conn, self._legacy_api_conn = _get_api_conn()
-        return self._api_conn
+            self._odoo_api = _get_odoo_api()
+        return self._odoo_api
+
+    @property
+    def legacy_odoo_api(self):
+        if getattr(self, "_legacy_api_conn", None) is None:
+            self._legacy_odoo_api = _get_legacy_odoo_api()
+        return self._legacy_odoo_api
 
     @api.constrains("backend_id", "external_id")
     def unique_backend_external_id(self):
@@ -105,8 +116,8 @@ class OdooBinding(models.AbstractModel):
         If any connector is not set, it will be created.
         """
         # Todo: check if the connector is already set or not
-        setattr(work_context, "odoo_api", self._api_conn)
-        setattr(work_context, "legacy_api", self._legacy_api_conn)
+        setattr(work_context, "odoo_api", self.odoo_api)
+        setattr(work_context, "legacy_odoo_api", self.legacy_odoo_api)
         return True
 
     @api.model
