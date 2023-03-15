@@ -89,6 +89,7 @@ class ProductImportMapper(Component):
         return {
             "product_tmpl_id": local_template_id.id,
             "product_template_attribute_value_ids": [(6, 0, attr_line_vals)],
+            "combination_indices": ','.join([str(i) for i in sorted(attr_line_vals)]),
         }
 
     @mapping
