@@ -450,6 +450,14 @@ class OdooBackend(models.Model):
         self._import_from_date("odoo.delivery.carrier", "import_stock_from_date")
         return True
 
+    def import_delivery_price_rules(self):
+        self._import_from_date("odoo.delivery.price.rule", "import_stock_from_date")
+        return True
+
+    def import_delivery_regions(self):
+        self._import_from_date("odoo.delivery.region", "import_stock_from_date")
+        return True
+
     def import_account_groups(self):
         if not self.default_import_account:
             return False

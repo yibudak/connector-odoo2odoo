@@ -166,11 +166,11 @@ class ProductTemplateImporter(Component):
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
         # Todo yigit: this causes concurrency issues
-        # uom_id = self.odoo_record.uom_id
-        # self._import_dependency(uom_id.id, "odoo.uom.uom", force=force)
-        #
-        # categ_id = self.odoo_record.categ_id
-        # self._import_dependency(categ_id.id, "odoo.product.category", force=force)
+        uom_id = self.odoo_record.uom_id
+        self._import_dependency(uom_id.id, "odoo.uom.uom", force=force)
+
+        categ_id = self.odoo_record.categ_id
+        self._import_dependency(categ_id.id, "odoo.product.category", force=force)
 
         return super()._import_dependencies(force=force)
 

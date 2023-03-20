@@ -27,14 +27,7 @@ class DeliveryCarrierBatchImporter(Component):
         )
         for external_id in external_ids:
             job_options = {"priority": 15}
-            self._import_record(external_id, job_options=job_options)
-
-    def _import_dependencies(self, force=False):
-        """Import the dependencies for the record"""
-        record = self.odoo_record
-        self._import_dependency(
-            record.product_id.id, "odoo.product.product", force=force
-        )
+            self._import_record(external_id, job_options=job_options, force=force)
 
 
 class DeliveryCarrierMapper(Component):
@@ -44,11 +37,44 @@ class DeliveryCarrierMapper(Component):
 
     direct = [
         ("name", "name"),
+        ("carrier_barcode_type", "carrier_barcode_type"),
+        ("payment_type", "payment_type"),
+        ("margin", "margin"),
+        ("attach_barcode", "attach_barcode"),
+        ("send_sms_customer", "send_sms_customer"),
+        ("barcode_text_1", "barcode_text_1"),
+        ("weight_calc_percentage", "weight_calc_percentage"),
+        ("show_in_price_table", "show_in_price_table"),
+        ("fuel_surcharge_percentage", "fuel_surcharge_percentage"),
+        ("environment_fee_per_kg", "environment_fee_per_kg"),
+        ("postal_charge_percentage", "postal_charge_percentage"),
+        ("Emergency_fee_per_kg", "Emergency_fee_per_kg"),
+        ("tracking_url_prefix_no_integration", "tracking_url_prefix_no_integration"),
+        ("delivery_deadline_no_integration", "delivery_deadline_no_integration"),
     ]
 
     @mapping
+    def deci_type(self, record):
+        try:
+            deci = str(record.deci_type)
+        except ValueError:
+            deci = "3000"
+        return {"deci_type": deci}
+
+    @mapping
+    def currency_id(self, record):
+        currency = self.env["res.currency"].search(
+            [("name", "=", record.currency_id.name)]
+        )
+        return {"currency_id": currency.id}
+
+    @mapping
     def delivery_type(self, record):
-        return {"delivery_type": "fixed"}
+        if record.delivery_type == "fixed":
+            delivery_type = "fixed"
+        else:
+            delivery_type = "base_on_rule"
+        return {"delivery_type": delivery_type}
 
     @only_create
     @mapping

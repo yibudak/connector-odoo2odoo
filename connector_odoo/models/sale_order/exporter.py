@@ -8,8 +8,6 @@ from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 from odoo.addons.component.core import Component
 from odoo.addons.connector.components.mapper import ExportMapChild, mapping
 
-# from odoo.addons.connector.exception import MappingError
-
 _logger = logging.getLogger(__name__)
 
 
@@ -17,23 +15,6 @@ class OdooSaleOrderExporter(Component):
     _name = "odoo.sale.order.exporter"
     _inherit = "odoo.exporter"
     _apply_on = ["odoo.sale.order"]
-
-    def _get_partner(self, record_partner):
-        partner_ids = record_partner.bind_ids
-        partner = self.env["odoo.res.partner"]
-        if partner_ids:
-            partner = partner_ids.filtered(
-                lambda c: c.backend_id == self.backend_record
-            )
-        if not partner:
-            partner = self.env["odoo.res.partner"].create(
-                {
-                    "odoo_id": record_partner.id,
-                    "external_id": 0,  # Todo: check this violates not null constraint
-                    "backend_id": self.backend_record.id,
-                }
-            )
-        return partner
 
     def _export_dependencies(self):
         if not self.binding.partner_id:
@@ -45,10 +26,14 @@ class OdooSaleOrderExporter(Component):
             partner_records |= self.binding[field]
 
         for record_partner in partner_records:
-            partner = self._get_partner(record_partner)
-            bind_partner = self.binder.to_external(partner, wrap=False)
-            if not bind_partner:
-                self._export_dependency(partner, "odoo.res.partner")
+            self._export_dependency(record_partner, "odoo.res.partner")
+
+    def _after_export(self):
+        """Hook called after the export"""
+        binding = self.binding
+        if binding and binding.order_line:
+            for line in binding.order_line:
+                self._export_dependency(line, "odoo.sale.order.line")
 
 
 class SaleOrderExportMapper(Component):
@@ -128,7 +113,4 @@ class SaleOrderExportMapChild(ExportMapChild):
     _model_name = "odoo.sale.order"
 
     def format_items(self, items_values):
-        self
-        items_values
-        print("yifit")
         return [(0, 0, item) for item in items_values]

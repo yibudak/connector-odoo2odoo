@@ -30,6 +30,8 @@ from . import mapping_models
 from . import stock_picking
 from . import stock_move
 from . import delivery_carrier
+from . import delivery_region
+from . import delivery_price_rule
 from . import account_group
 from . import account_tax
 from . import account_tax_group

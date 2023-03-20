@@ -196,6 +196,8 @@
                                 </group>
                                 <group string="Stock">
                                     <button name="import_delivery_carriers" type="object" string="Import Delivery Carriers" class="oe_highlight oe_inline" nolabel="1" />
+                                    <button name="import_delivery_regions" type="object" string="Import Delivery Regions" class="oe_highlight oe_inline" nolabel="1" />
+                                    <button name="import_delivery_price_rules" type="object" string="Import Delivery Price Rule" class="oe_highlight oe_inline" nolabel="1" />
                                 </group>
                                 <group string="Account">
                                     <field name="default_import_account"/>

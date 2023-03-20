@@ -10,11 +10,11 @@ from odoo.addons.component.core import Component
 _logger = logging.getLogger(__name__)
 
 
-class OdooDeliveryCarrier(models.Model):
-    _name = "odoo.delivery.carrier"
+class OdooDeliveryPriceRule(models.Model):
+    _name = "odoo.delivery.price.rule"
     _inherit = "odoo.binding"
-    _inherits = {"delivery.carrier": "odoo_id"}
-    _description = "External Odoo Delivery Carrier"
+    _inherits = {"delivery.price.rule": "odoo_id"}
+    _description = "External Odoo Delivery Price Rule"
     _sql_constraints = [
         (
             "external_id",
@@ -42,42 +42,41 @@ class OdooDeliveryCarrier(models.Model):
             )
 
 
-class DeliveryCarrier(models.Model):
-    _inherit = "delivery.carrier"
+class DeliveryPriceRule(models.Model):
+    _inherit = "delivery.price.rule"
 
     bind_ids = fields.One2many(
-        comodel_name="odoo.delivery.carrier",
+        comodel_name="odoo.delivery.price.rule",
         inverse_name="odoo_id",
         string="Odoo Bindings",
     )
 
 
-class DeliveryCarrierAdapter(Component):
-    _name = "odoo.delivery.carrier.adapter"
+class DeliveryPriceRuleAdapter(Component):
+    _name = "odoo.delivery.price.rule.adapter"
     _inherit = "odoo.adapter"
-    _apply_on = "odoo.delivery.carrier"
+    _apply_on = "odoo.delivery.price.rule"
+    _odoo_model = "delivery.price.rule"
 
-    _odoo_model = "delivery.carrier"
-
-    def search(self, filters=None, model=None, offset=0, limit=None, order=None):
-        """Search records according to some criteria
-        and returns a list of ids
-
-        :rtype: list
-        """
-        if filters is None:
-            filters = []
-        ext_filter = ast.literal_eval(
-            str(self.backend_record.external_carrier_domain_filter)
-        )
-        filters += ext_filter or []
-        return super(DeliveryCarrierAdapter, self).search(
-            filters=filters, model=model, offset=offset, limit=limit, order=order
-        )
+    # def search(self, filters=None, model=None, offset=0, limit=None, order=None):
+    #     """Search records according to some criteria
+    #     and returns a list of ids
+    #
+    #     :rtype: list
+    #     """
+    #     if filters is None:
+    #         filters = []
+    #     ext_filter = ast.literal_eval(
+    #         str(self.backend_record.external_carrier_domain_filter)
+    #     )
+    #     filters += ext_filter or []
+    #     return super(DeliveryPriceRuleAdapter, self).search(
+    #         filters=filters, model=model, offset=offset, limit=limit, order=order
+    #     )
 
 
-class DeliveryCarrierListener(Component):
-    _name = "delivery.carrier.listener"
+class DeliveryPriceRuleListener(Component):
+    _name = "delivery.price.rule.listener"
     _inherit = "base.connector.listener"
-    _apply_on = ["delivery.carrier"]
+    _apply_on = ["delivery.price.rule"]
     _usage = "event.listener"

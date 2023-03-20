@@ -225,7 +225,7 @@ class OdooExporter(AbstractComponent):
         relation,
         binding_model,
         component_usage="record.exporter",
-        binding_field="odoo_bind_ids",
+        binding_field="bind_ids",
         binding_extra_vals=None,
     ):
         """
@@ -276,6 +276,12 @@ class OdooExporter(AbstractComponent):
                 ("odoo_id", "=", relation.id),
                 ("backend_id", "=", self.backend_record.id),
             ]
+            if binding_model == "odoo.res.partner":
+                domain += [
+                    "|",
+                    ("active", "=", True),
+                    ("active", "=", False),
+                ]
             binding = self.env[binding_model].search(domain)
             if binding:
                 assert len(binding) == 1, (

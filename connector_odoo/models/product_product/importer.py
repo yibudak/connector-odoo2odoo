@@ -31,8 +31,8 @@ class ProductBatchImporter(Component):
         # We shuffle the list of products to avoid to have the same
         # priority for all the products
         random.shuffle(external_ids)
-        for external_id in external_ids:
-            job_options = {"priority": 15}
+        for idx, external_id in enumerate(external_ids):
+            job_options = {"priority": idx}
             self._import_record(
                 external_id, job_options=job_options, force=force
             )
@@ -122,8 +122,9 @@ class ProductImportMapper(Component):
             "product_width": record.product_width,
             "product_height": record.product_height,
             "weight": record.weight,
+            "volume": record.volume,
         }
-        # Todo: weight'in uomu eksik, v16'da m2o yerine char yapmışlar
+        # Todo: volume ve weight'in uomu eksik, v16'da m2o yerine char yapmışlar
 
     @mapping
     def price(self, record):

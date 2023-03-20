@@ -74,12 +74,7 @@ class OdooSaleOrder(models.Model):
         return result
 
     def resync(self):
-        if self.backend_id.read_operation_from == "odoo":
-            return self.with_delay().export_record(self.backend_id)
-        else:
-            return self.with_delay().import_record(
-                self.backend_id, self.external_id, force=True
-            )
+        return self.with_delay().export_record(self.backend_id)
 
     def _set_state(self):
         _logger.info("Setting state for %s", self)
