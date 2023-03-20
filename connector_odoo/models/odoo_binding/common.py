@@ -2,6 +2,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
+from odoo.addons.connector.exception import RetryableJobError
 
 
 class OdooBinding(models.AbstractModel):
@@ -33,6 +34,10 @@ class OdooBinding(models.AbstractModel):
         )
     ]
 
+    @property
+    def odoo_api(self):
+        return self.backend_id.get_connection()
+
     @api.constrains("backend_id", "external_id")
     def unique_backend_external_id(self):
         if self.external_id > 0:
@@ -61,14 +66,28 @@ class OdooBinding(models.AbstractModel):
             filters = {}
         with backend.work_on(self._name) as work:
             importer = work.component(usage="batch.importer")
-            return importer.run(filters=filters, force=backend.force)
+            importer.set_lock()
+            try:
+                return importer.run(filters=filters, force=backend.force)
+            except Exception:
+                raise RetryableJobError(
+                    "Could not import batch",
+                    seconds=5,
+                )
 
     @api.model
     def import_record(self, backend, external_id, force=False):
         """Import a Odoo record"""
         with backend.work_on(self._name) as work:
             importer = work.component(usage="record.importer")
-            return importer.run(external_id, force=force)
+            importer.set_lock(external_id)
+            try:
+                return importer.run(external_id, force=force)
+            except Exception:
+                raise RetryableJobError(
+                    "Could not import record %s" % external_id,
+                    seconds=5,
+                )
 
     @api.model
     def export_batch(self, backend, filters=None):

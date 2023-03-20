@@ -205,11 +205,7 @@ class OdooImporter(AbstractComponent):
         # This method will get the binding if needed
         return binding
 
-    def run(self, external_id, force=False):
-        """Run the synchronization
-
-        :param external_id: identifier of the record on Odoo
-        """
+    def set_lock(self, external_id):
         lock_name = "import({}, {}, {}, {})".format(
             self.backend_record._name,
             self.backend_record.id,
@@ -217,6 +213,18 @@ class OdooImporter(AbstractComponent):
             external_id,
         )
         _logger.info("Initializating {}".format(lock_name))
+        # Keep a lock on this import until the transaction is committed
+        # The lock is kept since we have detected that the informations
+        # will be updated into Odoo
+        self.advisory_lock_or_retry(lock_name)
+        _logger.info("Resource {} locked".format(lock_name))
+
+    def run(self, external_id, force=False):
+        """Run the synchronization
+
+        :param external_id: identifier of the record on Odoo
+        """
+
         self.external_id = external_id
         binding = self._get_binding()
         must_continue = self._init_import(binding, external_id)
@@ -227,8 +235,6 @@ class OdooImporter(AbstractComponent):
                 )
             )
             return
-
-        _logger.info("Reading data for {}".format(lock_name))
 
         try:
             self.odoo_record = self._get_odoo_data()
@@ -246,11 +252,6 @@ class OdooImporter(AbstractComponent):
             _logger.info("Already up-to-date")
             return _("Already up-to-date.")
 
-        # Keep a lock on this import until the transaction is committed
-        # The lock is kept since we have detected that the informations
-        # will be updated into Odoo
-        self.advisory_lock_or_retry(lock_name)
-        _logger.info("Resource {} locked".format(lock_name))
         if not binding:
             binding = self._get_binding_odoo_id_changed(binding)
         self._before_import()
@@ -299,6 +300,19 @@ class BatchImporter(AbstractComponent):
     _name = "odoo.batch.importer"
     _inherit = ["base.importer", "base.odoo.connector"]
     _usage = "batch.importer"
+
+    def set_lock(self):
+        lock_name = "import({}, {}, {})".format(
+            self.backend_record._name,
+            self.backend_record.id,
+            self.work.model_name,
+        )
+        _logger.info("Initializating {}".format(lock_name))
+        # Keep a lock on this import until the transaction is committed
+        # The lock is kept since we have detected that the informations
+        # will be updated into Odoo
+        self.advisory_lock_or_retry(lock_name)
+        _logger.info("Resource {} locked".format(lock_name))
 
     def run(self, filters=None, force=False):
         """Run the synchronization"""
