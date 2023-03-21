@@ -85,12 +85,16 @@ class ProductImportMapper(Component):
             )
             if attribute:
                 attr_line_vals.append(attribute.id)
-
-        return {
+        vals = {
             "product_tmpl_id": local_template_id.id,
             "product_template_attribute_value_ids": [(6, 0, attr_line_vals)],
             "combination_indices": ','.join([str(i) for i in sorted(attr_line_vals)]),
         }
+
+        if vals["combination_indices"] == "":
+            vals.pop("combination_indices")
+
+        return vals
 
     @mapping
     def company_id(self, record):
@@ -189,11 +193,10 @@ class ProductImporter(Component):
     _apply_on = ["odoo.product.product"]
 
     def _import_dependencies(self, force=False):
-        if self.backend_record.work_with_variants:
-            product_tmpl_id = self.odoo_record.product_tmpl_id
-            self._import_dependency(
-                product_tmpl_id.id, "odoo.product.template", force=force
-            )
+        product_tmpl_id = self.odoo_record.product_tmpl_id
+        self._import_dependency(
+            product_tmpl_id.id, "odoo.product.template", force=force
+        )
 
         if self.odoo_record.v_cari_urun:
             partner_id = self.odoo_record.v_cari_urun

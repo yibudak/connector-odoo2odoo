@@ -89,10 +89,7 @@ class ProductPricelistItemAdapter(Component):
         """
         if filters is None:
             filters = []
-        ext_filter = ast.literal_eval(
-            str(self.backend_record.external_product_pricelist_domain_filter)
-        )
-        filters += ext_filter
+
         return super(ProductPricelistItemAdapter, self).search(
             filters=filters, model=model, offset=offset, limit=limit, order=order
         )

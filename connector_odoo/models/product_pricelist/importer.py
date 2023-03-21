@@ -45,9 +45,6 @@ class ProductPricelistImporter(Component):
     _inherit = "odoo.importer"
     _apply_on = ["odoo.product.pricelist"]
 
-    def _import_dependencies(self, force=False):
-        """Import the dependencies for the record"""
-
 
 class ProductPricelistImportMapper(Component):
     _name = "odoo.product.pricelist.import.mapper"
@@ -106,7 +103,6 @@ class ProductPricelistItemBatchImporter(Component):
 
     def run(self, filters=None, force=False):
         """Run the synchronization"""
-        filters += [("pricelist_id", "=", 123)]
         updated_ids = self.backend_adapter.search(filters)
         _logger.info(
             "search for odoo product pricelist item %s returned %s items",
@@ -114,7 +110,6 @@ class ProductPricelistItemBatchImporter(Component):
             len(updated_ids),
         )
         for pricelist in updated_ids:
-            # pricelist_id = self.backend_adapter.read(pricelist)
             job_options = {
                 "priority": 10,
             }
@@ -163,7 +158,6 @@ class ProductPricelistItemImportMapper(Component):
 
     direct = [
         ("applied_on", "applied_on"),
-        # ("base", "base"),
         ("compute_price", "compute_price"),
         ("date_end", "date_end"),
         ("date_start", "date_start"),
@@ -178,25 +172,6 @@ class ProductPricelistItemImportMapper(Component):
         ("price_round", "price_round"),
         ("price_surcharge", "price_surcharge"),
     ]
-
-    """
-    @only_create
-    @mapping
-    def odoo_id(self, record):
-        binder = self.binder_for('odoo.product.pricelist')
-        pricelist = binder.to_internal(record.pricelist_id.id, unwrap=True)
-        item = self.env['product.pricelist.item'].search([
-            ('applied_on', '=', record.applied_on),
-            ('categ_id', '=', record.categ_id.name),
-            ('date_start', '=', record.date_start),
-            ('date_end', '=', record.date_end),
-        ])
-        _logger.info(
-            'found pricelist %s for record %s' % (pricelist.name, record))
-        if len(pricelist) == 1:
-            return {'odoo_id': pricelist.id}
-        return {}
-    """
 
     @mapping
     def pricelist_id(self, record):

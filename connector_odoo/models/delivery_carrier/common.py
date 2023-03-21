@@ -67,10 +67,6 @@ class DeliveryCarrierAdapter(Component):
         """
         if filters is None:
             filters = []
-        ext_filter = ast.literal_eval(
-            str(self.backend_record.external_carrier_domain_filter)
-        )
-        filters += ext_filter or []
         return super(DeliveryCarrierAdapter, self).search(
             filters=filters, model=model, offset=offset, limit=limit, order=order
         )

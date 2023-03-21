@@ -10,15 +10,7 @@ This module serves as Odoo 2 Odoo connector base. This connection allows the imp
 
 Currently, a mapping of the following models has been done:
 
- * ``partner``
- * ``product_attribute``
- * ``product_attribute_value``
- * ``product_category``
- * ``product_pricelist``
- * ``product_product``
- * ``product_template``
- * ``sale_order``
- * ``uom_uom``
+ * ``all the models in the models folder``
 
 Installation
 ============
@@ -56,17 +48,10 @@ Depending on the configuration and the scenario the connector will
 Credits
 =======
 
-Images
-------
-
-* Odoo Community Association: `Icon <https://odoo-community.org/logo.png>`_.
-
 Contributors
 ------------
 
-* Malte Jacobi <malte.jacobi@htwsaar.de>
-* Yelizariev Team (https://github.com/it-projects-llc)
-* Florent THOMAS (https://mind-and-go.com)
+* Yiğit Budak <yigit@altinkaya.com.tr>
 
 Do not contact contributors directly about support or help with technical issues.
 

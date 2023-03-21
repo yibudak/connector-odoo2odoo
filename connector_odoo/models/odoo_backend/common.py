@@ -63,6 +63,7 @@ class OdooBackend(models.Model):
         help="For SSL, 443 is mostly the right choice",
         default=8069,
     )
+    force = fields.Boolean(help="Execute import/export even if no changes in backend")
     protocol = fields.Selection(
         selection=[
             ("jsonrpc", "JsonRPC"),
@@ -83,84 +84,21 @@ class OdooBackend(models.Model):
                 system.""",
     )
 
-    export_partner_id = fields.Integer(
+    public_partner_id = fields.Many2one(
+        comodel_name="res.partner",
+        string="Public Partner",
+        domain=["|", ("active", "=", True), ("active", "=", False)],
+    )
+
+    public_partner_external_id = fields.Integer(
         string="Partner ID in the external System",
-        help="""The partner id that represents this company in the
-                external system.""",
-    )
-
-    export_user_id = fields.Integer(
-        string="User ID in the external System",
-        help="""The user id that represents this company in the
-                external system.""",
-    )
-
-    default_export_backend = fields.Boolean(
-        help="Use this backend as an automatic export target.",
+        help="""External ID for Public website user on Odoo 12.0.""",
     )
 
     """
-    PARTNER SYNC OPTIONS
+    DOMAIN FIELDS
     """
 
-    default_export_partner = fields.Boolean("Export partner")
-    default_import_partner = fields.Boolean("Import partner")
-
-    local_partner_domain_filter = fields.Char(default="[]")
-
-    external_partner_domain_filter = fields.Char(
-        default="[]",
-        help="""Filter in the Odoo Destination
-        """,
-    )
-
-    """
-    USER SYNC OPTIONS
-    """
-
-    default_export_user = fields.Boolean()
-    default_import_user = fields.Boolean()
-
-    local_user_domain_filter = fields.Char(default="[]")
-
-    external_user_domain_filter = fields.Char(
-        default="[]",
-        help="""Filter in the Odoo Destination
-        """,
-    )
-
-    """
-    PRODUCT SYNC OPTIONS
-    """
-
-    matching_product_product = fields.Boolean(string="Match product", default=True)
-    matching_product_ch = fields.Selection(
-        [("default_code", "Reference"), ("barcode", "Barcode")],
-        string="Matching Field for product",
-        default="default_code",
-        required=True,
-    )
-    matching_customer = fields.Boolean(
-        help="The selected fields will be matched to the ref field "
-        "of the partner. Please adapt your datas consequently.",
-        default=True,
-    )
-    matching_customer_ch = fields.Selection(
-        [
-            ("email", "Email"),
-            ("barcode", "Barcode"),
-            ("ref", "Internal reference"),
-            ("vat", "TIN Number"),
-        ],
-        string="Matching Field for partner",
-        default="ref",
-    )
-    local_product_domain_filter = fields.Char(
-        string="Local Product domain filter",
-        default="[]",
-        help="Use this option per backend to specify which part of your "
-        "catalog to synchronize",
-    )
     external_product_domain_filter = fields.Char(
         string="External Product domain filter",
         default="[]",
@@ -171,105 +109,20 @@ class OdooBackend(models.Model):
         default="[]",
         help="Filter in the Odoo Destination",
     )
-    local_uom_uom_domain_filter = fields.Char(
-        string="Local UOM domain filter",
-        default="[]",
-        help="Use this option per backend to specify which part of your "
-        "catalog to synchronize",
-    )
-    external_uom_uom_domain_filter = fields.Char(
-        string="External UOM domain filter",
-        default="[]",
-        help="Filter in the Odoo Destination",
-    )
-    external_product_pricelist_domain_filter = fields.Char(
-        string="External Product Pricelist domain filter",
-        default="[]",
-        help="Filter in the Odoo Destination",
-    )
-    work_with_variants = fields.Boolean(
-        help="If not work with variants, when import product does not try to import template",
-    )
-    default_import_product = fields.Boolean("Import products")
-    import_product_from_date = fields.Datetime()
-    import_product_template_from_date = fields.Datetime()
-    import_partner_from_date = fields.Datetime()
-    import_user_from_date = fields.Datetime()
-    import_categories_from_date = fields.Datetime()
-    import_pricelist_items_from_date = fields.Datetime("Import pricelists from date")
-    default_export_product = fields.Boolean("Export Products")
-    export_products_from_date = fields.Datetime()
-    export_categories_from_date = fields.Datetime()
-    default_category_id = fields.Integer(
-        help="If set, this Id will be used instead of getting dependencies",
-    )
-    default_product_export_dict = fields.Char(
-        "Default Json for creating/updating products",
-        default="{'default_code': '/', 'active': False}",
-    )
-    pricelist_id = fields.Many2one("product.pricelist", "Pricelist", required=True)
-    main_record = fields.Selection(
-        [
-            ("odoo", "Odoo -> Backend"),
-            ("backend", "Backend -> Odoo"),
-        ],
-        help="Direction of master data synchronization. Read from X write to Y (X -> Y)",
-    )
-    force = fields.Boolean(help="Execute import/export even if no changes in backend")
-    ignore_translations = fields.Boolean()
 
     """
-    Logistic SYNC OPTIONS
+    DATE FIELDS
     """
 
-    def _get_picking_in(self):
-        pick_in = self.env.ref("stock.picking_type_in", raise_if_not_found=False)
-        company = self.env.company
-        if (
-            not pick_in
-            or not pick_in.sudo().active
-            or pick_in.sudo().warehouse_id.company_id.id != company.id
-        ):
-            pick_in = self.env["stock.picking.type"].search(
-                [
-                    ("warehouse_id.company_id", "=", company.id),
-                    ("code", "=", "incoming"),
-                ],
-                limit=1,
-            )
-        return pick_in
-
-    read_operation_from = fields.Selection(
-        [("backend", "Backend"), ("odoo", "Odoo")], default="backend", required=True
-    )
-    default_purchase_picking_type_id = fields.Many2one(
-        "stock.picking.type",
-        required=True,
-        default=_get_picking_in,
-        domain="['|',"
-        + "('warehouse_id', '=', False),"
-        + "('warehouse_id.company_id', '=', company_id)]",
-    )
-    default_import_purchase_order = fields.Boolean("Import purchase orders")
-    import_purchase_order_from_date = fields.Datetime()
-    default_import_sale_order = fields.Boolean("Import Sale orders")
-    import_sale_order_from_date = fields.Datetime()
-    delayed_import_lines = fields.Boolean(
-        help="Import lines after import header document "
-        "(sale, purchase or picking) on delayed jobs"
-    )
-
-    default_import_stock = fields.Boolean("Import Stock")
-    import_stock_from_date = fields.Datetime()
-
-    external_carrier_domain_filter = fields.Char(
-        default="[]",
-        help="""Filter in the Odoo Destination
-        """,
-    )
-    default_import_account = fields.Boolean("Import Account")
-    import_account_from_date = fields.Datetime()
-    import_base_from_date = fields.Datetime()
+    import_base_models_from_date = fields.Datetime("Import base from date")
+    import_product_from_date = fields.Datetime("Import products from date")
+    import_product_template_from_date = fields.Datetime("Import product templates from date")
+    import_delivery_models_from_date = fields.Datetime("Import delivery models from date")
+    import_currency_rate_from_date = fields.Datetime("Import currency rates from date")
+    import_address_models_from_date = fields.Datetime("Import address models from date")
+    import_partner_from_date = fields.Datetime("Import partners from date")
+    import_pricelist_from_date = fields.Datetime("Import pricelists from date")
+    import_account_from_date = fields.Datetime("Import Account from date")
 
     def get_default_language_code(self):
         lang = (
@@ -312,24 +165,7 @@ class OdooBackend(models.Model):
         """
         self.ensure_one()
         lang = self.get_default_language_code()
-        odoo_location = OdooLocation(
-            hostname=self.hostname,
-            login=self.login,
-            password=self.password,
-            database=self.database,
-            port=self.port,
-            version=self.version,
-            protocol=self.protocol,
-            lang_id=lang,
-        )
-        # legacy_odoo_api = LegacyOdooAPI(
-        #     f"{protocol}://{self.host}:{self.port}",
-        #     self.dbname,
-        #     self.password,
-        #     self.username,
-        #     self.lang,
-        # )
-        with OdooAPI(odoo_location) as odoo_api:
+        with self.get_connection() as odoo_api:
             _super = super(OdooBackend, self.with_context(lang=lang))
             # from the components we'll be able to do: self.work.odoo_api
             with _super.work_on(model_name, odoo_api=odoo_api, **kwargs) as work:
@@ -367,15 +203,6 @@ class OdooBackend(models.Model):
                 % e
             ) from e
 
-    # TODO: Add Checkpoing as native Odoo Activity
-    def add_checkpoint(self, record):
-        # self.ensure_one()
-        # record.ensure_one()
-        # return checkpoint.add_checkpoint(
-        #     self.env, record._name, record.id, self._name, self.id
-        # )
-        return True
-
     def _get_backend(self):
         """
         Get the backend to use for the import. Usually we use this method
@@ -386,135 +213,62 @@ class OdooBackend(models.Model):
             backend = self.env["res.company"].browse(1).default_odoo_backend_id
         return backend
 
-    def import_product_product(self):
+    def _cron_import(self, model_name, from_date_field, backend=None):
+        if not backend:
+            backend = self._get_backend()
+        backend._import_from_date(model_name, from_date_field)
+        return True
+
+    # def import_partner(self):
+    #     backend = self._get_backend()
+    #     backend._import_from_date("odoo.res.partner", "import_partner_from_date")
+    #     return True
+
+    def import_delivery_models(self):
+        delivery_models = [
+            "odoo.delivery.region",
+            "odoo.delivery.price.rule",
+            "odoo.delivery.carrier",
+        ]
         backend = self._get_backend()
-        if not backend.default_import_product:
-            return False
-        backend._import_from_date("odoo.product.product", "import_product_from_date")
+        for model in delivery_models:
+            self._cron_import(model, "import_delivery_models_from_date", backend=backend)
         return True
 
-    def import_product_template(self):
+    def import_account_models(self):
         backend = self._get_backend()
-        if not backend.default_import_product:
-            return False
-        backend._import_from_date(
-            "odoo.product.template", "import_product_template_from_date"
-        )
+        account_models = [
+            "odoo.account.group",
+            "odoo.account.account",
+            "odoo.account.tax",
+            "odoo.account.fiscal.position",
+            "odoo.account.payment.term",
+        ]
+        for model in account_models:
+            self._cron_import(model, "import_account_from_date", backend=backend)
         return True
 
-    def import_partner(self):
-        if not self.default_import_partner:
-            return False
-        self._import_from_date("odoo.res.partner", "import_partner_from_date")
-        return True
-
-    def import_user(self):
-        if not self.default_import_user:
-            return False
-        self._import_from_date("odoo.res.users", "import_user_from_date")
-        return True
-
-    def import_product_pricelist_item(self):
-        if not self.default_import_product:
-            return False
-        self._import_from_date(
-            "odoo.product.pricelist.item", "import_pricelist_items_from_date"
-        )
-        return True
-
-    def import_product_categories(self):
-        if not self.default_import_product:
-            return False
-        self._import_from_date("odoo.product.category", "import_categories_from_date")
-        return True
-
-    def import_purchase_orders(self):
-        if not self.default_import_purchase_order:
-            return False
-        self._import_from_date("odoo.purchase.order", "import_purchase_order_from_date")
-        return True
-
-    def import_sale_orders(self):
-        if not self.default_import_sale_order:
-            return False
-        self._import_from_date("odoo.sale.order", "import_sale_order_from_date")
-        return True
-
-    def import_locations(self):
-        if not self.default_import_stock:
-            return False
-        self._import_from_date("odoo.stock.location", "import_stock_from_date")
-        return True
-
-    def import_delivery_carriers(self):
-        self._import_from_date("odoo.delivery.carrier", "import_stock_from_date")
-        return True
-
-    def import_delivery_price_rules(self):
-        self._import_from_date("odoo.delivery.price.rule", "import_stock_from_date")
-        return True
-
-    def import_delivery_regions(self):
-        self._import_from_date("odoo.delivery.region", "import_stock_from_date")
-        return True
-
-    def import_account_groups(self):
-        if not self.default_import_account:
-            return False
-        self._import_from_date("odoo.account.group", "import_account_from_date")
-        return True
-
-    def import_account_accounts(self):
-        if not self.default_import_account:
-            return False
-        self._import_from_date("odoo.account.account", "import_account_from_date")
-        return True
-
-    def import_account_taxes(self):
-        if not self.default_import_account:
-            return False
-        self._import_from_date("odoo.account.tax", "import_account_from_date")
-        return True
-
-    def import_account_fiscal_positions(self):
-        if not self.default_import_account:
-            return False
-        self._import_from_date(
-            "odoo.account.fiscal.position", "import_account_from_date"
-        )
-        return True
-
-    def import_account_payment_terms(self):
-        if not self.default_import_account:
-            return False
-        self._import_from_date("odoo.account.payment.term", "import_account_from_date")
-        return True
-
-    def import_res_currency_rate(self):
+    def import_address_models(self):
         backend = self._get_backend()
-        backend._import_from_date("odoo.res.currency.rate", "import_base_from_date")
+        address_models = [
+            "odoo.address.district",
+            "odoo.address.region",
+            "odoo.address.neighbour",
+        ]
+        for model in address_models:
+            self._cron_import(model, "import_address_models_from_date", backend=backend)
         return True
 
-    def import_address_fields(self):
-        # self._import_from_date("odoo.address.district", "import_base_from_date")
-        self._import_from_date("odoo.address.region", "import_base_from_date")
-        # self._import_from_date("odoo.address.neighbour", "import_base_from_date")
+    def import_base_models(self):
+        backend = self._get_backend()
+        base_models = [
+            "odoo.product.category",
+            "odoo.uom.uom",
+            "odoo.product.attribute.value",
+        ]
+        for model in base_models:
+            self._cron_import(model, "import_base_models_from_date", backend=backend)
         return True
-
-    def import_pickings(self):
-        if not self.default_import_stock:
-            return False
-        self._import_from_date("odoo.stock.picking", "import_stock_from_date")
-        return True
-
-    def import_stock_inventories(self):
-        raise UserError(_("Not implemented yet"))
-        # if not self.default_import_stock:
-        #     return False
-        # self._import_from_date(
-        #     "odoo.stock.inventory.disappeared", "import_stock_from_date"
-        # )
-        # return True
 
     def _import_from_date(self, model, from_date_field):
         import_start_time = datetime.now()
@@ -530,42 +284,18 @@ class OdooBackend(models.Model):
                         from_date,
                     )
                 )
-            else:
-                from_date = None
-            if self.version == "6.1":
-                self.env[model].with_delay().import_batch(
-                    backend, [("write_date", "=", False)]
-                )
             self.env[model].with_delay().import_batch(backend, filters)
 
         next_time = import_start_time - timedelta(seconds=IMPORT_DELTA_BUFFER)
         next_time = fields.Datetime.to_string(next_time)
         self.write({from_date_field: next_time})
 
-    def import_external_id(self, model, external_id, force, inmediate=False):
+    def import_external_id(self, model, external_id, force, inmediate=True):
         model = self.env[model]
         if not inmediate:
             model = model.with_delay()
         for backend in self:
             model.import_record(backend, external_id, force)
-
-    def export_product_categories(self):
-        if not self.default_export_product:
-            return False
-        self._export_from_date("odoo.product.category", "export_categories_from_date")
-        return True
-
-    def export_product_products(self):
-        if not self.default_export_product:
-            return False
-        self._export_from_date("odoo.product.product", "export_products_from_date")
-        return True
-
-    def export_product_templates(self):
-        if not self.default_export_product:
-            return False
-        self._export_from_date("odoo.product.template", "export_products_from_date")
-        return True
 
     def _export_from_date(self, model, from_date_field):
         self.ensure_one()

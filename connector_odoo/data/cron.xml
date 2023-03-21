@@ -1,56 +1,108 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo noupdate="1">
 
-    <record forcecreate="True" id="ir_cron_import_purchase_orders" model="ir.cron">
-        <field name="name">Odoo2Odoo - Import Purchase Orders</field>
-        <field name="active" eval="False" />
-        <field name="user_id" ref="base.user_root" />
-        <field name="interval_number">1</field>
-        <field name="state">code</field>
-        <field name="code">model.import_purchase_orders()</field>
-        <field name="interval_type">days</field>
-        <field name="numbercall">-1</field>
-        <field name="doall" eval="False" />
-        <field name="model_id" ref="connector_odoo.model_odoo_backend" />
-    </record>
-
     <record forcecreate="True" id="ir_cron_import_products" model="ir.cron">
         <field name="name">Odoo2Odoo - Sync Products</field>
-        <field name="active" eval="True" />
-        <field name="user_id" ref="base.user_root" />
+        <field name="active" eval="True"/>
+        <field name="user_id" ref="base.user_root"/>
         <field name="state">code</field>
-        <field name="code">model.import_product_product()</field>
+        <field name="code">model._cron_import("odoo.product.product", "import_product_from_date")</field>
         <field name="interval_number">5</field>
         <field name="interval_type">minutes</field>
         <field name="numbercall">-1</field>
-        <field name="doall" eval="False" />
-        <field name="model_id" ref="connector_odoo.model_odoo_backend" />
+        <field name="doall" eval="False"/>
+        <field name="model_id" ref="connector_odoo.model_odoo_backend"/>
     </record>
 
     <record forcecreate="True" id="ir_cron_import_product_templates" model="ir.cron">
         <field name="name">Odoo2Odoo - Sync Product Templates</field>
-        <field name="active" eval="True" />
-        <field name="user_id" ref="base.user_root" />
+        <field name="active" eval="True"/>
+        <field name="user_id" ref="base.user_root"/>
         <field name="state">code</field>
-        <field name="code">model.import_product_template()</field>
+        <field name="code">model._cron_import("odoo.product.template", "import_product_template_from_date")</field>
         <field name="interval_number">5</field>
         <field name="interval_type">minutes</field>
         <field name="numbercall">-1</field>
-        <field name="doall" eval="False" />
-        <field name="model_id" ref="connector_odoo.model_odoo_backend" />
+        <field name="doall" eval="False"/>
+        <field name="model_id" ref="connector_odoo.model_odoo_backend"/>
     </record>
 
     <record forcecreate="True" id="ir_cron_import_currency_rates" model="ir.cron">
         <field name="name">Odoo2Odoo - Sync Currency Rates</field>
-        <field name="active" eval="True" />
-        <field name="user_id" ref="base.user_root" />
+        <field name="active" eval="True"/>
+        <field name="user_id" ref="base.user_root"/>
         <field name="state">code</field>
-        <field name="code">model.import_res_currency_rate()</field>
+        <field name="code">model._cron_import("odoo.res.currency.rate", "import_currency_rate_from_date")</field>
         <field name="interval_number">8</field>
         <field name="interval_type">hours</field>
         <field name="numbercall">-1</field>
-        <field name="doall" eval="False" />
-        <field name="model_id" ref="connector_odoo.model_odoo_backend" />
+        <field name="doall" eval="False"/>
+        <field name="model_id" ref="connector_odoo.model_odoo_backend"/>
+    </record>
+
+    <record forcecreate="True" id="ir_cron_import_base_models" model="ir.cron">
+        <field name="name">Odoo2Odoo - Sync Base Models</field>
+        <field name="active" eval="True"/>
+        <field name="user_id" ref="base.user_root"/>
+        <field name="state">code</field>
+        <field name="code">model.import_base_models()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+        <field name="model_id" ref="connector_odoo.model_odoo_backend"/>
+    </record>
+
+    <record forcecreate="True" id="ir_cron_import_delivery_models" model="ir.cron">
+        <field name="name">Odoo2Odoo - Sync Delivery Models</field>
+        <field name="active" eval="True"/>
+        <field name="user_id" ref="base.user_root"/>
+        <field name="state">code</field>
+        <field name="code">model.import_delivery_models()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+        <field name="model_id" ref="connector_odoo.model_odoo_backend"/>
+    </record>
+
+        <record forcecreate="True" id="ir_cron_import_address_models" model="ir.cron">
+        <field name="name">Odoo2Odoo - Sync Address Models</field>
+        <field name="active" eval="True"/>
+        <field name="user_id" ref="base.user_root"/>
+        <field name="state">code</field>
+        <field name="code">model.import_address_models()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+        <field name="model_id" ref="connector_odoo.model_odoo_backend"/>
+    </record>
+
+            <record forcecreate="True" id="ir_cron_import_account_models" model="ir.cron">
+        <field name="name">Odoo2Odoo - Sync Account Models</field>
+        <field name="active" eval="True"/>
+        <field name="user_id" ref="base.user_root"/>
+        <field name="state">code</field>
+        <field name="code">model.import_account_models()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+        <field name="model_id" ref="connector_odoo.model_odoo_backend"/>
+    </record>
+
+    <record forcecreate="True" id="ir_cron_import_pricelist_items" model="ir.cron">
+        <field name="name">Odoo2Odoo - Sync Pricelist and Items</field>
+        <field name="active" eval="True"/>
+        <field name="user_id" ref="base.user_root"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_import("odoo.product.pricelist.item", "import_pricelist_from_date")</field>
+        <field name="interval_number">8</field>
+        <field name="interval_type">hours</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+        <field name="model_id" ref="connector_odoo.model_odoo_backend"/>
     </record>
 
 </odoo>

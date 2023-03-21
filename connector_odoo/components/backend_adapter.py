@@ -15,11 +15,6 @@ try:
 except ImportError:
     _logger.info("Cannot import 'odoorpc' Lib")
 
-# try:
-#     import oerplib
-# except ImportError:
-#     _logger.info("Cannot import 'oerplib' Lib")
-
 
 class OdooLocation(object):
     __slots__ = (
@@ -90,20 +85,12 @@ class OdooAPI(object):
     @property
     def api(self):
         if self._api is None:
-            if self._location.version == "6.1":
-                api = oerplib.OERP(
-                    server=self._location.hostname,
-                    port=self._location.port,
-                    protocol=self._location.protocol,
-                )
-            else:
-                api = odoorpc.ODOO(
-                    host=self._location.hostname,
-                    port=self._location.port,
-                    protocol=self._location.protocol,
-                    timeout=30,
-                )
-
+            api = odoorpc.ODOO(
+                host=self._location.hostname,
+                port=self._location.port,
+                protocol=self._location.protocol,
+                timeout=30,
+            )
             self._api_login(api)
             self._api = api
 
@@ -207,11 +194,7 @@ class GenericAdapter(AbstractComponent):
                 "Backend Adapter."
             ) from e
 
-        model = (
-            odoo_api.env[ext_model]
-            if odoo_api.version != "6.1"
-            else odoo_api.get(ext_model)
-        )
+        model = odoo_api.env[ext_model]
         return model.search(
             filters if filters else [], offset=offset, limit=limit, order=order
         )
@@ -242,11 +225,7 @@ class GenericAdapter(AbstractComponent):
                 "OdooAPI instance to be able to use the "
                 "Backend Adapter."
             ) from e
-        model = (
-            odoo_api.env[ext_model]
-            if odoo_api.version != "6.1"
-            else odoo_api.get(ext_model)
-        )
+        model = odoo_api.env[ext_model]
         if context:
             return model.with_context(**context).browse(arguments)
         return model.browse(arguments)
@@ -261,16 +240,12 @@ class GenericAdapter(AbstractComponent):
                 "OdooAPI instance to be able to use the "
                 "Backend Adapter."
             ) from e
-        model = (
-            odoo_api.env[ext_model]
-            if odoo_api.version != "6.1"
-            else odoo_api.get(ext_model)
-        )
+        model = odoo_api.env[ext_model]
         return model.create(data)
 
     def write(self, id, data):
         arguments = [int(id)]
-        # ext_model = self._odoo_model
+        ext_model = self._odoo_model
         try:
             odoo_api = self.work.odoo_api.api
         except AttributeError as e:
@@ -279,11 +254,7 @@ class GenericAdapter(AbstractComponent):
                 "OdooAPI instance to be able to use the "
                 "Backend Adapter."
             ) from e
-        model = (
-            odoo_api.env[self._odoo_model]
-            if odoo_api.version != "6.1"
-            else odoo_api.get(self._odoo_model)
-        )
+        model = odoo_api.env[ext_model]
         object_id = model.browse(arguments)
         # TODO: Check the write implementation of odoorpc
         return object_id.write(data)

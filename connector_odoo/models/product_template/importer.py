@@ -184,14 +184,13 @@ class ProductTemplateImporter(Component):
             self._import_website_images(force=force)
             # Todo yigit: enable here
             self._import_website_attachments(imported_template, force=force)
-            if self.backend_record.work_with_variants:
-                self._import_attribute_lines(force=force)
-                self._import_feature_lines(force=force)
+            self._import_attribute_lines(force=force)
+            self._import_feature_lines(force=force)
         super(ProductTemplateImporter, self)._after_import(binding, force=force)
 
     def _import_attribute_lines(self, force=False):
         for attr_line in self.odoo_record.attribute_line_ids:
-            self.env["odoo.product.template.attribute.line"].with_delay().import_record(
+            self.env["odoo.product.template.attribute.line"].import_record(
                 self.backend_record,
                 attr_line.id,
                 force=force,
@@ -200,7 +199,7 @@ class ProductTemplateImporter(Component):
 
     def _import_feature_lines(self, force=False):
         for feature_line in self.odoo_record.feature_line_ids:
-            self.env["odoo.product.template.feature.line"].with_delay().import_record(
+            self.env["odoo.product.template.feature.line"].import_record(
                 self.backend_record,
                 feature_line.id,
                 force=force,
