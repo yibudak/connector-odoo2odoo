@@ -45,6 +45,18 @@ class ProductPricelistImporter(Component):
     _inherit = "odoo.importer"
     _apply_on = ["odoo.product.pricelist"]
 
+    def _get_binding_with_data(self, binding):
+        """Return a binding with the data from the backend"""
+        if not binding:
+            binding = self.env["odoo.product.pricelist"].search(
+                [
+                    ("name", "=", self.odoo_record.name),
+                    ("currency_id.name", "=", self.odoo_record.currency_id.name)
+                ],
+                limit=1,
+            )
+        return binding
+
 
 class ProductPricelistImportMapper(Component):
     _name = "odoo.product.pricelist.import.mapper"
@@ -64,9 +76,15 @@ class ProductPricelistImportMapper(Component):
         # TODO: Improve the matching on name and position in the tree so that
         # multiple pricelist with the same name will be allowed and not
         # duplicated
-        pricelist = self.env["product.pricelist"].search([("name", "=", record.name)])
-        _logger.info("found pricelist %s for record %s" % (pricelist.name, record))
+        pricelist = self.env["product.pricelist"].search(
+                [
+                    ("name", "=", record.name),
+                    ("currency_id.name", "=", record.currency_id.name)
+                ],
+                limit=1,
+            )
         if len(pricelist) == 1:
+            _logger.info("found pricelist %s for record %s" % (pricelist.name, record))
             return {"odoo_id": pricelist.id}
         return {}
 
@@ -142,12 +160,6 @@ class ProductPricelistItemImporter(Component):
         if record.base_pricelist_id:
             self._import_dependency(
                 record.base_pricelist_id.id, "odoo.product.pricelist", force=force
-            )
-            filters = [
-                ("pricelist_id", "=", record.id),
-            ]
-            self.env["odoo.product.pricelist.item"].with_delay().import_batch(
-                self.backend_record, filters, force=force
             )
 
 

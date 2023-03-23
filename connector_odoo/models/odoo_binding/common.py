@@ -60,7 +60,7 @@ class OdooBinding(models.AbstractModel):
         return self.with_delay().export_record(self.backend_id)
 
     @api.model
-    def import_batch(self, backend, filters=None):
+    def import_batch(self, backend, filters=None, force=False):
         """Prepare the import of records modified on Odoo"""
         if filters is None:
             filters = {}
@@ -68,7 +68,7 @@ class OdooBinding(models.AbstractModel):
             importer = work.component(usage="batch.importer")
             importer.set_lock()
             try:
-                return importer.run(filters=filters, force=backend.force)
+                return importer.run(filters=filters, force=force or backend.force)
             except Exception:
                 raise RetryableJobError(
                     "Could not import batch",

@@ -80,14 +80,14 @@ class PartnerImportMapper(Component):
     @mapping
     def check_res_partner_exists(self, record):
         vals = {}
-        if not record.get("vat"):
+        if not record.vat:
             return vals
 
         odoo_partner_id = self.env["odoo.res.partner"].search(
             [
-                ("external_id", "=", record["id"]),
-                ("name", "=", record["name"]),
-                ("vat", "=", record["vat"]),
+                ("external_id", "=", record.id),
+                ("name", "=", record.name),
+                ("vat", "=", record.vat),
             ]
         )
         _logger.info("Res partner found for %s : %s" % (record, odoo_partner_id))
@@ -99,10 +99,10 @@ class PartnerImportMapper(Component):
     def address_fields(self, record):
         # Todo fix this function here and import mapper. Temiz değil.
         vals = {}
-        neighbour = record["neighbour_id"]
+        neighbour = record.neighbour_id
         if neighbour:
             local_neighbour = self.env["odoo.address.neighbour"].search(
-                [("external_id", "=", neighbour[0])], limit=1
+                [("external_id", "=", neighbour.id)], limit=1
             )
             if local_neighbour:
                 vals["neighbour_id"] = local_neighbour.odoo_id.id
@@ -147,10 +147,10 @@ class PartnerImportMapper(Component):
     @mapping
     def parent_id(self, record):
         vals = {}
-        if record["parent_id"]:
+        if record.parent_id:
             binder = self.binder_for("odoo.res.partner")
             vals["parent_id"] = binder.to_internal(
-                record["parent_id"][0], unwrap=True
+                record.parent_id.id, unwrap=True
             ).id
         return vals
 
@@ -171,19 +171,19 @@ class PartnerImportMapper(Component):
 
     @mapping
     def property_account_payable(self, record):
-        property_account_payable_id = record["property_account_payable_id"]
+        property_account_payable_id = record.property_account_payable_id
         if property_account_payable_id:
             binder = self.binder_for("odoo.account.account")
-            account = binder.to_internal(property_account_payable_id[0], unwrap=True)
+            account = binder.to_internal(property_account_payable_id.id, unwrap=True)
             if account:
                 return {"property_account_payable_id": account.id}
 
     @mapping
     def property_account_receivable(self, record):
-        property_account_receivable_id = record["property_account_receivable_id"]
+        property_account_receivable_id = record.property_account_receivable_id
         if property_account_receivable_id:
             binder = self.binder_for("odoo.account.account")
-            account = binder.to_internal(property_account_receivable_id[0], unwrap=True)
+            account = binder.to_internal(property_account_receivable_id.id, unwrap=True)
             if account:
                 return {"property_account_receivable_id": account.id}
 
@@ -250,7 +250,7 @@ class PartnerImporter(Component):
         if self.odoo_record["parent_id"]:
             _logger.info("Importing parent")
             self._import_dependency(
-                self.odoo_record["parent_id"][0], "odoo.res.partner", force=force
+                self.odoo_record.parent_id, "odoo.res.partner", force=force
             )
         # Todo yigit: should we import users?
         # if self.odoo_record["user_id"]:
@@ -269,7 +269,7 @@ class PartnerImporter(Component):
         if self.odoo_record["property_account_payable_id"]:
             _logger.info("Importing account payable")
             self._import_dependency(
-                self.odoo_record["property_account_payable_id"][0],
+                self.odoo_record.property_account_payable_id,
                 "odoo.account.account",
                 force=force,
             )
@@ -277,7 +277,7 @@ class PartnerImporter(Component):
         if self.odoo_record["property_account_receivable_id"]:
             _logger.info("Importing account receivable")
             self._import_dependency(
-                self.odoo_record["property_account_receivable_id"][0],
+                self.odoo_record.property_account_receivable_id,
                 "odoo.account.account",
                 force=force,
             )
