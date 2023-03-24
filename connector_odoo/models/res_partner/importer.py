@@ -113,10 +113,10 @@ class PartnerImportMapper(Component):
     @mapping
     def country_id(self, record):
         vals = {}
-        if not record["country_id"]:
+        if not record.country_id:
             return vals
         local_country_id = self.env["res.country"].search(
-            [("name", "=", record["country_id"][1])]
+            [("name", "=", record.country_id.name)]
         )
         if local_country_id:
             vals["country_id"] = local_country_id.id
@@ -125,19 +125,13 @@ class PartnerImportMapper(Component):
     @mapping
     def state_id(self, record):
         vals = {}
-        if not record["state_id"]:
+        if not record.state_id:
             return vals
-        state_id = self.work.odoo_api.api.read(
-            "res.country.state",
-            [record["state_id"][0]],
-            {"fields": ["name", "country_id"]},
-        )
-        if state_id:
-            state_id = state_id[0]
+        else:
             local_state_id = self.env["res.country.state"].search(
                 [
-                    ("name", "ilike", state_id["name"]),
-                    ("country_id.name", "=", state_id["country_id"][1]),
+                    ("name", "ilike", record.state_id.name),
+                    ("country_id.name", "=", record.state_id.country_id.name),
                 ]
             )
             if local_state_id:
