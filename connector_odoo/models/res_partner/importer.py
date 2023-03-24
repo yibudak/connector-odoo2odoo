@@ -244,7 +244,7 @@ class PartnerImporter(Component):
         if self.odoo_record["parent_id"]:
             _logger.info("Importing parent")
             self._import_dependency(
-                self.odoo_record.parent_id, "odoo.res.partner", force=force
+                self.odoo_record.parent_id.id, "odoo.res.partner", force=force
             )
         # Todo yigit: should we import users?
         # if self.odoo_record["user_id"]:
@@ -263,7 +263,7 @@ class PartnerImporter(Component):
         if self.odoo_record["property_account_payable_id"]:
             _logger.info("Importing account payable")
             self._import_dependency(
-                self.odoo_record.property_account_payable_id,
+                self.odoo_record.property_account_payable_id.id,
                 "odoo.account.account",
                 force=force,
             )
@@ -271,7 +271,7 @@ class PartnerImporter(Component):
         if self.odoo_record["property_account_receivable_id"]:
             _logger.info("Importing account receivable")
             self._import_dependency(
-                self.odoo_record.property_account_receivable_id,
+                self.odoo_record.property_account_receivable_id.id,
                 "odoo.account.account",
                 force=force,
             )
