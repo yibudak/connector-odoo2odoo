@@ -32,7 +32,7 @@ from . import account_payment_term
 from . import address_district
 from . import address_region
 from . import address_neighbour
-from . import mrp_bom
+# from . import mrp_bom
 
 # Disabled Models
 from . import purchase_order
