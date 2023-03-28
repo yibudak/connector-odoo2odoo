@@ -176,7 +176,9 @@ class ProductTemplateImporter(Component):
 
     def _get_context(self, data):
         """Context for the create-write"""
-        return {"no_handle_variant": False}  # Todo : check if it's needed
+        res = super(ProductTemplateImporter, self)._get_context(data)
+        res["no_handle_variant"] = False
+        return res
 
     def _after_import(self, binding, force=False):
         imported_template = self.binder.to_internal(self.external_id)
