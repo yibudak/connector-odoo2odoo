@@ -276,6 +276,7 @@ class OdooBackend(models.Model):
         base_models = [
             "odoo.product.category",
             "odoo.uom.uom",
+            "odoo.product.attribute",
             "odoo.product.attribute.value",
         ]
         for model in base_models:
