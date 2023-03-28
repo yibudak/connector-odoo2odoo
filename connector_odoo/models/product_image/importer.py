@@ -63,10 +63,10 @@ class ProductImageImportMapper(Component):
     @mapping
     def product_tmpl_id(self, record):
         vals = {}
-        imported_tmpl_id = self.env["product.template"].search(
+        imported_tmpl_id = self.env["odoo.product.template"].search(
             [
-                ("bind_ids.external_id", "in", [record.owner_id])
-            ]  # Todo: belki domain kötü olmuştur
+                ("external_id", "=", record.owner_id)
+            ]
         )
         if imported_tmpl_id:
             vals.update({"product_tmpl_id": imported_tmpl_id.id})

@@ -47,8 +47,8 @@ class OdooProductTemplate(models.Model):
 
     def resync(self):
         return self.with_delay().import_record(
-                self.backend_id, self.external_id, force=True
-            )
+            self.backend_id, self.external_id, force=True
+        )
 
 
 class ProductTemplate(models.Model):
@@ -79,12 +79,19 @@ class ProductTemplate(models.Model):
         for record in self:
             record.product_bind_ids = record.product_variant_ids.mapped("bind_ids")
 
-    def action_fix_main_image(self):
+    def multi_fix_product_images(self):
         """This method fixes main image of the all the products."""
         for product in self.search([]):
             variant_img = fields.first(product.product_template_image_ids)
             if variant_img:
-                product.write({"image_1920": variant_img.image_1920})
+                product.write(
+                    {
+                        "image_1920": variant_img.image_1920,
+                        "image_1024": variant_img.image_1024,
+                        "image_512": variant_img.image_512,
+                    }
+                )
+                product._compute_can_image_1024_be_zoomed()
         return True
 
 

@@ -214,9 +214,21 @@ class OdooBackend(models.Model):
         return backend
 
     def _cron_import(self, model_name, from_date_field, backend=None):
+        """
+        Base method to import data from Odoo with cron.
+        """
         if not backend:
             backend = self._get_backend()
         backend._import_from_date(model_name, from_date_field)
+        return True
+
+    def action_fix_product_images(self):
+        """
+        Action to call the multi_fix_product_images method from
+        product.template model.
+        """
+        self.ensure_one()
+        self.env["product.template"].multi_fix_product_images()
         return True
 
     # def import_partner(self):

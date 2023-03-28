@@ -68,6 +68,11 @@
                                     </group>
 								</group>
 							</page>
+                            <page string="Helpers" name="helpers_page">
+                                <group name="helper_group">
+                                    <button name="action_fix_product_images" type="object" string="Fix product images" />
+                                </group>
+                            </page>
 						</notebook>
 					</sheet>
 				</form>
