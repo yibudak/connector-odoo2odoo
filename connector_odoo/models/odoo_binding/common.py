@@ -38,6 +38,11 @@ class OdooBinding(models.AbstractModel):
     def odoo_api(self):
         return self.backend_id.get_connection()
 
+    def resync(self):
+        return self.with_delay().import_record(
+            self.backend_id, self.external_id, force=True
+        )
+
     @api.constrains("backend_id", "external_id")
     def unique_backend_external_id(self):
         if self.external_id > 0:
@@ -55,9 +60,6 @@ class OdooBinding(models.AbstractModel):
                         "for the external id {external_id} of the model {_name}"
                     ).format(self.backend_id.name, self.external_id, self._name)
                 )
-
-    def resync(self):
-        return self.with_delay().export_record(self.backend_id)
 
     @api.model
     def import_batch(self, backend, filters=None, force=False):

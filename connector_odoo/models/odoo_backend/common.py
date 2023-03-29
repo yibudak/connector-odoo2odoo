@@ -238,8 +238,8 @@ class OdooBackend(models.Model):
         # When we call this method for a single model, we pass the field name
         # Otherwise we pass the field itself to avoid time inconsistencies
         # between grouped models.
-        from_date_field = getattr(backend, from_date_field)
-        next_time = backend._import_from_date(model_name, from_date_field)
+        from_date = getattr(backend, from_date_field)
+        next_time = backend._import_from_date(model_name, from_date)
         if next_time and is_single:
             backend.write({from_date_field: next_time})
             return True
