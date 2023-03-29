@@ -116,8 +116,12 @@ class OdooBackend(models.Model):
 
     import_base_models_from_date = fields.Datetime("Import base from date")
     import_product_from_date = fields.Datetime("Import products from date")
-    import_product_template_from_date = fields.Datetime("Import product templates from date")
-    import_delivery_models_from_date = fields.Datetime("Import delivery models from date")
+    import_product_template_from_date = fields.Datetime(
+        "Import product templates from date"
+    )
+    import_delivery_models_from_date = fields.Datetime(
+        "Import delivery models from date"
+    )
     import_currency_rate_from_date = fields.Datetime("Import currency rates from date")
     import_address_models_from_date = fields.Datetime("Import address models from date")
     import_partner_from_date = fields.Datetime("Import partners from date")
@@ -213,14 +217,34 @@ class OdooBackend(models.Model):
             backend = self.env["res.company"].browse(1).default_odoo_backend_id
         return backend
 
-    def _cron_import(self, model_name, from_date_field, backend=None):
+    def _cron_multi_import(self, models, date_field):
+        """
+        Multi-way to import data from Odoo with cron.
+        """
+        backend = self._get_backend()
+        for model in models:
+            next_time = self._cron_import(
+                model, date_field, is_single=False, backend=backend
+            )
+        backend.write({date_field: next_time})
+        return True
+
+    def _cron_import(self, model_name, from_date_field, is_single=True, backend=None):
         """
         Base method to import data from Odoo with cron.
         """
         if not backend:
             backend = self._get_backend()
-        backend._import_from_date(model_name, from_date_field)
-        return True
+        # When we call this method for a single model, we pass the field name
+        # Otherwise we pass the field itself to avoid time inconsistencies
+        # between grouped models.
+        from_date_field = getattr(backend, from_date_field)
+        next_time = backend._import_from_date(model_name, from_date_field)
+        if next_time and is_single:
+            backend.write({from_date_field: next_time})
+            return True
+        else:
+            return next_time
 
     def action_fix_product_images(self):
         """
@@ -242,13 +266,10 @@ class OdooBackend(models.Model):
             "odoo.delivery.price.rule",
             "odoo.delivery.carrier",
         ]
-        backend = self._get_backend()
-        for model in delivery_models:
-            self._cron_import(model, "import_delivery_models_from_date", backend=backend)
-        return True
+        date_field = "import_delivery_models_from_date"
+        return self._cron_multi_import(models=delivery_models, date_field=date_field)
 
     def import_account_models(self):
-        backend = self._get_backend()
         account_models = [
             "odoo.account.group",
             "odoo.account.account",
@@ -256,40 +277,38 @@ class OdooBackend(models.Model):
             "odoo.account.fiscal.position",
             "odoo.account.payment.term",
         ]
-        for model in account_models:
-            self._cron_import(model, "import_account_from_date", backend=backend)
-        return True
+        date_field = "import_account_from_date"
+        return self._cron_multi_import(models=account_models, date_field=date_field)
 
     def import_address_models(self):
-        backend = self._get_backend()
         address_models = [
             "odoo.address.district",
             "odoo.address.region",
             "odoo.address.neighbour",
         ]
-        for model in address_models:
-            self._cron_import(model, "import_address_models_from_date", backend=backend)
-        return True
+        date_field = "import_address_models_from_date"
+        return self._cron_multi_import(models=address_models, date_field=date_field)
 
     def import_base_models(self):
-        backend = self._get_backend()
         base_models = [
             "odoo.product.category",
             "odoo.uom.uom",
             "odoo.product.attribute",
             "odoo.product.attribute.value",
         ]
-        for model in base_models:
-            self._cron_import(model, "import_base_models_from_date", backend=backend)
-        return True
+        date_field = "import_base_models_from_date"
+        return self._cron_multi_import(models=base_models, date_field=date_field)
+
+    def _get_next_import_time(self, import_start_time):
+        next_time = import_start_time - timedelta(seconds=IMPORT_DELTA_BUFFER)
+        return fields.Datetime.to_string(next_time)
 
     def _import_from_date(self, model, from_date_field):
         import_start_time = datetime.now()
         filters = [("write_date", "<", fields.Datetime.to_string(import_start_time))]
         for backend in self:
-            from_date = backend[from_date_field]
-            if from_date:
-                from_date = fields.Datetime.to_string(from_date)
+            if from_date_field:
+                from_date = fields.Datetime.to_string(from_date_field)
                 filters.append(
                     (
                         "write_date",
@@ -298,10 +317,7 @@ class OdooBackend(models.Model):
                     )
                 )
             self.env[model].with_delay().import_batch(backend, filters)
-
-        next_time = import_start_time - timedelta(seconds=IMPORT_DELTA_BUFFER)
-        next_time = fields.Datetime.to_string(next_time)
-        self.write({from_date_field: next_time})
+        return self._get_next_import_time(import_start_time)
 
     def import_external_id(self, model, external_id, force, inmediate=True):
         model = self.env[model]
