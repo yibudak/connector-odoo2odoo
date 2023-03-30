@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="mrp_bom_form_view" model="ir.ui.view">
+        <field name="name">mrp.bom.form.view.inherit</field>
+        <field name="model">mrp.bom</field>
+        <field name="inherit_id" ref="mrp.mrp_bom_form_view"/>
+        <field name="arch" type="xml">
+            <page name="miscellaneous" position="inside">
+                <group string="Odoo Bindings" colspan="12">
+                    <field name="bind_ids" readonly="1" nolabel="1">
+                        <tree>
+                            <field name="id"/>
+                            <field name="odoo_id"/>
+                            <field name="backend_id"/>
+                            <field name="external_id"/>
+                            <field name="sync_date"/>
+                            <button name="resync" type="object" string="Resync"/>
+                        </tree>
+                    </field>
+                </group>
+            </page>
+        </field>
+    </record>
+
+</odoo>
