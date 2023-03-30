@@ -315,7 +315,7 @@ class OdooBackend(models.Model):
     def import_mrp_models(self):
         mrp_models = [
             "odoo.mrp.bom",
-            # "odoo.mrp.bom.line",
+            "odoo.mrp.bom.line",
         ]
         date_field = "import_mrp_models_from_date"
         return self._cron_multi_import(models=mrp_models, date_field=date_field)

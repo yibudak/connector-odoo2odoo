@@ -130,15 +130,15 @@ class MrpBomLineImporter(Component):
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
         super()._import_dependencies(force=force)
-        # record = self.odoo_record
-        # self._import_dependency(
-        #     record.bom_id.id, "odoo.mrp.bom", force=force
-        # )
-        # if record.product_tmpl_id:
-        #     self._import_dependency(
-        #         record.product_tmpl_id.id, "odoo.product.template", force=force
-        #     )
-        # if record.product_id:
-        #     self._import_dependency(
-        #         record.product_id.id, "odoo.product.product", force=force
-        #     )
+        record = self.odoo_record
+        self._import_dependency(
+            record.bom_id.id, "odoo.mrp.bom", force=force
+        )
+        if record.product_tmpl_id:
+            self._import_dependency(
+                record.product_tmpl_id.id, "odoo.product.template", force=force
+            )
+        if record.product_id:
+            self._import_dependency(
+                record.product_id.id, "odoo.product.product", force=force
+            )
