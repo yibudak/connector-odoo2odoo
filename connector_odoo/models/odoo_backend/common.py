@@ -110,6 +110,18 @@ class OdooBackend(models.Model):
         help="Filter in the Odoo Destination",
     )
 
+    external_bom_domain_filter = fields.Char(
+        string="External BOM domain filter",
+        default="[]",
+        help="Filter in the Odoo Destination",
+    )
+
+    external_bom_line_domain_filter = fields.Char(
+        string="External BOM Line domain filter",
+        default="[]",
+        help="Filter in the Odoo Destination",
+    )
+
     """
     DATE FIELDS
     """
@@ -127,6 +139,7 @@ class OdooBackend(models.Model):
     import_partner_from_date = fields.Datetime("Import partners from date")
     import_pricelist_from_date = fields.Datetime("Import pricelists from date")
     import_account_from_date = fields.Datetime("Import Account from date")
+    import_mrp_models_from_date = fields.Datetime("Import MRP models from date")
 
     def get_default_language_code(self):
         lang = (
@@ -252,7 +265,7 @@ class OdooBackend(models.Model):
         product.template model.
         """
         self.ensure_one()
-        self.env["product.template"].multi_fix_product_images()
+        self.env["product.template"].with_delay().multi_fix_product_images()
         return True
 
     # def import_partner(self):
@@ -298,6 +311,14 @@ class OdooBackend(models.Model):
         ]
         date_field = "import_base_models_from_date"
         return self._cron_multi_import(models=base_models, date_field=date_field)
+
+    def import_mrp_models(self):
+        mrp_models = [
+            "odoo.mrp.bom",
+            # "odoo.mrp.bom.line",
+        ]
+        date_field = "import_mrp_models_from_date"
+        return self._cron_multi_import(models=mrp_models, date_field=date_field)
 
     def _get_next_import_time(self, import_start_time):
         next_time = import_start_time - timedelta(seconds=IMPORT_DELTA_BUFFER)

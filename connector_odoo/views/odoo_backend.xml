@@ -58,6 +58,7 @@
                                     <field name="import_pricelist_from_date"/>
                                     <field name="import_partner_from_date"/>
                                     <field name="import_account_from_date"/>
+                                    <field name="import_mrp_models_from_date"/>
                                 </group>
                             </page>
 							<page string="Domains" name="domains_page">
@@ -65,6 +66,10 @@
 									<group string="Product Domains">
 										<field name="external_product_domain_filter" string="Ext. Product Filter" />
                                         <field name="external_product_template_domain_filter" string="Ext. Product Template Filter" />
+                                    </group>
+                                    <group string="BoM Domains">
+                                        <field name="external_bom_domain_filter" string="Ext. BoM Filter" />
+                                        <field name="external_bom_line_domain_filter" string="Ext. BoM Line Filter" />
                                     </group>
 								</group>
 							</page>
