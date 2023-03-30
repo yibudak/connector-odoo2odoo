@@ -90,18 +90,18 @@ class MrpBomImporter(Component):
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
         super()._import_dependencies(force=force)
-        record = self.odoo_record
+        # record = self.odoo_record
         # self._import_dependency(
         #     record.product_tmpl_id.id, "odoo.product.template", force=force
         # )
-        if record.product_uom_id:
-            self._import_dependency(
-                record.product_uom_id.id, "odoo.uom.uom", force=force
-            )
-        if record.product_id:
-            self._import_dependency(
-                record.product_id.id, "odoo.product.product", force=force
-            )
+        # if record.product_uom_id:
+        #     self._import_dependency(
+        #         record.product_uom_id.id, "odoo.uom.uom", force=force
+        #     )
+        # if record.product_id:
+        #     self._import_dependency(
+        #         record.product_id.id, "odoo.product.product", force=force
+        #     )
 
     def _after_import(self, binding, force=False):
         """Import the dependencies for the record"""

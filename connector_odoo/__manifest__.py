@@ -38,6 +38,7 @@
         "views/product.xml",
         "views/product_template.xml",
         "views/partner.xml",
+        "views/mrp.xml",
         "views/partner_category.xml",
         "views/product_attribute_value.xml",
         "views/account_account.xml",

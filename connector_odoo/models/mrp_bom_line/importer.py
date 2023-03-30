@@ -47,9 +47,7 @@ class MrpBomLineMapper(Component):
         res = {}
         bom = record.bom_id
         if bom:
-            local_bom = self.env["odoo.mrp.bom"].search(
-                [("external_id", "=", bom.id)]
-            )
+            local_bom = self.env["odoo.mrp.bom"].search([("external_id", "=", bom.id)])
             if local_bom:
                 res["bom_id"] = local_bom.odoo_id.id
         return res
@@ -88,6 +86,41 @@ class MrpBomLineMapper(Component):
                 res["product_uom_id"] = local_uom.odoo_id.id
         return res
 
+    @mapping
+    def bom_product_template_attribute_value_ids(self, record):
+        """
+        In Odoo 12 this field is related to bom_id.product_tmpl_id.attribute_line_ids
+        and in Odoo 16 this field is related to bom_id.product_tmpl_id.attribute_line_ids.product_template_value_ids
+        That's why we need to map it manually.
+        """
+        res = {}
+        attribute_binder = self.binder_for("odoo.product.attribute")
+        attribute_value_binder = self.binder_for("odoo.product.attribute.value")
+        bom_binder = self.binder_for("odoo.mrp.bom")
+        if record.attribute_value_ids:
+            attribute_ids = []
+            bom_id = bom_binder.to_internal(record.bom_id.id, unwrap=True)
+            for attr_val in record.attribute_value_ids:
+                attribute_id = attribute_binder.to_internal(
+                    attr_val.attribute_id.id, unwrap=True
+                )
+                attribute_value_id = attribute_value_binder.to_internal(
+                    attr_val.id, unwrap=True
+                )
+                if not (attribute_id and attribute_value_id):
+                    continue
+                ptav = self.env["product.template.attribute.value"].search(
+                    [
+                        ("product_tmpl_id", "=", bom_id.product_tmpl_id.id),
+                        ("attribute_id", "=", attribute_id.id),
+                        ("product_attribute_value_id", "=", attribute_value_id.id),
+                    ]
+                )
+                if ptav:
+                    attribute_ids.append(ptav.id)
+            res["bom_product_template_attribute_value_ids"] = [(6, 0, attribute_ids)]
+        return res
+
 
 class MrpBomLineImporter(Component):
     _name = "odoo.mrp.bom.line.importer"
@@ -97,15 +130,15 @@ class MrpBomLineImporter(Component):
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
         super()._import_dependencies(force=force)
-        record = self.odoo_record
+        # record = self.odoo_record
         # self._import_dependency(
         #     record.bom_id.id, "odoo.mrp.bom", force=force
         # )
-        if record.product_tmpl_id:
-            self._import_dependency(
-                record.product_tmpl_id.id, "odoo.product.template", force=force
-            )
-        if record.product_id:
-            self._import_dependency(
-                record.product_id.id, "odoo.product.product", force=force
-            )
+        # if record.product_tmpl_id:
+        #     self._import_dependency(
+        #         record.product_tmpl_id.id, "odoo.product.template", force=force
+        #     )
+        # if record.product_id:
+        #     self._import_dependency(
+        #         record.product_id.id, "odoo.product.product", force=force
+        #     )
