@@ -70,7 +70,7 @@ class IrAttachmentImportMapper(Component):
     def res_id(self, record):
         binder = self.binder_for("odoo.{}".format(record.res_model))
         res_id = binder.to_internal(record.res_id, unwrap=True)
-        return {"res_id": res_id.id}
+        return {"res_id": res_id.odoo_id.id}
 
 
 class IrAttachmentImporter(Component):

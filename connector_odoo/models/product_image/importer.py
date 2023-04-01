@@ -69,7 +69,7 @@ class ProductImageImportMapper(Component):
             ]
         )
         if imported_tmpl_id:
-            vals.update({"product_tmpl_id": imported_tmpl_id.id})
+            vals.update({"product_tmpl_id": imported_tmpl_id.odoo_id.id})
         return vals
 
 
