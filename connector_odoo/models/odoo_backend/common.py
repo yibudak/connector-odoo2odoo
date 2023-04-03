@@ -268,6 +268,14 @@ class OdooBackend(models.Model):
         self.env["product.template"].with_delay().multi_fix_product_images()
         return True
 
+    def action_fix_category_seo_name(self):
+        self.ensure_one()
+        self.env["product.public.category"].with_delay().multi_fix_category_seo_name()
+
+    def action_fix_product_seo_name(self):
+        self.ensure_one()
+        self.env["product.template"].with_delay().multi_fix_product_seo_name()
+
     # def import_partner(self):
     #     backend = self._get_backend()
     #     backend._import_from_date("odoo.res.partner", "import_partner_from_date")
