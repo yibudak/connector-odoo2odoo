@@ -59,7 +59,6 @@ class ProductImageImportMapper(Component):
         else:
             return {"name": "Product Image"}
 
-    @only_create
     @mapping
     def product_tmpl_id(self, record):
         vals = {}
@@ -80,6 +79,7 @@ class ProductImageImporter(Component):
 
     def run(self, external_id, force=False):
         """Map base_multi_image.image to product.image before import"""
+
         self.backend_adapter._odoo_model = "base_multi_image.image"
         super(ProductImageImporter, self).run(external_id, force=force)
 
