@@ -54,6 +54,7 @@ class ProductTemplateImportMapper(Component):
         ("is_published", "is_published"),
         ("short_public_description", "description_sale"),
         ("website_sequence", "website_sequence"),
+        ("qty_increment_step", "qty_increment_step"),
         # ("public_description", "public_description"),
     ]
 
@@ -220,5 +221,4 @@ class ProductTemplateImporter(Component):
                 self.env["odoo.product.image"].with_delay().import_record(
                     self.backend_record, image_id.id, force=force
                 )
-                # Todo: imageların hepsi import olmuyor.
         return True
