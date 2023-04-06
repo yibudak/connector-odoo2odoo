@@ -31,6 +31,7 @@
         "security/ir.model.access.csv",
         "views/odoo_backend.xml",
         "wizards/import_external_id.xml",
+        "wizards/import_single_field_legacy.xml",
         "wizards/wizards_menu.xml",
         "views/product_uom.xml",
         "views/odoo_connector_menus.xml",

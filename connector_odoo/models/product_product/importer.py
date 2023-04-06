@@ -33,9 +33,7 @@ class ProductBatchImporter(Component):
         random.shuffle(external_ids)
         for idx, external_id in enumerate(external_ids):
             job_options = {"priority": idx}
-            self._import_record(
-                external_id, job_options=job_options, force=force
-            )
+            self._import_record(external_id, job_options=job_options, force=force)
 
 
 class ProductImportMapper(Component):
@@ -88,11 +86,24 @@ class ProductImportMapper(Component):
         vals = {
             "product_tmpl_id": local_template_id.id,
             "product_template_attribute_value_ids": [(6, 0, attr_line_vals)],
-            "combination_indices": ','.join([str(i) for i in sorted(attr_line_vals)]),
+            "combination_indices": ",".join([str(i) for i in sorted(attr_line_vals)]),
         }
 
         if vals["combination_indices"] == "":
             vals.pop("combination_indices")
+        else:
+            exist_product = self.env["product.product"].search(
+                [
+                    ("product_tmpl_id", "=", local_template_id.id),
+                    (
+                        "combination_indices",
+                        "=",
+                        ",".join([str(i) for i in sorted(attr_line_vals)]),
+                    ),
+                ]
+            )
+            if exist_product:
+                vals["odoo_id"] = exist_product.id
 
         return vals
 
@@ -200,9 +211,7 @@ class ProductImporter(Component):
 
         if self.odoo_record.v_cari_urun:
             partner_id = self.odoo_record.v_cari_urun
-            self._import_dependency(
-                partner_id.id, "odoo.res.partner", force=force
-            )
+            self._import_dependency(partner_id.id, "odoo.res.partner", force=force)
 
         if self.odoo_record.attribute_value_ids:
             for attr_value in self.odoo_record.attribute_value_ids:

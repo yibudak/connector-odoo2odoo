@@ -11,6 +11,7 @@ from odoo.exceptions import UserError
 
 # pylint: disable=W7950
 from odoo.addons.connector_odoo.components.backend_adapter import OdooAPI, OdooLocation
+from odoo.addons.connector_odoo.components.legacy_adapter import LegacyOdooAPI
 
 # TODO : verify if needed
 IMPORT_DELTA_BUFFER = 30  # seconds
@@ -163,6 +164,17 @@ class OdooBackend(models.Model):
             lang_id=self.get_default_language_code(),
         )
         return OdooAPI(odoo_location)
+
+    def get_legacy_connection(self):
+        self.ensure_one()
+        protocol = "https" if self.protocol == "jsonrpc+ssl" else "http"
+        return LegacyOdooAPI(
+            url=f"{protocol}://{self.hostname}:{self.port}",
+            db=self.database,
+            password=self.password,
+            username=self.login,
+            language=self.get_default_language_code(),
+        )
 
     def button_check_connection(self):
         odoo_api = self.get_connection()

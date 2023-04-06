@@ -33,10 +33,6 @@ class ProductTemplateBatchImporter(Component):
             len(external_ids),
         )
         for external_id in external_ids:
-            # TODO : get the parent_left of the category so that we change
-            #   the priority
-            # prod_id = self.backend_adapter.read(external_id)
-            # cat_id = prod_id.categ_id
             job_options = {"priority": 15}
             self._import_record(external_id, job_options=job_options, force=force)
 
@@ -153,16 +149,6 @@ class ProductTemplateImporter(Component):
     _inherit = "odoo.importer"
     _apply_on = ["odoo.product.template"]
 
-    # def _before_import(self):
-    #     """Import attachments before product.template we can do
-    #     mapping on web attachments"""
-    #     web_attachs = self.odoo_record.website_attachment_ids
-    #     if web_attachs:
-    #         self.env["odoo.ir.attachment"].with_delay().import_batch(
-    #             self.backend_record, [('id', 'in', web_attachs.ids)]
-    #         )
-    #     super(ProductTemplateImporter, self)._before_import()
-
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
         # Todo yigit: this causes concurrency issues
@@ -184,7 +170,6 @@ class ProductTemplateImporter(Component):
         imported_template = self.binder.to_internal(self.external_id)
         if imported_template:
             self._import_website_images(force=force)
-            # Todo yigit: enable here
             self._import_website_attachments(imported_template, force=force)
             self._import_attribute_lines(force=force)
             self._import_feature_lines(force=force)
