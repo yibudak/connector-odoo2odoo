@@ -94,6 +94,17 @@ class ProductTemplate(models.Model):
                 product._compute_can_image_1024_be_zoomed()
         return True
 
+    def import_external_variant_ids(self):
+        odoo_record = fields.first(self.bind_ids)
+        domain = [["product_tmpl_id", "=", odoo_record.external_id]]
+
+        domain += ast.literal_eval(
+            str(odoo_record.backend_id.external_product_domain_filter)
+        )
+        self.env["odoo.product.product"].with_delay().import_batch(
+            odoo_record.backend_id, filters=domain
+        )
+
 
 class ProductTemplateAdapter(Component):
     _name = "odoo.product.template.adapter"

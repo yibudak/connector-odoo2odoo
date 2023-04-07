@@ -15,6 +15,7 @@
             </group>
             <group string="Child Odoo Bindings">
                 <field name="product_bind_ids" readonly="1" nolabel="1" />
+                <button name="import_external_variant_ids" string="Import Variants" type="object" />
             </group>
         </xpath>
       </field>
