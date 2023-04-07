@@ -87,8 +87,8 @@ class ProductTemplate(models.Model):
                 product.write(
                     {
                         "image_1920": variant_img.image_1920,
-                        "image_1024": variant_img.image_1024,
-                        "image_512": variant_img.image_512,
+                        "image_1024": variant_img.image_1920,
+                        "image_512": variant_img.image_1920,
                     }
                 )
                 product._compute_can_image_1024_be_zoomed()
