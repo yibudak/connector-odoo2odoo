@@ -16,6 +16,7 @@ class ImportSingleFieldLegacyWizard(models.TransientModel):
         "ir.model", required=True, domain="[('model', 'like', 'odoo.%')]"
     )
     field_name = fields.Char(required=True)
+    to_field_name = fields.Char(required=True)
     force = fields.Boolean(default=True)
 
     def action_import(self):
@@ -42,6 +43,6 @@ class ImportSingleFieldLegacyWizard(models.TransientModel):
         for record_external_id, record in record_dict.items():
             data = external_records.get(record_external_id)
             if data:
-                record.write({self.field_name: data[self.field_name]})
+                record.write({self.to_field_name: data[self.field_name]})
 
         return True
