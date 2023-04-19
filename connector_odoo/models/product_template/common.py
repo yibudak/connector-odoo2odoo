@@ -81,7 +81,7 @@ class ProductTemplate(models.Model):
 
     def multi_fix_product_images(self):
         """This method fixes main image of the all the products."""
-        for product in self.search([]):
+        for product in self.search([("is_published", "=", True)]):
             variant_img = fields.first(product.product_template_image_ids)
             if variant_img:
                 product.write(
@@ -92,6 +92,15 @@ class ProductTemplate(models.Model):
                     }
                 )
                 product._compute_can_image_1024_be_zoomed()
+                for variant in product.product_variant_ids:
+                    variant.write(
+                        {
+                            "image_1920": variant_img.image_1920,
+                            "image_1024": variant_img.image_1920,
+                            "image_512": variant_img.image_1920,
+                        }
+                    )
+                    variant._compute_can_image_1024_be_zoomed()
         return True
 
     def import_external_variant_ids(self):
