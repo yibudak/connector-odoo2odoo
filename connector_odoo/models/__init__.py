@@ -3,6 +3,7 @@
 from . import odoo_binding  # Keep this order for inheritance
 from . import odoo_backend
 
+from . import base_multi_image_image
 from . import res_currency_rate
 from . import res_currency
 from . import res_company

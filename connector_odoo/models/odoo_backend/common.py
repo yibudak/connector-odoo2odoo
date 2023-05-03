@@ -129,6 +129,7 @@ class OdooBackend(models.Model):
 
     import_base_models_from_date = fields.Datetime("Import base from date")
     import_product_from_date = fields.Datetime("Import products from date")
+    import_base_multi_image_from_date = fields.Datetime("Import Base Multi Image Date")
     import_product_template_from_date = fields.Datetime(
         "Import product templates from date"
     )

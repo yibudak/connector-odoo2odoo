@@ -55,6 +55,7 @@
                                     <field name="import_delivery_models_from_date"/>
                                     <field name="import_address_models_from_date"/>
                                     <field name="import_currency_rate_from_date"/>
+									<field name="import_base_multi_image_from_date" />
                                     <field name="import_pricelist_from_date"/>
                                     <field name="import_partner_from_date"/>
                                     <field name="import_account_from_date"/>
