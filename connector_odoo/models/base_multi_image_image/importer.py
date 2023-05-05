@@ -44,6 +44,7 @@ class BaseMultiImageImageMapper(Component):
         ("storage", "storage"),
         ("extension", "extension"),
         ("comments", "comments"),
+        ("is_published", "is_published"),
     ]
 
     @mapping
