@@ -111,6 +111,7 @@ class BaseMultiImageImageImporter(Component):
             raise Exception(
                 "The owner model of the image is" " not a product or a product template"
             )
+        # These lines cause a circular dependency.
         self._import_dependency(
             record.owner_id, "odoo.%s" % record.owner_model, force=force
         )
