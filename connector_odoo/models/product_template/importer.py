@@ -218,7 +218,7 @@ class ProductTemplateImporter(Component):
         image_ids = self.odoo_record.image_ids
         if image_ids:
             for image_id in image_ids:
-                self.env["odoo.product.image"].with_delay().import_record(
+                self.env["odoo.base_multi_image.image"].with_delay().import_record(
                     self.backend_record, image_id.id, force=force
                 )
         return True
