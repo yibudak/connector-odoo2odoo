@@ -47,18 +47,30 @@ class BaseMultiImageImageMapper(Component):
         ("is_published", "is_published"),
     ]
 
+    def _get_owner(self, record):
+        binder = self.binder_for("odoo.%s" % record.owner_model)
+        owner = binder.to_internal(record.owner_id)
+        return owner
+
     @mapping
     def name(self, record):
-        if record.name:
-            return {"name": record.name}
-        else:
-            return {"name": record.owner_ref_id.name}
+        name = record.name if record.name else record.owner_ref_id.name
+        owner = self._get_owner(record)
+        if owner:
+            exist_images = self.env["base_multi_image.image"].search(
+                [
+                    ("owner_model", "=", record.owner_model),
+                    ("owner_id", "=", owner.odoo_id.id),
+                ]
+            )
+            if name in exist_images.mapped("name"):
+                name = "%s %s" % (name, record.id)
+        return {"name": name}
 
     @mapping
     def owner_ref_model(self, record):
         vals = {}
-        binder = self.binder_for("odoo.%s" % record.owner_model)
-        owner = binder.to_internal(record.owner_id)
+        owner = self._get_owner(record)
         if owner:
             vals["owner_model"] = record.owner_model
             vals["owner_id"] = owner.odoo_id.id
@@ -72,8 +84,7 @@ class BaseMultiImageImageMapper(Component):
             attachment = binder.to_internal(record.attachment_id.id)
             if not attachment:
                 attachment = self.env["odoo.ir.attachment"].search(
-                    [("store_fname", "=", record.attachment_id.store_fname)],
-                    limit=1
+                    [("store_fname", "=", record.attachment_id.store_fname)], limit=1
                 )
             vals["attachment_id"] = attachment.odoo_id.id
         return vals
