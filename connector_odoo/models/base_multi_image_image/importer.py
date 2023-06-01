@@ -79,7 +79,7 @@ class BaseMultiImageImageMapper(Component):
     @mapping
     def attachment_id(self, record):
         vals = {}
-        if record.attachment_id:
+        if record.attachment_id and record.storage != "db":
             binder = self.binder_for("odoo.ir.attachment")
             attachment = binder.to_internal(record.attachment_id.id)
             if not attachment:
@@ -132,6 +132,7 @@ class BaseMultiImageImageImporter(Component):
                 record.attachment_id.id, "odoo.ir.attachment", force=force
             )
 
+        # todo fix this line this causes timeout
         if record.product_variant_ids:
             for variant in record.product_variant_ids:
                 self._import_dependency(variant.id, "odoo.product.product", force=force)

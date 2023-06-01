@@ -85,9 +85,9 @@ class OdooBinding(models.AbstractModel):
             importer.set_lock(external_id)
             try:
                 return importer.run(external_id, force=force)
-            except Exception:
+            except Exception as e:
                 raise RetryableJobError(
-                    "Could not import record %s" % external_id,
+                    "Could not import record %s: \n%s" % (external_id, str(e)),
                     seconds=5,
                 )
 

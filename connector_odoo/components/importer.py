@@ -93,7 +93,8 @@ class OdooImporter(AbstractComponent):
         if not external_id:
             return
         binder = self.binder_for(binding_model)
-        if force or not binder.to_internal(external_id):
+        binding = binder.to_internal(external_id)
+        if force or not (binding and self._is_uptodate(binding)):
             if importer is None:
                 importer = self.component(
                     usage="record.importer", model_name=binding_model
@@ -238,7 +239,7 @@ class OdooImporter(AbstractComponent):
 
         try:
             self.odoo_record = self._get_odoo_data()
-        except IDMissingInBackend:
+        except (IDMissingInBackend, ValueError):
             return _("Record does no longer exist in Odoo")
 
         binding = self._get_binding_with_data(binding)  # Todo experimental daha iyisini yaparsın
