@@ -133,6 +133,6 @@ class BaseMultiImageImageImporter(Component):
             )
 
         # todo fix this line this causes timeout
-        if record.product_variant_ids:
-            for variant in record.product_variant_ids:
-                self._import_dependency(variant.id, "odoo.product.product", force=force)
+        # if record.product_variant_ids:
+        #     for variant in record.product_variant_ids:
+        #         self._import_dependency(variant.id, "odoo.product.product", force=force)
