@@ -87,13 +87,15 @@ class BaseMultiImageImageMapper(Component):
                     [("store_fname", "=", record.attachment_id.store_fname)], limit=1
                 )
             vals["attachment_id"] = attachment.odoo_id.id
+        else:
+            vals["attachment_id"] = False
         return vals
 
     @mapping
     def file_db_store(self, record):
         vals = {}
         if record.storage == "db" and record.file_db_store:
-            vals["file_db_store"] = record.file_db_store
+            vals["file_db_store"] = record.file_db_store.replace("\n", "")
         return vals
 
     @mapping
