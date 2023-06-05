@@ -1,5 +1,5 @@
 import logging
-from odoo import fields, models
+from odoo import fields, models, api
 from odoo.addons.component.core import Component
 
 _logger = logging.getLogger(__name__)
@@ -31,9 +31,6 @@ class OdooBaseMultiImageImage(models.Model):
                 self.backend_id, self.external_id, force=True
             )
 
-    def create(self, vals):
-        return super().create(vals)
-
 
 class BaseMultiImageImage(models.Model):
     _inherit = "base_multi_image.image"
@@ -43,6 +40,12 @@ class BaseMultiImageImage(models.Model):
         inverse_name="odoo_id",
         string="Odoo Bindings",
     )
+
+    # We have a bug when we try to import images from Odoo to Odoo
+    # So we need to override this method and remove the check
+    @api.constrains("storage", "file_db_store")
+    def _check_store(self):
+        return True
 
 
 class BaseMultiImageImageAdapter(Component):
