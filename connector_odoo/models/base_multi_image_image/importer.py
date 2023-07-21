@@ -41,7 +41,6 @@ class BaseMultiImageImageMapper(Component):
 
     direct = [
         ("sequence", "sequence"),
-        ("storage", "storage"),
         ("extension", "extension"),
         ("comments", "comments"),
         ("is_published", "is_published"),
@@ -96,6 +95,8 @@ class BaseMultiImageImageMapper(Component):
         vals = {}
         if record.storage == "db" and record.file_db_store:
             vals["file_db_store"] = record.file_db_store.replace("\n", "")
+        else:
+            vals["file_db_store"] = False
         return vals
 
     @mapping
@@ -109,7 +110,18 @@ class BaseMultiImageImageMapper(Component):
                 if variant:
                     variants.append(variant.odoo_id.id)
             vals["product_variant_ids"] = [(6, 0, variants)]
+        else:
+            vals["product_variant_ids"] = False
         return vals
+
+    @mapping
+    def storage(self, record):
+        """
+        Yigit: This is a hack to fix the constraint error when importing images
+        Actually we could import `storage` field with the `direct` mapping above
+        but this field needs to be imported after `attachment_id` field.
+        """
+        return {"storage": record.storage}
 
 
 class BaseMultiImageImageImporter(Component):
