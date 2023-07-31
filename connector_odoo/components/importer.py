@@ -50,16 +50,15 @@ class OdooImporter(AbstractComponent):
         """Return True if the import should be skipped because
         it is already up-to-date in Odoo"""
         assert self.odoo_record
-        odoo_date = self.odoo_record.write_date
-        if not hasattr(self.odoo_record, "write_date") or not odoo_date:
+        odoo_date = self.odoo_record.get("write_date", False)
+        if not odoo_date:
             return  # no update date on Odoo, always import it.
         if not binding:
             return  # it does not exist so it should not be skipped
-        sync = binding.sync_date
-        if not sync:
+        sync_date = binding.sync_date
+        if not sync_date:
             return
         from_string = fields.Datetime.from_string
-        sync_date = from_string(sync)
 
         # if the last synchronization date is greater than the last
         # update in odoo, we skip the import.
@@ -67,7 +66,7 @@ class OdooImporter(AbstractComponent):
         # check if the odoo_date is more recent than the sync_date
         # and if so, schedule a new import. If we don't do that, we'll
         # miss changes done in Odoo
-        return odoo_date < sync_date
+        return from_string(odoo_date) < sync_date
 
     def _import_dependency(
         self, external_id, binding_model, importer=None, force=False
@@ -104,7 +103,7 @@ class OdooImporter(AbstractComponent):
             except NothingToDoJob:
                 _logger.info(
                     "Dependency import of %s(%s) has been ignored.",
-                    binding_model._name,
+                    binding_model,
                     external_id,
                 )
 
@@ -123,16 +122,6 @@ class OdooImporter(AbstractComponent):
         """
         return self.mapper.map_record(self.odoo_record)
 
-    def _validate_data(self, data):
-        """Check if the values to import are correct
-
-        Pro-actively check before the ``_create`` or
-        ``_update`` if some fields are missing or invalid.
-
-        Raise `InvalidDataError`
-        """
-        return
-
     def _must_skip(self):
         """Hook called right after we read the data from the backend.
 
@@ -146,6 +135,16 @@ class OdooImporter(AbstractComponent):
         :returns: None | str | unicode
         """
         return
+
+    # def _validate_binding(self, binding, data):
+    #     """
+    #     If update dictionary has odoo_id, update the binding with the
+    #     matching odoo_id.
+    #     """
+    #     if data.get("odoo_id"):
+    #         binding = binding.search([("odoo_id", "=", data.get("odoo_id"))])
+    #         data.update({"external_id": binding.external_id})
+    #     return binding
 
     def _get_binding(self):
         return self.binder.to_internal(self.external_id)
@@ -162,9 +161,10 @@ class OdooImporter(AbstractComponent):
     def _create(self, data):
         """Create the Odoo record"""
         # special check on data before import
-        self._validate_data(data)
         context = {**{"connector_no_export": True}, **self._get_context(data)}
-        model = self.model.with_context(context)
+        # Todo yigit: we've added sudo here. maybe we should avoid sudo and
+        # rearrange the permissions
+        model = self.model.sudo().with_context(context)
 
         binding = model.create(data)
         _logger.info("%d created from Odoo %s", binding, self.external_id)
@@ -179,10 +179,10 @@ class OdooImporter(AbstractComponent):
 
     def _update(self, binding, data):
         """Update an Odoo record"""
-        # special check on data before import
-        self._validate_data(data)
         context = {**{"connector_no_export": True}, **self._get_context(data)}
-        binding.with_context(context).write(data)
+        # Todo yigit: we've added sudo here. maybe we should avoid sudo and
+        # rearrange the permissions
+        binding.with_context(context).sudo().write(data)
         _logger.info("%d updated from Odoo %s", binding, self.external_id)
         return
 
@@ -225,7 +225,6 @@ class OdooImporter(AbstractComponent):
 
         :param external_id: identifier of the record on Odoo
         """
-
         self.external_id = external_id
         binding = self._get_binding()
         must_continue = self._init_import(binding, external_id)
@@ -242,7 +241,9 @@ class OdooImporter(AbstractComponent):
         except (IDMissingInBackend, ValueError):
             return _("Record does no longer exist in Odoo")
 
-        binding = self._get_binding_with_data(binding)  # Todo experimental daha iyisini yaparsın
+        binding = self._get_binding_with_data(
+            binding
+        )  # Todo experimental daha iyisini yaparsın
         if self._must_skip():
             _logger.info(
                 "({}: {}) It must be skipped".format(self.work.model_name, external_id)
@@ -288,9 +289,13 @@ class OdooImporter(AbstractComponent):
                 self.work.model_name, external_id
             )
         )
+        # We commit the transaction before the after import
+        self.env.cr.commit()
         self._after_import(binding, force)
         _logger.info("Finished ({}: {})!".format(self.work.model_name, external_id))
-
+        # We commit the transaction after the after import
+        self.env.cr.commit()
+        return _("Imported with success.")
 
 class BatchImporter(AbstractComponent):
     """The role of a BatchImporter is to search for a list of
@@ -315,9 +320,9 @@ class BatchImporter(AbstractComponent):
         self.advisory_lock_or_retry(lock_name)
         _logger.info("Resource {} locked".format(lock_name))
 
-    def run(self, filters=None, force=False):
+    def run(self, domain=None, force=False):
         """Run the synchronization"""
-        record_ids = self.backend_adapter.search(filters)
+        record_ids = self.backend_adapter.search(domain)
         for record_id in record_ids:
             self._import_record(record_id)
 

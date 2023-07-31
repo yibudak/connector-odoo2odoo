@@ -30,7 +30,7 @@ class OdooImportMapper(AbstractComponent):
     @mapping
     def odoo_id(self, record):
         """Value is assigned to odoo_id so as not to duplicate records already imported"""
-        model_id = record.id
+        model_id = record["id"]
         binder = self.binder_for()
         res_id = binder.to_internal(model_id, unwrap=True)
 
@@ -52,12 +52,14 @@ class OdooImportMapper(AbstractComponent):
         :type from_attr: callable | str
         :param to_attr: name of the target attribute
         :type to_attr: str
+        yigit 26.07.2023: this method is changed to work with new odoo connector
         """
-        if callable(from_attr):
-            return from_attr(self, record, to_attr)
-        value = record[from_attr] if hasattr(record, from_attr) else False
-        if not value:
-            return False
+        return record.get(from_attr, False)
+        # if callable(from_attr):
+        #     return from_attr(self, record, to_attr)
+        # value = record[from_attr] if hasattr(record, from_attr) else False
+        # if not value:
+        #     return False
 
         # Backward compatibility: when a field is a relation, and a modifier is
         # not used, we assume that the relation model is a binding.

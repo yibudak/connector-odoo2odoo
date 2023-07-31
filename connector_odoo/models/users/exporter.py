@@ -15,10 +15,10 @@ class BatchUserExporter(Component):
     _apply_on = ["odoo.res.users"]
     _usage = "batch.exporter"
 
-    def run(self, filters=None, force=False):
+    def run(self, domain=None, force=False):
         loc_filter = ast.literal_eval(self.backend_record.local_user_domain_filter)
-        filters += loc_filter
-        user_ids = self.env["res.users"].search(filters)
+        domain += loc_filter
+        user_ids = self.env["res.users"].search(domain)
 
         o_ids = self.env["odoo.res.users"].search(
             [("backend_id", "=", self.backend_record.id)]
@@ -85,17 +85,17 @@ class UserExportMapper(Component):
 
     def get_user_by_match_field(self, record):
         match_field = "login"
-        filters = []
+        domain = []
 
-        filters = ast.literal_eval(self.backend_record.external_user_domain_filter)
+        domain = ast.literal_eval(self.backend_record.external_user_domain_filter)
         if record[match_field]:
-            filters.append((match_field, "=", record[match_field]))
-        filters.append("|")
-        filters.append(("active", "=", False))
-        filters.append(("active", "=", True))
+            domain.append((match_field, "=", record[match_field]))
+        domain.append("|")
+        domain.append(("active", "=", False))
+        domain.append(("active", "=", True))
 
         adapter = self.component(usage="record.exporter").backend_adapter
-        user = adapter.search(filters)
+        user = adapter.search(domain)
         if len(user) == 1:
             return user[0]
 

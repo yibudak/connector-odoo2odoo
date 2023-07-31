@@ -14,13 +14,13 @@ class ResCurrencyBatchImporter(Component):
     _inherit = "odoo.delayed.batch.importer"
     _apply_on = ["odoo.res.currency"]
 
-    def run(self, filters=None, force=False):
+    def run(self, domain=None, force=False):
         """Run the synchronization"""
 
-        external_ids = self.backend_adapter.search(filters)
+        external_ids = self.backend_adapter.search(domain)
         _logger.info(
             "search for odoo currencies %s returned %s items",
-            filters,
+            domain,
             len(external_ids),
         )
         base_priority = 10
@@ -51,14 +51,16 @@ class ResCurrencyMapper(Component):
         res = {}
         currency_id = self.env["res.currency"].search(
             [
-                ("name", "=", record.name),
+                ("name", "=", record["name"]),
                 "|",
                 ("active", "=", True),
                 ("active", "=", False),
             ]
         )
-        _logger.info("Res currency found for %s : %s" % (record, currency_id))
         if len(currency_id) == 1:
+            _logger.info(
+                "Res currency found for %s : %s" % (record["name"], currency_id.name)
+            )
             res.update({"odoo_id": currency_id.id})
         return res
 
@@ -69,4 +71,3 @@ class CurrencyImporter(Component):
     _name = "odoo.res.currency.importer"
     _inherit = "odoo.importer"
     _apply_on = "odoo.res.currency"
-

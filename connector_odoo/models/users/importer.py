@@ -21,12 +21,12 @@ class UserBatchImporter(Component):
     _inherit = "odoo.delayed.batch.importer"
     _apply_on = ["odoo.res.users"]
 
-    def run(self, filters=None, force=False):
+    def run(self, domain=None, force=False):
         """Run the synchronization"""
 
-        external_ids = self.backend_adapter.search(filters)
+        external_ids = self.backend_adapter.search(domain)
         _logger.info(
-            "search for odoo user %s returned %s items", filters, len(external_ids)
+            "search for odoo user %s returned %s items", domain, len(external_ids)
         )
         for external_id in external_ids:
             job_options = {"priority": 15}
@@ -47,16 +47,16 @@ class UserImportMapper(Component):
     @only_create
     @mapping
     def odoo_id(self, record):
-        filters = ast.literal_eval(self.backend_record.local_user_domain_filter)
+        domain = ast.literal_eval(self.backend_record.local_user_domain_filter)
         if record.login or record.name:
-            filters.extend(
+            domain.extend(
                 [
                     "|",
                     ("login", "=", record.login),
                     ("name", "=", record.name),
                 ]
             )
-        user = self.env["res.users"].search(filters)
+        user = self.env["res.users"].search(domain)
         if len(user) == 1:
             return {"odoo_id": user.id}
         return {}

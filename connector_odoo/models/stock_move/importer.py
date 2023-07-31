@@ -13,13 +13,13 @@ class StockMoveBatchImporter(Component):
     _inherit = "odoo.delayed.batch.importer"
     _apply_on = ["odoo.stock.move"]
 
-    def run(self, filters=None, force=False):
+    def run(self, domain=None, force=False):
         """Run the synchronization"""
 
-        updated_ids = self.backend_adapter.search(filters)
+        updated_ids = self.backend_adapter.search(domain)
         _logger.info(
             "search for odoo stock move %s returned %s items",
-            filters,
+            domain,
             len(updated_ids),
         )
         for move in updated_ids:

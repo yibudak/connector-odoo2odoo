@@ -16,16 +16,16 @@ class MrpBomBatchImporter(Component):
     _inherit = "odoo.delayed.batch.importer"
     _apply_on = ["odoo.mrp.bom"]
 
-    def run(self, filters=None, force=False):
+    def run(self, domain=None, force=False):
         """Run the synchronization"""
         imported_products = (
             self.env["odoo.product.template"].search([]).mapped("external_id")
         )
-        filters.append(("product_tmpl_id", "in", imported_products))
-        external_ids = self.backend_adapter.search(filters)
+        domain.append(("product_tmpl_id", "in", imported_products))
+        external_ids = self.backend_adapter.search(domain)
         _logger.info(
             "search for delivery regions %s returned %s items",
-            filters,
+            domain,
             len(external_ids),
         )
         for external_id in external_ids:
@@ -50,9 +50,8 @@ class MrpBomMapper(Component):
     @mapping
     def product_uom_id(self, record):
         res = {}
-        uom = record.product_uom_id
-        if uom:
-            local_uom = self.env["odoo.uom.uom"].search([("external_id", "=", uom.id)])
+        if uom := record.get("product_uom_id"):
+            local_uom = self.env["odoo.uom.uom"].search([("external_id", "=", uom[0])])
             if local_uom:
                 res["product_uom_id"] = local_uom.odoo_id.id
         return res
@@ -60,10 +59,9 @@ class MrpBomMapper(Component):
     @mapping
     def product_tmpl_id(self, record):
         res = {}
-        product = record.product_tmpl_id
-        if product:
+        if product := record.get("product_tmpl_id"):
             local_product = self.env["odoo.product.template"].search(
-                [("external_id", "=", product.id)]
+                [("external_id", "=", product[0])]
             )
             if local_product:
                 res["product_tmpl_id"] = local_product.odoo_id.id
@@ -72,10 +70,9 @@ class MrpBomMapper(Component):
     @mapping
     def product_id(self, record):
         res = {}
-        product = record.product_id
-        if product:
+        if product := record.get("product_id"):
             local_product = self.env["odoo.product.product"].search(
-                [("external_id", "=", product.id)]
+                [("external_id", "=", product[0])]
             )
             if local_product:
                 res["product_id"] = local_product.odoo_id.id
@@ -92,24 +89,20 @@ class MrpBomImporter(Component):
         super()._import_dependencies(force=force)
         record = self.odoo_record
         self._import_dependency(
-            record.product_tmpl_id.id, "odoo.product.template", force=force
+            record["product_tmpl_id"][0], "odoo.product.template", force=force
         )
-        if record.product_uom_id:
-            self._import_dependency(
-                record.product_uom_id.id, "odoo.uom.uom", force=force
-            )
-        if record.product_id:
-            self._import_dependency(
-                record.product_id.id, "odoo.product.product", force=force
-            )
+        if uom_id := record.get("product_uom_id", False):
+            self._import_dependency(uom_id[0], "odoo.uom.uom", force=force)
+        if product_id := record.get("product_id", False):
+            self._import_dependency(product_id[0], "odoo.product.product", force=force)
 
     def _after_import(self, binding, force=False):
         """Import the dependencies for the record"""
         res = super()._after_import(binding, force=force)
         record = self.odoo_record
-        if record.bom_line_ids:
-            for line in record.bom_line_ids:
+        if bom_lines := record.get("bom_line_ids", False):
+            for line_id in bom_lines:
                 self.env["odoo.mrp.bom.line"].with_delay().import_record(
-                    self.backend_record, line.id, force=force
+                    self.backend_record, line_id, force=force
                 )
         return res

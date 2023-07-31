@@ -10,8 +10,7 @@ from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
 # pylint: disable=W7950
-from odoo.addons.connector_odoo.components.backend_adapter import OdooAPI, OdooLocation
-from odoo.addons.connector_odoo.components.legacy_adapter import LegacyOdooAPI
+from odoo.addons.connector_odoo.components.odoo_api import OdooAPI
 
 # TODO : verify if needed
 IMPORT_DELTA_BUFFER = 30  # seconds
@@ -64,13 +63,25 @@ class OdooBackend(models.Model):
         help="For SSL, 443 is mostly the right choice",
         default=8069,
     )
+    timeout = fields.Integer(
+        required=True,
+        default=15,
+        help="Timeout in seconds for the connection to the backend",
+    )
+
+    uid = fields.Integer(
+        string="User ID in the external system",
+        help="""The user id that represents this system in the external
+                system.""",
+        default=0,
+        readonly=True,
+    )
+
     force = fields.Boolean(help="Execute import/export even if no changes in backend")
     protocol = fields.Selection(
         selection=[
-            ("jsonrpc", "JsonRPC"),
-            ("jsonrpc+ssl", "JsonRPC with SSL"),
-            ("xmlrpc", "XMLRPC"),
-            ("xmlrpc+ssl", "XMLRPC with SSL"),
+            ("http", "JsonRPC"),
+            ("https", "JsonRPC with SSL"),
         ],
         required=True,
         default="jsonrpc",
@@ -143,6 +154,16 @@ class OdooBackend(models.Model):
     import_account_from_date = fields.Datetime("Import Account from date")
     import_mrp_models_from_date = fields.Datetime("Import MRP models from date")
 
+    @api.onchange("login")
+    def _onchange_login(self):
+        for backend in self:
+            backend.write(
+                {
+                    "state": "draft",
+                    "uid": 0,
+                }
+            )
+
     def get_default_language_code(self):
         lang = (
             self.default_lang_id.code
@@ -154,37 +175,35 @@ class OdooBackend(models.Model):
 
     def get_connection(self):
         self.ensure_one()
-        odoo_location = OdooLocation(
-            hostname=self.hostname,
+        return OdooAPI(
+            base_url=self.protocol + "://" + self.hostname + ":" + str(self.port),
+            db=self.database,
             login=self.login,
             password=self.password,
-            database=self.database,
-            port=self.port,
-            version=self.version,
-            protocol=self.protocol,
-            lang_id=self.get_default_language_code(),
-        )
-        return OdooAPI(odoo_location)
-
-    def get_legacy_connection(self):
-        self.ensure_one()
-        protocol = "https" if self.protocol == "jsonrpc+ssl" else "http"
-        return LegacyOdooAPI(
-            url=f"{protocol}://{self.hostname}:{self.port}",
-            db=self.database,
-            password=self.password,
-            username=self.login,
+            timeout=self.timeout,
+            uid=self.uid,
             language=self.get_default_language_code(),
         )
 
+    # def get_legacy_connection(self):
+    #     self.ensure_one()
+    #     protocol = "https" if self.protocol == "jsonrpc+ssl" else "http"
+    #     return LegacyOdooAPI(
+    #         url=f"{protocol}://{self.hostname}:{self.port}",
+    #         db=self.database,
+    #         password=self.password,
+    #         username=self.login,
+    #         language=self.get_default_language_code(),
+    #     )
+
     def button_check_connection(self):
         odoo_api = self.get_connection()
-        odoo_api.complete_check()
-        self.write({"state": "checked"})
+        odoo_api.test_connection()
+        self.write({"state": "checked", "uid": odoo_api._uid})
 
     def button_reset_to_draft(self):
         self.ensure_one()
-        self.write({"state": "draft"})
+        self.write({"state": "draft", "uid": 0})
 
     @contextmanager
     def work_on(self, model_name, **kwargs):
@@ -195,11 +214,11 @@ class OdooBackend(models.Model):
         """
         self.ensure_one()
         lang = self.get_default_language_code()
-        with self.get_connection() as odoo_api:
-            _super = super(OdooBackend, self.with_context(lang=lang))
-            # from the components we'll be able to do: self.work.odoo_api
-            with _super.work_on(model_name, odoo_api=odoo_api, **kwargs) as work:
-                yield work
+        _conn = self.get_connection()
+        _super = super(OdooBackend, self.with_context(lang=lang))
+        # from the components we'll be able to do: self.work.odoo_api
+        with _super.work_on(model_name, odoo_api=_conn, **kwargs) as work:
+            yield work
 
     def synchronize_basedata(self):
         self.ensure_one()
@@ -347,18 +366,18 @@ class OdooBackend(models.Model):
 
     def _import_from_date(self, model, from_date_field):
         import_start_time = datetime.now()
-        filters = [("write_date", "<", fields.Datetime.to_string(import_start_time))]
+        domain = [("write_date", "<", fields.Datetime.to_string(import_start_time))]
         for backend in self:
             if from_date_field:
                 from_date = fields.Datetime.to_string(from_date_field)
-                filters.append(
+                domain.append(
                     (
                         "write_date",
                         ">",
                         from_date,
                     )
                 )
-            self.env[model].with_delay().import_batch(backend, filters)
+            self.env[model].with_delay().import_batch(backend, domain)
         return self._get_next_import_time(import_start_time)
 
     def import_external_id(self, model, external_id, force, inmediate=True):
@@ -371,14 +390,14 @@ class OdooBackend(models.Model):
     def _export_from_date(self, model, from_date_field):
         self.ensure_one()
         import_start_time = datetime.now()
-        filters = [("write_date", "<", fields.Datetime.to_string(import_start_time))]
+        domain = [("write_date", "<", fields.Datetime.to_string(import_start_time))]
         for backend in self:
             from_date = backend[from_date_field]
             if from_date:
-                filters.append(("write_date", ">", from_date))
+                domain.append(("write_date", ">", from_date))
             else:
                 from_date = None
-            self.env[model].with_delay().export_batch(backend, filters)
+            self.env[model].with_delay().export_batch(backend, domain)
         next_time = import_start_time - timedelta(seconds=IMPORT_DELTA_BUFFER)
         next_time = fields.Datetime.to_string(next_time)
         self.write({from_date_field: next_time})

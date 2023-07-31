@@ -20,13 +20,13 @@ class AccountAccountBatchImporter(Component):
     _inherit = "odoo.delayed.batch.importer"
     _apply_on = ["odoo.account.account"]
 
-    def run(self, filters=None, force=False):
+    def run(self, domain=None, force=False):
         """Run the synchronization"""
 
-        external_ids = self.backend_adapter.search(filters)
+        external_ids = self.backend_adapter.search(domain)
         _logger.info(
             "search for odoo Account Account %s returned %s items",
-            filters,
+            domain,
             len(external_ids),
         )
         for external_id in external_ids:
@@ -51,18 +51,20 @@ class AccountAccountImportMapper(Component):
     @mapping
     def check_account_account_exists(self, record):
         res = {}
-        account_id = self.env["account.account"].search([("code", "=", record.code)])
-        _logger.info("Account Account found for %s : %s" % (record, account_id))
+        account_id = self.env["account.account"].search([("code", "=", record["code"])])
         if len(account_id) == 1:
+            _logger.info(
+                "Account Account found for %s : %s" % (record["code"], account_id.code)
+            )
             res.update({"odoo_id": account_id.id})
         return res
 
     @mapping
     def currency_id(self, record):
         vals = {}
-        if record.currency_id:
+        if record.get("currency_id"):
             binder = self.binder_for("odoo.res.currency")
-            currency_id = binder.to_internal(record.currency_id.id, unwrap=True)
+            currency_id = binder.to_internal(record["currency_id"][0], unwrap=True)
             vals.update({"currency_id": currency_id.id})
         return vals
 
@@ -75,9 +77,12 @@ class AccountAccountImportMapper(Component):
             lambda f: f[0],
             self.env["account.account"]._fields["account_type"].selection,
         )
-        if record.user_type_id:
-            if record.user_type_id.type in available_types:
-                vals = {"account_type": record.user_type_id.type}
+        if record["user_type_id"]:
+            external_type = self.work.odoo_api.browse(
+                model="account.account.type", res_id=record["user_type_id"][0]
+            )
+            if external_type["type"] in available_types:
+                vals = {"account_type": external_type["type"]}
             else:
                 vals = {"account_type": "income_other"}
         return vals
@@ -89,9 +94,9 @@ class AccountAccountImportMapper(Component):
     @mapping
     def group_id(self, record):
         vals = {}
-        if record.group_id:
+        if record.get("group_id"):
             binder = self.binder_for("odoo.account.group")
-            group_id = binder.to_internal(record.group_id.id, unwrap=True)
+            group_id = binder.to_internal(record["group_id"][0], unwrap=True)
             vals.update({"group_id": group_id.id})
         return vals
 
@@ -104,14 +109,16 @@ class AccountAccountImporter(Component):
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
         record = self.odoo_record
-        self._import_dependency(record.currency_id.id, "odoo.res.currency", force=force)
-        self._import_dependency(record.group_id.id, "odoo.account.group", force=force)
+        self._import_dependency(
+            record["currency_id"][0], "odoo.res.currency", force=force
+        )
+        self._import_dependency(record["group_id"][0], "odoo.account.group", force=True)
         # for tax_id in record.tax_ids:
         #     self._import_dependency(tax_id.id, "odoo.account.tax", force=force)
 
     def _must_skip(self):
         return self.env["account.account"].search(
-            [("code", "=", self.odoo_record.code)]
+            [("code", "=", self.odoo_record["code"])]
         )
 
     # def _before_import(self):

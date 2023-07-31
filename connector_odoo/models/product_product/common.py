@@ -86,17 +86,17 @@ class ProductProductAdapter(Component):
 
     _odoo_model = "product.product"
 
-    def search(self, filters=None, model=None, offset=0, limit=None, order=None):
+    def search(self, domain=None, model=None, offset=0, limit=None, order=None):
         """Search records according to some criteria
         and returns a list of ids
         :rtype: list
         """
-        if filters is None:
-            filters = []
+        if domain is None:
+            domain = []
         ext_filter = ast.literal_eval(
             str(self.backend_record.external_product_domain_filter)
         )
-        filters += ext_filter
+        domain += ext_filter
         return super(ProductProductAdapter, self).search(
-            filters=filters, model=model, offset=offset, limit=limit, order=order
+            domain=domain, model=model, offset=offset, limit=limit, order=order
         )

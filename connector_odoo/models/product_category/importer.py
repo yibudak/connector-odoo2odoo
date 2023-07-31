@@ -23,13 +23,13 @@ class ProductCategoryBatchImporter(Component):
     _inherit = "odoo.delayed.batch.importer"
     _apply_on = ["odoo.product.category"]
 
-    def run(self, filters=None, force=False):
+    def run(self, domain=None, force=False):
         """Run the synchronization"""
 
-        updated_ids = self.backend_adapter.search(filters)
+        updated_ids = self.backend_adapter.search(domain)
         _logger.info(
             "search for odoo product categories %s returned %s items",
-            filters,
+            domain,
             len(updated_ids),
         )
         base_priority = 10
@@ -50,8 +50,8 @@ class ProductCategoryImporter(Component):
         record = self.odoo_record
         # import parent category
         # the root category has a 0 parent_id
-        if record.parent_id:
-            self._import_dependency(record.parent_id.id, self.model, force=force)
+        if parent := record["parent_id"]:
+            self._import_dependency(parent[0], self.model, force=force)
 
     def _after_import(self, binding, force=False):
         """Hook called at the end of the import"""
@@ -113,10 +113,10 @@ class ProductCategoryImportMapper(Component):
     @mapping
     def parent_id(self, record):
         vals = {"parent_id": False, "odoo_parent_id": False}
-        if not record.parent_id:
+        if not (parent := record.get("parent_id")):
             return vals
         binder = self.binder_for()
-        parent_binding = binder.to_internal(record.parent_id.id)
+        parent_binding = binder.to_internal(parent[0])
 
         if not parent_binding:
             raise MappingError(

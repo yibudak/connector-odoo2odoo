@@ -21,11 +21,11 @@ class PartnerBatchImporter(Component):
     _inherit = "odoo.delayed.batch.importer"
     _apply_on = ["odoo.res.partner"]
 
-    def run(self, filters=None, force=False):
+    def run(self, domain=None, force=False):
         """Run the synchronization"""
-        external_ids = self.backend_adapter.search(filters)
+        external_ids = self.backend_adapter.search(domain)
         _logger.debug(
-            "search for odoo partner %s returned %s items", filters, len(external_ids)
+            "search for odoo partner %s returned %s items", domain, len(external_ids)
         )
         for external_id in external_ids:
             job_options = {"priority": 15}
@@ -80,18 +80,20 @@ class PartnerImportMapper(Component):
     @mapping
     def check_res_partner_exists(self, record):
         vals = {}
-        if not record.vat:
+        if not record.get("vat"):
             return vals
 
         odoo_partner_id = self.env["odoo.res.partner"].search(
             [
-                ("external_id", "=", record.id),
-                ("name", "=", record.name),
-                ("vat", "=", record.vat),
+                ("external_id", "=", record["id"]),
+                ("name", "=", record["name"]),
+                ("vat", "=", record["vat"]),
             ]
         )
-        _logger.info("Res partner found for %s : %s" % (record, odoo_partner_id))
         if len(odoo_partner_id) == 1:
+            _logger.info(
+                "Res partner found for %s : %s" % (record["name"], odoo_partner_id.name)
+            )
             vals.update({"odoo_id": odoo_partner_id.odoo_id.id})
         return vals
 
@@ -99,10 +101,9 @@ class PartnerImportMapper(Component):
     def address_fields(self, record):
         # Todo fix this function here and import mapper. Temiz değil.
         vals = {}
-        neighbour = record.neighbour_id
-        if neighbour:
+        if neighbour := record.get("neighbour_id"):
             local_neighbour = self.env["odoo.address.neighbour"].search(
-                [("external_id", "=", neighbour.id)], limit=1
+                [("external_id", "=", neighbour[0])], limit=1
             )
             if local_neighbour:
                 vals["neighbour_id"] = local_neighbour.odoo_id.id
@@ -113,10 +114,10 @@ class PartnerImportMapper(Component):
     @mapping
     def country_id(self, record):
         vals = {}
-        if not record.country_id:
+        if not record.get("country_id"):
             return vals
         local_country_id = self.env["res.country"].search(
-            [("name", "=", record.country_id.name)]
+            [("name", "=", record["country_id"][1])]
         )
         if local_country_id:
             vals["country_id"] = local_country_id.id
@@ -125,13 +126,17 @@ class PartnerImportMapper(Component):
     @mapping
     def state_id(self, record):
         vals = {}
-        if not record.state_id:
+        if not record.get("state_id"):
             return vals
         else:
+            external_state_id = self.work.odoo_api.browse(
+                model="res.country.state", res_id=record["state_id"][0]
+            )
+
             local_state_id = self.env["res.country.state"].search(
                 [
-                    ("name", "ilike", record.state_id.name),
-                    ("country_id.name", "=", record.state_id.country_id.name),
+                    ("name", "ilike", external_state_id["name"]),
+                    ("country_id.name", "=", external_state_id["country_id"][1]),
                 ]
             )
             if local_state_id:
@@ -141,10 +146,10 @@ class PartnerImportMapper(Component):
     @mapping
     def parent_id(self, record):
         vals = {}
-        if record.parent_id:
+        if record.get("parent_id"):
             binder = self.binder_for("odoo.res.partner")
             vals["parent_id"] = binder.to_internal(
-                record.parent_id.id, unwrap=True
+                record["parent_id"][0], unwrap=True
             ).id
         return vals
 
@@ -164,22 +169,20 @@ class PartnerImportMapper(Component):
     #         return {"user_id": user.id}
 
     @mapping
-    def property_account_payable(self, record):
-        property_account_payable_id = record.property_account_payable_id
-        if property_account_payable_id:
+    def property_account_receivable(self, record):
+        if account_id := record.get("property_account_payable_id"):
             binder = self.binder_for("odoo.account.account")
-            account = binder.to_internal(property_account_payable_id.id, unwrap=True)
-            if account:
-                return {"property_account_payable_id": account.id}
+            local_account = binder.to_internal(account_id[0], unwrap=True)
+            if local_account:
+                return {"property_account_payable_id": local_account.id}
 
     @mapping
     def property_account_receivable(self, record):
-        property_account_receivable_id = record.property_account_receivable_id
-        if property_account_receivable_id:
+        if account_id := record.get("property_account_receivable_id"):
             binder = self.binder_for("odoo.account.account")
-            account = binder.to_internal(property_account_receivable_id.id, unwrap=True)
-            if account:
-                return {"property_account_receivable_id": account.id}
+            local_account = binder.to_internal(account_id[0], unwrap=True)
+            if local_account:
+                return {"property_account_receivable_id": local_account.id}
 
     # @mapping
     # def property_purchase_currency_id(self, record):
@@ -204,48 +207,45 @@ class PartnerImportMapper(Component):
 class PartnerImporter(Component):
     _name = "odoo.res.partner.importer"
     _inherit = "odoo.importer"
-    _inherits = "AbstractModel"
     _apply_on = ["odoo.res.partner"]
-    _import_fields = [
-        "write_date",
-        "id",
-        "name",
-        "street",
-        "street2",
-        "city",
-        "zip",
-        "phone",
-        "mobile",
-        "email",
-        "website",
-        "lang",
-        "ref",
-        "comment",
-        "company_type",
-        "sale_warn",
-        "sale_warn_msg",
-        "vat",
-        "tax_office_name",
-        "category_id",
-        "neighbour_id",
-        "user_id",
-        "country_id",
-        "state_id",
-        "parent_id",
-        "ranking",
-        "property_account_payable_id",
-        "property_account_receivable_id",
-    ]
+    # _import_fields = [
+    #     "write_date",
+    #     "id",
+    #     "name",
+    #     "street",
+    #     "street2",
+    #     "city",
+    #     "zip",
+    #     "phone",
+    #     "mobile",
+    #     "email",
+    #     "website",
+    #     "lang",
+    #     "ref",
+    #     "comment",
+    #     "company_type",
+    #     "sale_warn",
+    #     "sale_warn_msg",
+    #     "vat",
+    #     "tax_office_name",
+    #     "category_id",
+    #     "neighbour_id",
+    #     "user_id",
+    #     "country_id",
+    #     "state_id",
+    #     "parent_id",
+    #     "ranking",
+    #     "property_account_payable_id",
+    #     "property_account_receivable_id",
+    # ]
 
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
         # import parent
         _logger.info("Importing dependencies for external ID %s", self.external_id)
-        if self.odoo_record["parent_id"]:
+        if parent_id := self.odoo_record["parent_id"]:
             _logger.info("Importing parent")
-            self._import_dependency(
-                self.odoo_record.parent_id.id, "odoo.res.partner", force=force
-            )
+            self._import_dependency(parent_id[0], "odoo.res.partner", force=force)
         # Todo yigit: should we import users?
         # if self.odoo_record["user_id"]:
         #     _logger.info("Importing user")
@@ -260,18 +260,18 @@ class PartnerImporter(Component):
         #         category_id, "odoo.res.partner.category", force=force
         #     )
 
-        if self.odoo_record["property_account_payable_id"]:
+        if payable_account_id := self.odoo_record["property_account_payable_id"]:
             _logger.info("Importing account payable")
             self._import_dependency(
-                self.odoo_record.property_account_payable_id.id,
+                payable_account_id[0],
                 "odoo.account.account",
                 force=force,
             )
 
-        if self.odoo_record["property_account_receivable_id"]:
+        if receivable_account_id := self.odoo_record["property_account_receivable_id"]:
             _logger.info("Importing account receivable")
             self._import_dependency(
-                self.odoo_record.property_account_receivable_id.id,
+                receivable_account_id[0],
                 "odoo.account.account",
                 force=force,
             )

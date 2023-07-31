@@ -106,12 +106,8 @@ class ProductTemplate(models.Model):
     def import_external_variant_ids(self):
         odoo_record = fields.first(self.bind_ids)
         domain = [["product_tmpl_id", "=", odoo_record.external_id]]
-
-        domain += ast.literal_eval(
-            str(odoo_record.backend_id.external_product_domain_filter)
-        )
         self.env["odoo.product.product"].with_delay().import_batch(
-            odoo_record.backend_id, filters=domain
+            odoo_record.backend_id, domain=domain, force=True
         )
 
 
@@ -122,18 +118,18 @@ class ProductTemplateAdapter(Component):
 
     _odoo_model = "product.template"
 
-    def search(self, filters=None, model=None, offset=0, limit=None, order=None):
+    def search(self, domain=None, model=None, offset=0, limit=None, order=None):
         """Search records according to some criteria
         and returns a list of ids
 
         :rtype: list
         """
-        if filters is None:
-            filters = []
+        if domain is None:
+            domain = []
         ext_filter = ast.literal_eval(
             str(self.backend_record.external_product_template_domain_filter)
         )
-        filters += ext_filter
+        domain += ext_filter
         return super(ProductTemplateAdapter, self).search(
-            filters=filters, model=model, offset=offset, limit=limit, order=order
+            domain=domain, model=model, offset=offset, limit=limit, order=order
         )

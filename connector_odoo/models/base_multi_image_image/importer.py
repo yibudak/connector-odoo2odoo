@@ -15,18 +15,18 @@ class BaseMultiImageImageBatchImporter(Component):
     _inherit = "odoo.delayed.batch.importer"
     _apply_on = ["odoo.base_multi_image.image"]
 
-    def run(self, filters=None, force=False):
+    def run(self, domain=None, force=False):
         """Run the synchronization"""
 
         # We only want to import images that are related to products.
-        filters += [["owner_model", "in", ("product.template", "product.product")]]
+        domain += [["owner_model", "in", ("product.template", "product.product")]]
 
         external_ids = self.backend_adapter.search(
-            filters, model="base_multi_image.image"
+            domain, model="base_multi_image.image"
         )
         _logger.info(
             "search for odoo base multi images %s returned %s items",
-            filters,
+            domain,
             len(external_ids),
         )
         for external_id in external_ids:
@@ -47,23 +47,25 @@ class BaseMultiImageImageMapper(Component):
     ]
 
     def _get_owner(self, record):
-        binder = self.binder_for("odoo.%s" % record.owner_model)
-        owner = binder.to_internal(record.owner_id)
+        binder = self.binder_for("odoo.%s" % record["owner_model"])
+        owner = binder.to_internal(record["owner_id"])
         return owner
 
     @mapping
     def name(self, record):
-        name = record.name if record.name else record.owner_ref_id.name
         owner = self._get_owner(record)
+        name = record.get("name", owner.name)
         if owner:
             exist_images = self.env["base_multi_image.image"].search(
                 [
-                    ("owner_model", "=", record.owner_model),
+                    ("owner_model", "=", owner.odoo_id._name),
                     ("owner_id", "=", owner.odoo_id.id),
                 ]
             )
+            # Avoid duplicate names
+            # Todo: exclude the current record from the search
             if name in exist_images.mapped("name"):
-                name = "%s %s" % (name, record.id)
+                name = "%s %s" % (name, record["id"])
         return {"name": name}
 
     @mapping
@@ -71,21 +73,26 @@ class BaseMultiImageImageMapper(Component):
         vals = {}
         owner = self._get_owner(record)
         if owner:
-            vals["owner_model"] = record.owner_model
+            vals["owner_model"] = record["owner_model"]
             vals["owner_id"] = owner.odoo_id.id
         return vals
 
     @mapping
     def attachment_id(self, record):
         vals = {}
-        if record.attachment_id and record.storage != "db":
+        if (attachment_id := record["attachment_id"]) and record["storage"] != "db":
             binder = self.binder_for("odoo.ir.attachment")
-            attachment = binder.to_internal(record.attachment_id.id)
-            if not attachment:
-                attachment = self.env["odoo.ir.attachment"].search(
-                    [("store_fname", "=", record.attachment_id.store_fname)], limit=1
+            local_attachment = binder.to_internal(attachment_id[0])
+            if not local_attachment:
+                external_attachment_id = self.work.odoo_api.browse(
+                    model="ir.attachment", res_id=attachment_id[0]
                 )
-            vals["attachment_id"] = attachment.odoo_id.id
+
+                local_attachment = self.env["odoo.ir.attachment"].search(
+                    [("store_fname", "=", external_attachment_id[["store_fname"]])],
+                    limit=1,
+                )
+            vals["attachment_id"] = local_attachment.odoo_id.id
         else:
             vals["attachment_id"] = False
         return vals
@@ -93,8 +100,8 @@ class BaseMultiImageImageMapper(Component):
     @mapping
     def file_db_store(self, record):
         vals = {}
-        if record.storage == "db" and record.file_db_store:
-            vals["file_db_store"] = record.file_db_store.replace("\n", "")
+        if record["storage"] == "db" and record["file_db_store"]:
+            vals["file_db_store"] = record["file_db_store"].replace("\n", "")
         else:
             vals["file_db_store"] = False
         return vals
@@ -102,11 +109,11 @@ class BaseMultiImageImageMapper(Component):
     @mapping
     def product_variant_ids(self, record):
         vals = {}
-        if record.product_variant_ids:
+        if variant_ids := record["product_variant_ids"]:
             binder = self.binder_for("odoo.product.product")
             variants = []
-            for variant in record.product_variant_ids:
-                variant = binder.to_internal(variant.id)
+            for variant_id in variant_ids:
+                variant = binder.to_internal(variant_id)
                 if variant:
                     variants.append(variant.odoo_id.id)
             vals["product_variant_ids"] = [(6, 0, variants)]
@@ -121,7 +128,7 @@ class BaseMultiImageImageMapper(Component):
         Actually we could import `storage` field with the `direct` mapping above
         but this field needs to be imported after `attachment_id` field.
         """
-        return {"storage": record.storage}
+        return {"storage": record["storage"]}
 
 
 class BaseMultiImageImageImporter(Component):
@@ -132,19 +139,17 @@ class BaseMultiImageImageImporter(Component):
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
         record = self.odoo_record
-        if record.owner_model not in ("product.template", "product.product"):
+        if record["owner_model"] not in ("product.template", "product.product"):
             raise Exception(
                 "The owner model of the image is" " not a product or a product template"
             )
         # These lines cause a circular dependency.
         self._import_dependency(
-            record.owner_id, "odoo.%s" % record.owner_model, force=force
+            record["owner_id"], "odoo.%s" % record["owner_model"], force=force
         )
         # We need to import the attachment as well.
-        if record.attachment_id:
-            self._import_dependency(
-                record.attachment_id.id, "odoo.ir.attachment", force=force
-            )
+        if attachment := record["attachment_id"]:
+            self._import_dependency(attachment[0], "odoo.ir.attachment", force=force)
 
         # todo fix this line this causes timeout
         # if record.product_variant_ids:

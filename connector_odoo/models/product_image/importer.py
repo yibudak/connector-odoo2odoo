@@ -17,15 +17,15 @@ class ProductImageBatchImporter(Component):
     _inherit = "odoo.delayed.batch.importer"
     _apply_on = ["odoo.product.image"]
 
-    def run(self, filters=None, force=False):
+    def run(self, domain=None, force=False):
         """Run the synchronization"""
 
         external_ids = self.backend_adapter.search(
-            filters, model="base_multi_image.image"
+            domain, model="base_multi_image.image"
         )
         _logger.info(
             "search for odoo product images %s returned %s items",
-            filters,
+            domain,
             len(external_ids),
         )
         for external_id in external_ids:

@@ -12,7 +12,7 @@
     "author": "Yigit Budak, Florent THOMAS (Mind And Go), Odoo Community Association (OCA)",
     "application": False,
     "installable": True,
-    "external_dependencies": {"python": ["odoorpc", "lxml"], "bin": []},
+    "external_dependencies": {"python": ["requests"], "bin": []},
     "depends": [
         "base",
         "product",

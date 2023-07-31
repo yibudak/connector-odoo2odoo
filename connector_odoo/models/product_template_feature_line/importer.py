@@ -19,10 +19,10 @@ class ProductTemlateFeatureLineImporter(Component):
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
         record = self.odoo_record
-        if record.value_ids:
-            for value in record.value_ids:
+        if value_ids := record["value_ids"]:
+            for value_id in value_ids:
                 self._import_dependency(
-                    value.id, "odoo.product.attribute.value", force=force
+                    value_id, "odoo.product.attribute.value", force=force
                 )
 
 
@@ -41,13 +41,13 @@ class ProductTemplateFeatureLineMapper(Component):
 
     def _get_feature_id(self, record):
         binder = self.binder_for("odoo.product.attribute")
-        return binder.to_internal(record.feature_id.id, unwrap=True).id
+        return binder.to_internal(record["feature_id"][0], unwrap=True).id
 
     def _get_feature_value_id(self, record):
         binder = self.binder_for("odoo.product.attribute.value")
         vals = []
-        for value in record.value_ids:
-            local_feature_value_id = binder.to_internal(value.id, unwrap=True).id
+        for value_id in record["value_ids"]:
+            local_feature_value_id = binder.to_internal(value_id, unwrap=True).id
             vals.append(local_feature_value_id)
         return vals
 
@@ -61,7 +61,7 @@ class ProductTemplateFeatureLineMapper(Component):
 
     def _get_product_tmpl_id(self, record):
         binder = self.binder_for("odoo.product.template")
-        return binder.to_internal(record.product_tmpl_id.id, unwrap=True).id
+        return binder.to_internal(record["product_tmpl_id"][0], unwrap=True).id
 
     @only_create
     @mapping

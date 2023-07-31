@@ -116,9 +116,9 @@ class BatchExporter(AbstractComponent):
     _inherit = ["base.exporter", "base.odoo.connector"]
     _usage = "batch.exporter"
 
-    def run(self, filters=None, force=False):
+    def run(self, domain=None, force=False):
         """Run the synchronization"""
-        record_ids = self.backend_adapter.search(filters)
+        record_ids = self.backend_adapter.search(domain)
         for record_id in record_ids:
             self._export_record(record_id)
 

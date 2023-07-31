@@ -19,12 +19,10 @@ class ProductAttributeValueImporter(Component):
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
         record = self.odoo_record
-        self._import_dependency(
-            record.attribute_id.id, "odoo.product.attribute", force=force
-        )
-
-    # def _must_skip(self):
-    #     return self.model.search([("external_id", "=", self.external_id)])
+        if attribute_id := record["attribute_id"]:
+            self._import_dependency(
+                attribute_id[0], "odoo.product.attribute", force=force
+            )
 
 
 class ProductAttributeValueMapper(Component):
@@ -39,7 +37,7 @@ class ProductAttributeValueMapper(Component):
 
     def get_attribute_id(self, record):
         binder = self.binder_for("odoo.product.attribute")
-        local_attribute_id = binder.to_internal(record.attribute_id.id, unwrap=True)
+        local_attribute_id = binder.to_internal(record["attribute_id"][0], unwrap=True)
         return local_attribute_id.id
 
     @mapping

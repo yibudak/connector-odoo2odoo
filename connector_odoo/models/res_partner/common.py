@@ -69,22 +69,22 @@ class PartnerAdapter(Component):
     _odoo_model = "res.partner"
 
     def search(
-        self, filters=None, model=None, offset=0, limit=5000, order=None
+        self, domain=None, model=None, offset=0, limit=5000, order=None
     ):  # Todo: limit none olacak debug için 5 yaptım
         """Search records according to some criteria
         and returns a list of ids
 
         :rtype: list
         """
-        if filters is None:
-            filters = []
+        if domain is None:
+            domain = []
         ext_filter = ast.literal_eval(
             str(self.backend_record.external_partner_domain_filter)
         )
-        filters += ext_filter or []
-        filters += [("name", "!=", False)]  # Todo: not null constraint hatasını geçtik
+        domain += ext_filter or []
+        domain += [("name", "!=", False)]  # Todo: not null constraint hatasını geçtik
         return super(PartnerAdapter, self).search(
-            filters=filters, model=model, offset=offset, limit=limit, order=order
+            domain=domain, model=model, offset=offset, limit=limit, order=order
         )
 
 

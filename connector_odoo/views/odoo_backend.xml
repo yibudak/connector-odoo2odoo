@@ -37,12 +37,14 @@
 								<field name="version" />
 								<field name="protocol" />
 								<field name="port" />
+								<field name="timeout" />
 								<field name="default_lang_id" />
                             </group>
 							<group>
 								<field name="database" />
 								<field name="login" />
 								<field name="password" password="1" />
+								<field name="uid" />
 								<field name="force" />
                             </group>
 						</group>

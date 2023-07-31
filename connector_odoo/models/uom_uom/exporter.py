@@ -16,10 +16,10 @@ class BatchUomExporter(Component):
     _apply_on = ["odoo.uom.uom"]
     _usage = "batch.exporter"
 
-    def run(self, filters=None, force=False):
+    def run(self, domain=None, force=False):
         loc_filter = safe_eval(self.backend_record.local_uom_uom_domain_filter)
-        filters += loc_filter
-        uoms = self.env["uom.uom"].search(filters)
+        domain += loc_filter
+        uoms = self.env["uom.uom"].search(domain)
         o_ids = self.env["odoo.uom.uom"].search(
             [
                 ("backend_id", "=", self.backend_record.id),
@@ -27,7 +27,7 @@ class BatchUomExporter(Component):
         )
         _logger.info(
             "search for odoo UoM %s returned %s items",
-            filters,
+            domain,
             len(o_ids),
         )
         o_uoms = self.env["uom.uom"].search(

@@ -17,13 +17,13 @@ class IrAttachmentBatchImporter(Component):
     _inherit = "odoo.delayed.batch.importer"
     _apply_on = ["odoo.ir.attachment"]
 
-    def run(self, filters=None, force=False):
+    def run(self, domain=None, force=False):
         """Run the synchronization"""
 
-        external_ids = self.backend_adapter.search(filters)
+        external_ids = self.backend_adapter.search(domain)
         _logger.info(
             "search for odoo Attachment %s returned %s items",
-            filters,
+            domain,
             len(external_ids),
         )
         for external_id in external_ids:
@@ -55,7 +55,7 @@ class IrAttachmentImportMapper(Component):
     def check_ir_attachment_exists(self, record):
         res = {}
         attachment_id = self.env["ir.attachment"].search(
-            [("store_fname", "=", record.store_fname)]
+            [("store_fname", "=", record["store_fname"])]
         )
         _logger.info("Attachment found for %s : %s" % (record, attachment_id))
         if len(attachment_id) == 1:
@@ -69,9 +69,9 @@ class IrAttachmentImportMapper(Component):
     @mapping
     def res_id(self, record):
         vals = {}
-        if record.res_model:
-            binder = self.binder_for("odoo.{}".format(record.res_model))
-            res_id = binder.to_internal(record.res_id, unwrap=True)
+        if model := record["res_model"]:
+            binder = self.binder_for("odoo.{}".format(model))
+            res_id = binder.to_internal(record["res_id"], unwrap=True)
             vals.update({"res_id": res_id})
         return vals
 
@@ -86,7 +86,7 @@ class IrAttachmentImporter(Component):
         binding = super(IrAttachmentImporter, self)._get_binding_with_data(binding)
         if not binding:
             binding = self.model.search(
-                [("store_fname", "=", self.odoo_record.store_fname)], limit=1
+                [("store_fname", "=", self.odoo_record["store_fname"])], limit=1
             )
         return binding
 

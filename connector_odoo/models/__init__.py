@@ -35,6 +35,7 @@ from . import address_region
 from . import address_neighbour
 from . import mrp_bom
 from . import mrp_bom_line
+from . import mrp_bom_template_line
 
 # Disabled Models
 from . import purchase_order

@@ -17,13 +17,13 @@ class UomBatchImporter(Component):
     _inherit = "odoo.delayed.batch.importer"
     _apply_on = ["odoo.uom.uom"]
 
-    def run(self, filters=None, force=False):
+    def run(self, domain=None, force=False):
         """Run the synchronization"""
         external_ids = self.backend_adapter.search(
-            filters,
+            domain,
         )
         _logger.info(
-            "search for odoo uom %s returned %s items", filters, len(external_ids)
+            "search for odoo uom %s returned %s items", domain, len(external_ids)
         )
         for external_id in external_ids:
             job_options = {
@@ -60,7 +60,7 @@ class UomMapper(Component):
             8: 8,
         }
 
-        category_id = record["category_id"].id
+        category_id = record["category_id"][0]
         return {"category_id": manual_categ_mapping[category_id]}
 
     @only_create
@@ -68,12 +68,12 @@ class UomMapper(Component):
     def check_uom_exists(self, record):
         # Todo: bu çalışmıyor ki? dict'e odoo_id ekliyor ama yine de create ediyor duplicate oluyor
         res = {}
-        category_name = record["category_id"].name
+        category_name = record["category_id"][1]
         lang = (
             self.backend_record.default_lang_id.code
             or self.env.user.lang
             or self.env.context["lang"]
-            or "en_US"
+            or "tr_TR"
         )
         _logger.info("CHECK ONLY CREATE UOM %s with lang %s" % (record["name"], lang))
 
@@ -81,21 +81,21 @@ class UomMapper(Component):
             self.env["uom.uom"]
             .with_context(lang=lang)
             .search(
-                [("name", "=", record.name), ("category_id.name", "=", category_name)]
+                [("name", "=", record["name"]), ("category_id.name", "=", category_name)]
             )
         )
         _logger.info("UOM found for %s : %s" % (record, local_uom_id))
         if len(local_uom_id) == 1:
             res.update({"odoo_id": local_uom_id.id})
         # If not found test if UOM was renamed and is "reference" for its category
-        if record.uom_type == "reference":
+        if record["uom_type"] == "reference":
             local_uom_id = (
                 self.env["uom.uom"]
                 .with_context(lang=lang)
                 .search(
                     [
                         ("uom_type", "=", "reference"),
-                        ("factor", "=", record.factor),
+                        ("factor", "=", record["factor"]),
                         ("category_id.name", "=", category_name),
                     ]
                 )
@@ -107,7 +107,7 @@ class UomMapper(Component):
                     _(
                         "Unable to find Reference UOM with factor %s for"
                         " category %s. It is possible that the UOM %s was"
-                        " renamed." % (record.factor, category_name, record.name)
+                        " renamed." % (record["factor"], category_name, record["name"])
                     )
                 )
         return res

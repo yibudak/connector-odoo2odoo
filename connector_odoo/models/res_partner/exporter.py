@@ -19,10 +19,10 @@ class BatchPartnerExporter(Component):
     _apply_on = ["odoo.res.partner"]
     _usage = "batch.exporter"
 
-    def run(self, filters=None, force=False):
+    def run(self, domain=None, force=False):
         loc_filter = ast.literal_eval(self.backend_record.local_partner_domain_filter)
-        filters += loc_filter
-        partner_ids = self.env["res.partner"].search(filters)
+        domain += loc_filter
+        partner_ids = self.env["res.partner"].search(domain)
 
         o_ids = self.env["odoo.res.partner"].search(
             [("backend_id", "=", self.backend_record.id)]
@@ -91,20 +91,20 @@ class PartnerExportMapper(Component):
 
     def get_partner_by_match_field(self, record):
         match_field = "email"
-        filters = []
+        domain = []
 
         if self.backend_record.matching_customer:
             match_field = self.backend_record.matching_customer_ch
 
-        filters = ast.literal_eval(self.backend_record.external_partner_domain_filter)
+        domain = ast.literal_eval(self.backend_record.external_partner_domain_filter)
         if record[match_field]:
-            filters.append((match_field, "=", record[match_field]))
-        filters.append("|")
-        filters.append(("active", "=", False))
-        filters.append(("active", "=", True))
+            domain.append((match_field, "=", record[match_field]))
+        domain.append("|")
+        domain.append(("active", "=", False))
+        domain.append(("active", "=", True))
 
         adapter = self.component(usage="record.exporter").backend_adapter
-        partner = adapter.search(filters)
+        partner = adapter.search(domain)
         if len(partner) == 1:
             return partner[0]
 

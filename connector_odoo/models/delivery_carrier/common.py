@@ -59,16 +59,16 @@ class DeliveryCarrierAdapter(Component):
 
     _odoo_model = "delivery.carrier"
 
-    def search(self, filters=None, model=None, offset=0, limit=None, order=None):
+    def search(self, domain=None, model=None, offset=0, limit=None, order=None):
         """Search records according to some criteria
         and returns a list of ids
 
         :rtype: list
         """
-        if filters is None:
-            filters = []
+        if domain is None:
+            domain = []
         return super(DeliveryCarrierAdapter, self).search(
-            filters=filters, model=model, offset=offset, limit=limit, order=order
+            domain=domain, model=model, offset=offset, limit=limit, order=order
         )
 
 

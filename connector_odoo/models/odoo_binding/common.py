@@ -62,15 +62,16 @@ class OdooBinding(models.AbstractModel):
                 )
 
     @api.model
-    def import_batch(self, backend, filters=None, force=False):
+    def import_batch(self, backend, domain=None, force=False):
         """Prepare the import of records modified on Odoo"""
-        if filters is None:
-            filters = {}
+        if domain is None:
+            domain = {}
         with backend.work_on(self._name) as work:
             importer = work.component(usage="batch.importer")
             importer.set_lock()
             try:
-                return importer.run(filters=filters, force=force or backend.force)
+                # todo: add job options for uid
+                return importer.run(domain=domain, force=force or backend.force)
             except Exception:
                 raise RetryableJobError(
                     "Could not import batch",
@@ -92,13 +93,13 @@ class OdooBinding(models.AbstractModel):
                 )
 
     @api.model
-    def export_batch(self, backend, filters=None):
+    def export_batch(self, backend, domain=None):
         """Prepare the import of records modified on Odoo"""
-        if filters is None:
-            filters = {}
+        if domain is None:
+            domain = {}
         with backend.work_on(self._name) as work:
             exporter = work.component(usage="batch.exporter")
-            return exporter.run(filters=filters)
+            return exporter.run(domain=domain)
 
     def export_record(self, backend, local_id=None, fields=None):
         """Export a record on Odoo"""

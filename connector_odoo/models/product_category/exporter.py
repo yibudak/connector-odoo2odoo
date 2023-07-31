@@ -15,9 +15,9 @@ class BatchProductCategoryExporter(Component):
     _apply_on = ["odoo.product.category"]
     _usage = "batch.exporter"
 
-    def run(self, filters=None, force=False):
-        filters += [("backend_id", "=", self.backend_record.id)]
-        prod_ids = self.env["odoo.product.category"].search(filters)
+    def run(self, domain=None, force=False):
+        domain += [("backend_id", "=", self.backend_record.id)]
+        prod_ids = self.env["odoo.product.category"].search(domain)
         for prod in prod_ids:
             job_options = {
                 "max_retries": 0,

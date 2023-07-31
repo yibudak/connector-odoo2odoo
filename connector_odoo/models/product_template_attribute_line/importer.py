@@ -20,10 +20,10 @@ class ProductTemlateAttributeLineImporter(Component):
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
         record = self.odoo_record
-        if record.value_ids:
-            for value in record.value_ids:
+        if value_ids := record["value_ids"]:
+            for value in value_ids:
                 self._import_dependency(
-                    value.id, "odoo.product.attribute.value", force=force
+                    value, "odoo.product.attribute.value", force=force
                 )
 
 
@@ -42,23 +42,21 @@ class ProductTemplateAttributeLineMapper(Component):
 
     def _get_product_tmpl_id(self, record):
         binder = self.binder_for("odoo.product.template")
-        return binder.to_internal(record.product_tmpl_id.id, unwrap=True).id
+        return binder.to_internal(record["product_tmpl_id"][0], unwrap=True).id
 
     def _get_attribute_id(self, record):
         binder = self.binder_for("odoo.product.attribute")
-        return binder.to_internal(record.attribute_id.id, unwrap=True).id
+        return binder.to_internal(record["attribute_id"][0], unwrap=True).id
 
     def _get_attribute_value_id(self, record):
         binder = self.binder_for("odoo.product.attribute.value")
         vals = []
-        for value in record.value_ids:
-            local_attribute_value_id = binder.to_internal(value.id, unwrap=True)
+        for value_id in record["value_ids"]:
+            local_attribute_value_id = binder.to_internal(value_id, unwrap=True)
             if local_attribute_value_id:
                 vals.append(local_attribute_value_id.id)
             else:
-                ValidationError(
-                    "Attribute value %s is not imported yet" % value.name
-                )
+                ValidationError("Attribute value %s is not imported yet" % value_id)
         return vals
 
     @mapping

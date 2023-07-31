@@ -14,13 +14,13 @@ class ResCurrencyRateBatchImporter(Component):
     _inherit = "odoo.delayed.batch.importer"
     _apply_on = ["odoo.res.currency.rate"]
 
-    def run(self, filters=None, force=False):
+    def run(self, domain=None, force=False):
         """Run the synchronization"""
 
-        external_ids = self.backend_adapter.search(filters)
+        external_ids = self.backend_adapter.search(domain)
         _logger.info(
             "search for odoo currency rates %s returned %s items",
-            filters,
+            domain,
             len(external_ids),
         )
         base_priority = 10
@@ -42,22 +42,28 @@ class ResCurrencyRateMapper(Component):
     @mapping
     def check_currency_rate_exists(self, record):
         res = {}
-
+        currency_id = self.binding_for("odoo.res.currency").to_internal(
+            record["currency_id"][0], unwrap=True
+        )
         rate_id = self.env["res.currency.rate"].search(
             [
-                ("name", "=", record.name),
-                ("currency_id", "=", record.currency_id.id),
+                ("name", "=", record["name"]),
+                ("currency_id", "=", currency_id.id),
             ]
         )
-        _logger.info("Res currency rate found for %s : %s" % (record, rate_id))
         if len(rate_id) == 1:
+            _logger.info(
+                "Res currency rate found for %s : %s" % (record["name"], rate_id.name)
+            )
             res.update({"odoo_id": rate_id.id})
         return res
 
     @only_create
     @mapping
     def currency_id(self, record):
-        return {"currency_id": record.currency_id.id}
+        binder = self.binder_for("odoo.res.currency")
+        currency_id = binder.to_internal(record["currency_id"][0])
+        return {"currency_id": currency_id.id}
 
 
 class CurrencyRateImporter(Component):
@@ -69,6 +75,6 @@ class CurrencyRateImporter(Component):
 
     def _import_dependencies(self, force=False):
         self._import_dependency(
-            self.odoo_record.currency_id.id, "odoo.res.currency", force=force
+            self.odoo_record["currency_id"][0], "odoo.res.currency", force=force
         )
         return super()._import_dependencies(force=force)

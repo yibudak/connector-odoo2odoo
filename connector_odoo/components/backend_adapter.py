@@ -25,6 +25,7 @@ class OdooLocation(object):
         "port",
         "version",
         "protocol",
+        "timeout",
         "lang_id",
         "use_custom_api_path",
     )
@@ -38,6 +39,7 @@ class OdooLocation(object):
         port,
         version,
         protocol,
+        timeout,
         lang_id="en_US",
         use_custom_api_path=False,
     ):
@@ -47,6 +49,7 @@ class OdooLocation(object):
         self.database = database
         self.port = port
         self.version = version
+        self.timeout = timeout
         self.protocol = protocol
         self.lang_id = lang_id
 
@@ -89,7 +92,7 @@ class OdooAPI(object):
                 host=self._location.hostname,
                 port=self._location.port,
                 protocol=self._location.protocol,
-                timeout=30,
+                timeout=self._location.timeout,
             )
             self._api_login(api)
             self._api = api
@@ -133,7 +136,7 @@ class OdooCRUDAdapter(AbstractComponent):
     _inherit = ["base.backend.adapter", "base.odoo.connector"]
     _usage = "backend.adapter"
 
-    def search(self, filters=None):
+    def search(self, domain=None):
         """Search records according to some criterias
         and returns a list of ids"""
         raise NotImplementedError
@@ -177,7 +180,15 @@ class GenericAdapter(AbstractComponent):
     # _odoo_model = None
     # _admin_path = None
 
-    def search(self, filters=None, model=None, offset=0, limit=None, order=None):
+    def search(
+        self,
+        domain=None,
+        model=None,
+        offset=0,
+        limit=None,
+        order=None,
+        fields=None,
+    ):
         """Search records according to some criterias
         and returns a list of ids
         :rtype: list
@@ -186,49 +197,42 @@ class GenericAdapter(AbstractComponent):
         ext_model = model or self._odoo_model
 
         try:
-            odoo_api = self.work.odoo_api.api
-        except AttributeError as e:
+            odoo_api = self.work.odoo_api
+        except AttributeError:
             raise AttributeError(
                 "You must provide a odoo_api attribute with a "
                 "OdooAPI instance to be able to use the "
                 "Backend Adapter."
-            ) from e
-
-        model = odoo_api.env[ext_model]
-        return model.search(
-            filters if filters else [], offset=offset, limit=limit, order=order
-        )
+            )
+        # Todo: maybe we shouldn't only get id field.
+        return [
+            q["id"]
+            for q in odoo_api.search(
+                model=ext_model,
+                fields=fields or ["id"],
+                domain=domain or [],
+                offset=offset,
+                limit=limit,
+                order=order,
+                # Todo: add context.
+            )
+        ]
 
     # pylint: disable=W8106,W0622
-    def read(self, id, attributes=None, model=None, context=None):
+    def read(self, id, model=None, context=None, fields=None):
         """Returns the information of a record
         :rtype: dict
         """
-        arguments = int(id)
         ext_model = model or self._odoo_model
-        if attributes:
-            # Avoid to pass Null values in attributes. Workaround for
-            # https://bugs.launchpad.net/openerp-connector-Odoo/+bug/1210775
-            # When Odoo is installed on PHP 5.4 and the compatibility patch
-            # http://odoo.com/blog/Odoo-news/Odoo-now-supports-php-54
-            # is not installed, calling info() with None in attributes
-            # would return a wrong result (almost empty list of
-            # attributes). The right correction is to install the
-            # compatibility patch on odoo.
-            arguments.append(attributes)
-
         try:
-            odoo_api = self.work.odoo_api.api
-        except AttributeError as e:
+            odoo_api = self.work.odoo_api
+        except AttributeError:
             raise AttributeError(
                 "You must provide a odoo_api attribute with a "
                 "OdooAPI instance to be able to use the "
                 "Backend Adapter."
-            ) from e
-        model = odoo_api.env[ext_model]
-        if context:
-            return model.with_context(**context).browse(arguments)
-        return model.browse(arguments)
+            )
+        return odoo_api.browse(model=ext_model, res_id=id, context=context)
 
     def create(self, data):
         ext_model = self._odoo_model

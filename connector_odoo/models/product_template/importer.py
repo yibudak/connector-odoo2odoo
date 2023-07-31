@@ -23,13 +23,13 @@ class ProductTemplateBatchImporter(Component):
     _inherit = "odoo.delayed.batch.importer"
     _apply_on = ["odoo.product.template"]
 
-    def run(self, filters=None, force=False):
+    def run(self, domain=None, force=False):
         """Run the synchronization"""
 
-        external_ids = self.backend_adapter.search(filters)
+        external_ids = self.backend_adapter.search(domain)
         _logger.info(
             "search for odoo products template %s returned %s items",
-            filters,
+            domain,
             len(external_ids),
         )
         for external_id in external_ids:
@@ -65,7 +65,7 @@ class ProductTemplateImportMapper(Component):
     @mapping
     def uom_id(self, record):
         binder = self.binder_for("odoo.uom.uom")
-        uom = binder.to_internal(record.uom_id.id, unwrap=True)
+        uom = binder.to_internal(record["uom_id"][0], unwrap=True)
         return {"uom_id": uom.id, "uom_po_id": uom.id}
 
     # @mapping # Todo: we don't use pricing at template level
@@ -74,18 +74,16 @@ class ProductTemplateImportMapper(Component):
 
     @mapping
     def default_code(self, record):
-        if not hasattr(record, "default_code"):
+        if not (code := record["default_code"]):
             return {}
-        code = record["default_code"]
         if not code:
             return {"default_code": "/"}
         return {"default_code": code}
 
     @mapping
     def name(self, record):
-        if not hasattr(record, "name"):
+        if not (name := record["name"]):
             return {}
-        name = record["name"]
         if not name:
             return {"name": "/"}
         return {"name": name}
@@ -98,7 +96,7 @@ class ProductTemplateImportMapper(Component):
         categ_id = record["categ_id"]
         binder = self.binder_for("odoo.product.category")
 
-        cat = binder.to_internal(categ_id.id, unwrap=True)
+        cat = binder.to_internal(categ_id[0], unwrap=True)
         if not cat:
             raise MappingError(
                 "Can't find external category with odoo_id %s." % categ_id.odoo_id
@@ -123,13 +121,9 @@ class ProductTemplateImportMapper(Component):
             "11.0",
             "12.0",
         ):
-            return {
-                "image_1920": record.image_medium
-                if hasattr(record, "image_medium")
-                else False
-            }
+            return {"image_1920": record["image_main"]}
         else:
-            return {"image_1920": record.image_1920}
+            return {"image_1920": record["image_1920"]}
 
     @mapping
     def public_description(self, record):
@@ -137,11 +131,9 @@ class ProductTemplateImportMapper(Component):
         This may lead to add some old styles from the main instance.
         So we are cleaning the HTML before importing it."""
         vals = {}
-        if record.public_description:
+        if desc := record["public_description"]:
             cleaner = Cleaner(style=True, remove_unknown_tags=False)
-            vals["public_description"] = (
-                cleaner.clean_html(record.public_description) or ""
-            )
+            vals["public_description"] = cleaner.clean_html(desc) or ""
         return vals
 
 
@@ -153,11 +145,16 @@ class ProductTemplateImporter(Component):
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
         # Todo yigit: this causes concurrency issues
-        uom_id = self.odoo_record.uom_id
-        self._import_dependency(uom_id.id, "odoo.uom.uom", force=force)
-
-        categ_id = self.odoo_record.categ_id
-        self._import_dependency(categ_id.id, "odoo.product.category", force=force)
+        self._import_dependency(
+            self.odoo_record["uom_id"][0],
+            "odoo.uom.uom",
+            force=force,
+        )
+        self._import_dependency(
+            self.odoo_record["categ_id"][0],
+            "odoo.product.category",
+            force=force,
+        )
 
         return super()._import_dependencies(force=force)
 
@@ -170,40 +167,41 @@ class ProductTemplateImporter(Component):
     def _after_import(self, binding, force=False):
         imported_template = self.binder.to_internal(self.external_id)
         if imported_template:
-            self._import_website_images(force=force)
+            # Todo: this line causes recursion
+            # self._import_website_images(force=force)
             self._import_website_attachments(imported_template, force=force)
             self._import_attribute_lines(force=force)
             self._import_feature_lines(force=force)
         super(ProductTemplateImporter, self)._after_import(binding, force=force)
 
     def _import_attribute_lines(self, force=False):
-        for attr_line in self.odoo_record.attribute_line_ids:
+        for attr_line in self.odoo_record["attribute_line_ids"]:
             self.env["odoo.product.template.attribute.line"].import_record(
                 self.backend_record,
-                attr_line.id,
+                attr_line,
                 force=force,
             )
         return True
 
     def _import_feature_lines(self, force=False):
-        for feature_line in self.odoo_record.feature_line_ids:
+        for feature_line in self.odoo_record["feature_line_ids"]:
             self.env["odoo.product.template.feature.line"].import_record(
                 self.backend_record,
-                feature_line.id,
+                feature_line,
                 force=force,
             )
         return True
 
     def _import_website_attachments(self, tmpl_id, force=False):
-        attachment_ids = self.odoo_record.website_attachment_ids
-        if attachment_ids:
+        if attachment_ids := self.odoo_record["website_attachment_ids"]:
             for attachment_id in attachment_ids:
-                self.env["odoo.ir.attachment"].with_delay().import_record(
-                    self.backend_record, attachment_id.id, force=force
+                self.env["odoo.ir.attachment"].import_record(
+                    self.backend_record, attachment_id, force=force
                 )
+            # Todo: bind_ids.external_id -> use odoo.ir.attachment
             imported_attachments = self.env["ir.attachment"].search(
                 [
-                    ("bind_ids.external_id", "in", attachment_ids.ids),
+                    ("bind_ids.external_id", "in", attachment_ids),
                     ("res_model", "=", "product.template"),
                 ]
             )
@@ -215,10 +213,9 @@ class ProductTemplateImporter(Component):
         return True
 
     def _import_website_images(self, force):
-        image_ids = self.odoo_record.image_ids
-        if image_ids:
+        if image_ids := self.odoo_record["image_ids"]:
             for image_id in image_ids:
                 self.env["odoo.base_multi_image.image"].with_delay().import_record(
-                    self.backend_record, image_id.id, force=force
+                    self.backend_record, image_id, force=force
                 )
         return True

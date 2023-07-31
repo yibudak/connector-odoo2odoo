@@ -23,13 +23,13 @@ class ProductPricelistBatchImporter(Component):
     _inherit = "odoo.delayed.batch.importer"
     _apply_on = ["odoo.product.pricelist"]
 
-    def run(self, filters=None, force=False):
+    def run(self, domain=None, force=False):
         """Run the synchronization"""
 
-        updated_ids = self.backend_adapter.search(filters)
+        updated_ids = self.backend_adapter.search(domain)
         _logger.info(
             "search for odoo product pricelist %s returned %s items",
-            filters,
+            domain,
             len(updated_ids),
         )
         base_priority = 10
@@ -119,12 +119,12 @@ class ProductPricelistItemBatchImporter(Component):
         """Delay a job for the import"""
         return super()._import_record(external_id, job_options=job_options, force=force)
 
-    def run(self, filters=None, force=False):
+    def run(self, domain=None, force=False):
         """Run the synchronization"""
-        updated_ids = self.backend_adapter.search(filters)
+        updated_ids = self.backend_adapter.search(domain)
         _logger.info(
             "search for odoo product pricelist item %s returned %s items",
-            filters,
+            domain,
             len(updated_ids),
         )
         for pricelist in updated_ids:

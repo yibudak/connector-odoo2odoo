@@ -20,10 +20,10 @@ class BatchProductTemplateExporter(Component):
     _apply_on = ["odoo.product.template"]
     _usage = "batch.exporter"
 
-    def run(self, filters=None, force=False):
+    def run(self, domain=None, force=False):
         loc_filter = ast.literal_eval(self.backend_record.local_product_domain_filter)
-        filters += loc_filter
-        prod_ids = self.env["product.template"].search(filters)
+        domain += loc_filter
+        prod_ids = self.env["product.template"].search(domain)
 
         o_ids = self.env["odoo.product.template"].search(
             [("backend_id", "=", self.backend_record.id)]
@@ -120,20 +120,20 @@ class ProductTemplateExportMapper(Component):
 
     def get_product_by_match_field(self, record):
         match_field = "default_code"
-        filters = []
+        domain = []
 
         if self.backend_record.matching_product_product:
             match_field = self.backend_record.matching_product_ch
 
-        filters = ast.literal_eval(self.backend_record.external_product_domain_filter)
+        domain = ast.literal_eval(self.backend_record.external_product_domain_filter)
         if record[match_field]:
-            filters.append((match_field, "=", record[match_field]))
-        filters.append("|")
-        filters.append(("active", "=", False))
-        filters.append(("active", "=", True))
+            domain.append((match_field, "=", record[match_field]))
+        domain.append("|")
+        domain.append(("active", "=", False))
+        domain.append(("active", "=", True))
 
         adapter = self.component(usage="record.exporter").backend_adapter
-        prod_id = adapter.search(filters)
+        prod_id = adapter.search(domain)
         if len(prod_id) == 1:
             return prod_id[0]
 
