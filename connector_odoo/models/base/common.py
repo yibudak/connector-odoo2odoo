@@ -15,6 +15,7 @@ class Base(models.AbstractModel):
     def _compute_active_job_ids(self):
         """
         Add active job ids to the recordset.
+        # Todo yigit: find a better way to implement.
         """
         for record in self:
             if record.id and hasattr(record, "bind_ids"):
