@@ -53,7 +53,7 @@ class AccountTaxGroupGroupImportMapper(Component):
         group_record = (
             self.env["account.tax.group"]
             .with_context(ctx)
-            .search([("name", "=", record.name)], limit=1)
+            .search([("name", "=", record["name"])], limit=1)
         )
         if group_record:
             _logger.info(

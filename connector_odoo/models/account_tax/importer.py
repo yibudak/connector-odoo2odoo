@@ -59,8 +59,8 @@ class AccountTaxImportMapper(Component):
             .with_context(ctx)
             .search(
                 [
-                    ("name", "=", record.name),
-                    ("type_tax_use", "=", record.type_tax_use),
+                    ("name", "=", record["name"]),
+                    ("type_tax_use", "=", record["type_tax_use"]),
                 ],
                 limit=1,
             )
@@ -96,9 +96,9 @@ class AccountTaxImportMapper(Component):
 
     def group_id(self, record):
         vals = {}
-        if record.group_id:
+        if record.get("group_id"):
             binder = self.binder_for("odoo.account.tax.group")
-            group = binder.to_internal(record.group_id.id, unwrap=True)
+            group = binder.to_internal(record["group_id"][0], unwrap=True)
             if group:
                 vals.update({"group_id": group.id})
         return vals
@@ -107,10 +107,10 @@ class AccountTaxImportMapper(Component):
     def children_tax_ids(self, record):
         vals = {}
         binder = self.binder_for("odoo.account.tax")
-        if record.amount_type == "group":
+        if record["amount_type"] == "group":
             children = []
-            for tax in record.children_tax_ids:
-                local_tax = binder.to_internal(tax.id, unwrap=True)
+            for tax_id in record["children_tax_ids"]:
+                local_tax = binder.to_internal(tax_id, unwrap=True)
                 if local_tax:
                     children.append(local_tax.id)
             vals.update({"children_tax_ids": [(6, 0, children)]})
@@ -125,9 +125,9 @@ class AccountTaxImporter(Component):
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
         record = self.odoo_record
-        if record.tax_group_id:
+        if tax_group_id := record.get("tax_group_id"):
             self._import_dependency(
-                record.tax_group_id.id, "odoo.account.tax.group", force=force
+                tax_group_id[0], "odoo.account.tax.group", force=force
             )
         # if record.account_id:
         #     self._import_dependency(
@@ -138,6 +138,6 @@ class AccountTaxImporter(Component):
         #         record.refund_account_id.id, "odoo.account.account", force=force
         #     )
         #  Grouped taxes
-        if record.amount_type == "group":
-            for tax in record.children_tax_ids:
-                self._import_dependency(tax.id, "odoo.account.tax", force=force)
+        if record.get("amount_type") == "group":
+            for tax_id in record.get("children_tax_ids"):
+                self._import_dependency(tax_id, "odoo.account.tax", force=force)

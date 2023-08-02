@@ -42,7 +42,7 @@ class ResCurrencyRateMapper(Component):
     @mapping
     def check_currency_rate_exists(self, record):
         res = {}
-        currency_id = self.binding_for("odoo.res.currency").to_internal(
+        currency_id = self.binder_for("odoo.res.currency").to_internal(
             record["currency_id"][0], unwrap=True
         )
         rate_id = self.env["res.currency.rate"].search(
