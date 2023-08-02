@@ -55,6 +55,8 @@ class ProductTemplateImportMapper(Component):
         ("short_public_description", "description_sale"),
         ("website_sequence", "website_sequence"),
         ("qty_increment_step", "qty_increment_step"),
+        ("set_product", "set_product"),
+        ("sub_component", "sub_component"),
         # ("public_description", "public_description"),
     ]
 
