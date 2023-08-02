@@ -36,6 +36,13 @@ class OdooImporter(AbstractComponent):
         super(OdooImporter, self).__init__(work_context)
         self.external_id = None
         self.odoo_record = None
+        self.job_uuid = None
+
+    def _connect_with_job(self, context_dict):
+        """Save job_uuid in context to match write external odoo id to the job"""
+        if job_uuid := context_dict.get("job_uuid"):
+            self.job_uuid = job_uuid
+        return True
 
     def _get_odoo_data(self):
         """Return the raw Odoo data for ``self.external_id``"""
@@ -256,6 +263,18 @@ class OdooImporter(AbstractComponent):
 
         if not binding:
             binding = self._get_binding_odoo_id_changed(binding)
+
+        # Add relation between job and binding, so we can monitor the import
+        if binding and self.job_uuid:
+            job_id = self.env["queue.job"].search([("uuid", "=", self.job_uuid)])
+            if job_id:
+                job_id.write(
+                    {
+                        "odoo_binding_model_name": binding.odoo_id._name,
+                        "odoo_binding_id": binding.odoo_id.id,
+                    }
+                )
+                self.env.cr.commit()  # Commit in case of a failure in the next steps
         self._before_import()
 
         # import the missing linked resources
@@ -296,6 +315,7 @@ class OdooImporter(AbstractComponent):
         # We commit the transaction after the after import
         self.env.cr.commit()
         return _("Imported with success.")
+
 
 class BatchImporter(AbstractComponent):
     """The role of a BatchImporter is to search for a list of

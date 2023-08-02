@@ -34,9 +34,10 @@ class OdooBinding(models.AbstractModel):
         )
     ]
 
-    @property
-    def odoo_api(self):
-        return self.backend_id.get_connection()
+    # note yigit: we don't need this anymore.
+    # @property
+    # def odoo_api(self):
+    #     return self.backend_id.get_connection()
 
     def resync(self):
         return self.with_delay().import_record(
@@ -84,6 +85,7 @@ class OdooBinding(models.AbstractModel):
         with backend.work_on(self._name) as work:
             importer = work.component(usage="record.importer")
             importer.set_lock(external_id)
+            importer._connect_with_job(self._context)
             try:
                 return importer.run(external_id, force=force)
             except Exception as e:
