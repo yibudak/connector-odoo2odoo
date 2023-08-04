@@ -49,4 +49,8 @@ class OdooProductAttributeAdapter(Component):
     _name = "odoo.product.attribute.value.adapter"
     _inherit = "odoo.adapter"
     _apply_on = "odoo.product.attribute.value"
+
     _odoo_model = "product.attribute.value"
+
+    # Set get_passive to True to get the passive records also.
+    _get_passive = False

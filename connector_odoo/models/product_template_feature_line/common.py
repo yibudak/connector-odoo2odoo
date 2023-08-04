@@ -45,4 +45,8 @@ class OdooProductFeatureAdapter(Component):
     _name = "odoo.product.template.feature.line.adapter"
     _inherit = "odoo.adapter"
     _apply_on = "odoo.product.template.feature.line"
+
     _odoo_model = "product.template.feature.line"
+
+    # Set get_passive to True to get the passive records also.
+    _get_passive = False

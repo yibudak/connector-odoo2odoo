@@ -37,7 +37,7 @@ class ProductPricelistBatchImporter(Component):
             job_options = {
                 "priority": base_priority,
             }
-            self._import_record(pricelist, job_options=job_options)
+            self._import_record(pricelist, job_options=job_options, force=force)
 
 
 class ProductPricelistImporter(Component):
@@ -50,8 +50,8 @@ class ProductPricelistImporter(Component):
         if not binding:
             binding = self.env["odoo.product.pricelist"].search(
                 [
-                    ("name", "=", self.odoo_record.name),
-                    ("currency_id.name", "=", self.odoo_record.currency_id.name)
+                    ("name", "=", self.odoo_record["name"]),
+                    ("currency_id.name", "=", self.odoo_record["currency_id"][1]),
                 ],
                 limit=1,
             )
@@ -70,33 +70,35 @@ class ProductPricelistImportMapper(Component):
         ("sequence", "sequence"),
     ]
 
-    @only_create
+    # @only_create # todo enable
     @mapping
     def odoo_id(self, record):
         # TODO: Improve the matching on name and position in the tree so that
         # multiple pricelist with the same name will be allowed and not
         # duplicated
         pricelist = self.env["product.pricelist"].search(
-                [
-                    ("name", "=", record.name),
-                    ("currency_id.name", "=", record.currency_id.name)
-                ],
-                limit=1,
-            )
+            [
+                ("name", "=", record["name"]),
+                ("currency_id.name", "=", record["currency_id"][1]),
+            ],
+            limit=1,
+        )
         if len(pricelist) == 1:
-            _logger.info("found pricelist %s for record %s" % (pricelist.name, record))
+            _logger.info(
+                "found pricelist %s for record %s" % (pricelist.name, record["name"])
+            )
             return {"odoo_id": pricelist.id}
         return {}
 
     @mapping
     def currency_id(self, record):
-        if not record.currency_id:
+        if not (currency_id := record.get("currency_id")):
             return
-        currency = self.env["res.currency"].search(
-            [("name", "=", record.currency_id.name)]
-        )
-        _logger.info("found currency %s for record %s" % (currency.name, record))
+        currency = self.env["res.currency"].search([("name", "=", currency_id[1])])
         if len(currency) == 1:
+            _logger.info(
+                "found currency %s for record %s" % (currency.name, record["name"])
+            )
             return {"currency_id": currency.id}
         raise MappingError("No currency found %s" % currency.name)
 
@@ -111,13 +113,9 @@ class ProductPricelistItemBatchImporter(Component):
     For every pricelist item in the list, a delayed job is created.
     """
 
-    _name = "odoo.product.pricelist.batch.importer"
+    _name = "odoo.product.pricelist.item.batch.importer"
     _inherit = "odoo.delayed.batch.importer"
     _apply_on = ["odoo.product.pricelist.item"]
-
-    def _import_record(self, external_id, job_options=None, force=False):
-        """Delay a job for the import"""
-        return super()._import_record(external_id, job_options=job_options, force=force)
 
     def run(self, domain=None, force=False):
         """Run the synchronization"""
@@ -131,7 +129,7 @@ class ProductPricelistItemBatchImporter(Component):
             job_options = {
                 "priority": 10,
             }
-            self._import_record(pricelist, job_options=job_options)
+            self._import_record(pricelist, job_options=job_options, force=force)
 
 
 class ProductPricelistItemImporter(Component):
@@ -142,24 +140,19 @@ class ProductPricelistItemImporter(Component):
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
         record = self.odoo_record
+        # pricelist_id is must have
         self._import_dependency(
-            record.pricelist_id.id, "odoo.product.pricelist", force=force
+            record["pricelist_id"][0], "odoo.product.pricelist", force=force
         )
-        if record.product_id:
+        if product_id := record.get("product_id"):
+            self._import_dependency(product_id[0], "odoo.product.product", force=force)
+        if tmpl_id := record.get("product_tmpl_id"):
+            self._import_dependency(tmpl_id[0], "odoo.product.template", force=force)
+        if categ_id := record.get("categ_id"):
+            self._import_dependency(categ_id[0], "odoo.product.category", force=force)
+        if base_pricelist_id := record.get("base_pricelist_id"):
             self._import_dependency(
-                record.product_id.id, "odoo.product.product", force=force
-            )
-        if record.product_tmpl_id:
-            self._import_dependency(
-                record.product_tmpl_id.id, "odoo.product.template", force=force
-            )
-        if record.categ_id:
-            self._import_dependency(
-                record.categ_id.id, "odoo.product.category", force=force
-            )
-        if record.base_pricelist_id:
-            self._import_dependency(
-                record.base_pricelist_id.id, "odoo.product.pricelist", force=force
+                base_pricelist_id[0], "odoo.product.pricelist", force=force
             )
 
 
@@ -188,26 +181,28 @@ class ProductPricelistItemImportMapper(Component):
     @mapping
     def pricelist_id(self, record):
         binder = self.binder_for("odoo.product.pricelist")
-        pricelist = binder.to_internal(record.pricelist_id.id, unwrap=True)
+        pricelist = binder.to_internal(record["pricelist_id"][0], unwrap=True)
+        if not pricelist:
+            raise MappingError("No pricelist found for %s" % record["pricelist_id"])
         return {"pricelist_id": pricelist.id}
 
     @mapping
     def categ_id(self, record):
-        if record.categ_id:
+        if categ_id := record.get("categ_id"):
             binder = self.binder_for("odoo.product.category")
-            categ = binder.to_internal(record.categ_id.id, unwrap=True)
+            categ = binder.to_internal(categ_id[0], unwrap=True)
             return {"categ_id": categ.id}
 
     @mapping
     def base_pricelist_id(self, record):
-        if record.base_pricelist_id:
+        if base_pricelist_id := record.get("base_pricelist_id"):
             binder = self.binder_for("odoo.product.pricelist")
-            pricelist = binder.to_internal(record.base_pricelist_id.id, unwrap=True)
+            pricelist = binder.to_internal(base_pricelist_id[0], unwrap=True)
             return {"base_pricelist_id": pricelist.id}
 
     @mapping
     def base(self, record):
-        base = record.base
+        base = record.get("base")
         if base == "-1":
             pricelist_base = "pricelist"
         elif base == "list_price":
@@ -222,16 +217,16 @@ class ProductPricelistItemImportMapper(Component):
 
     @mapping
     def product_id(self, record):
-        if record.product_id:
+        if product_id := record.get("product_id"):
             binder = self.binder_for("odoo.product.product")
-            product = binder.to_internal(record.product_id.id, unwrap=True)
+            product = binder.to_internal(product_id[0], unwrap=True)
             return {"product_id": product.id}
         return {}
 
     @mapping
     def product_tmpl_id(self, record):
-        if record.product_tmpl_id:
+        if tmpl_id := record.get("base_pricelist_id"):
             binder = self.binder_for("odoo.product.template")
-            product = binder.to_internal(record.product_tmpl_id.id, unwrap=True)
+            product = binder.to_internal(tmpl_id[0], unwrap=True)
             return {"product_tmpl_id": product.id}
         return {}

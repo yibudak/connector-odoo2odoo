@@ -219,7 +219,7 @@ class GenericAdapter(AbstractComponent):
         ]
 
     # pylint: disable=W8106,W0622
-    def read(self, id, model=None, context=None, fields=None):
+    def read(self, id, model=None, context=None):
         """Returns the information of a record
         :rtype: dict
         """
@@ -232,7 +232,10 @@ class GenericAdapter(AbstractComponent):
                 "OdooAPI instance to be able to use the "
                 "Backend Adapter."
             )
-        return odoo_api.browse(model=ext_model, res_id=id, context=context)
+
+        return odoo_api.browse(
+            model=ext_model, res_id=id, context=context, get_passive=self._get_passive
+        )
 
     def create(self, data):
         ext_model = self._odoo_model

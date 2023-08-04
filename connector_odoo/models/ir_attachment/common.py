@@ -49,6 +49,9 @@ class IrAttachmentAdapter(Component):
 
     _odoo_model = "ir.attachment"
 
+    # Set get_passive to True to get the passive records also.
+    _get_passive = True
+
 
 class IrAttachmentListener(Component):
     _name = "ir.attachment.listener"

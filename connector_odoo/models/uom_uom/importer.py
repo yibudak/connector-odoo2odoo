@@ -29,7 +29,7 @@ class UomBatchImporter(Component):
             job_options = {
                 "priority": 15,
             }
-            self._import_record(external_id, job_options=job_options)
+            self._import_record(external_id, job_options=job_options, force=force)
 
 
 class UomMapper(Component):
@@ -43,6 +43,7 @@ class UomMapper(Component):
         ("factor", "factor"),
         ("uom_type", "uom_type"),
         ("rounding", "rounding"),
+        ("active", "active"),
     ]
 
     # TODO: Improve and check family, factor etc...
@@ -81,7 +82,10 @@ class UomMapper(Component):
             self.env["uom.uom"]
             .with_context(lang=lang)
             .search(
-                [("name", "=", record["name"]), ("category_id.name", "=", category_name)]
+                [
+                    ("name", "=", record["name"]),
+                    ("category_id.name", "=", category_name),
+                ]
             )
         )
         _logger.info("UOM found for %s : %s" % (record, local_uom_id))

@@ -44,6 +44,7 @@ class AccountFiscalPositionImportMapper(Component):
         ("name", "name"),
         ("auto_apply", "auto_apply"),
         ("note", "note"),
+        ("active", "active"),
     ]
 
     @only_create

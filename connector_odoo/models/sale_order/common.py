@@ -138,6 +138,9 @@ class SaleOrderAdapter(Component):
     _apply_on = "odoo.sale.order"
     _odoo_model = "sale.order"
 
+    # Set get_passive to True to get the passive records also.
+    _get_passive = True
+
 
 class SaleOrderListener(Component):
     _name = "odoo.sale.order.listener"
@@ -179,4 +182,8 @@ class SaleOrderLineAdapter(Component):
     _name = "odoo.sale.order.line.adapter"
     _inherit = "odoo.adapter"
     _apply_on = "odoo.sale.order.line"
+
     _odoo_model = "sale.order.line"
+
+    # Set get_passive to True to get the passive records also.
+    _get_passive = False

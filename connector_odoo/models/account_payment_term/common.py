@@ -46,6 +46,9 @@ class AccountPaymentTermAdapter(Component):
 
     _odoo_model = "account.payment.term"
 
+    # Set get_passive to True to get the passive records also.
+    _get_passive = True
+
 
 class AccountPaymentTermListener(Component):
     _name = "account.payment.term.listener"

@@ -48,7 +48,11 @@ class ProductPricelistAdapter(Component):
     _name = "odoo.product.pricelist.adapter"
     _inherit = "odoo.adapter"
     _apply_on = "odoo.product.pricelist"
+
     _odoo_model = "product.pricelist"
+
+    # Set get_passive to True to get the passive records also.
+    _get_passive = True
 
 
 class OdooProductPricelistItem(models.Model):
@@ -56,6 +60,7 @@ class OdooProductPricelistItem(models.Model):
     _inherit = "odoo.binding"
     _inherits = {"product.pricelist.item": "odoo_id"}
     _description = "Odoo Product Pricelist Item"
+
     def resync(self):
         if self.backend_id.main_record == "odoo":
             return self.with_delay().export_record(self.backend_id)
@@ -79,7 +84,11 @@ class ProductPricelistItemAdapter(Component):
     _name = "odoo.product.pricelist.item.adapter"
     _inherit = "odoo.adapter"
     _apply_on = "odoo.product.pricelist.item"
+
     _odoo_model = "product.pricelist.item"
+
+    # Set get_passive to True to get the passive records also.
+    _get_passive = False
 
     def search(self, domain=None, model=None, offset=0, limit=None, order=None):
         """Search records according to some criteria

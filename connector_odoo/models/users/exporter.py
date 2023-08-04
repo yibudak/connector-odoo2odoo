@@ -45,7 +45,7 @@ class BatchUserExporter(Component):
         )
         for user in bind_ids:
             job_options = {"max_retries": 0, "priority": 15}
-            self._export_record(user, job_options=job_options)
+            self._export_record(user, job_options=job_options, force=force)
 
 
 class OdooUserExporter(Component):

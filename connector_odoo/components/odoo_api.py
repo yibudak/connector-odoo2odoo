@@ -44,8 +44,6 @@ class OdooAPI(object):
     def query_id(self):
         return randint(1, 1337)
 
-
-
     def _post(self, payload):
         with self._session as client:
             try:
@@ -166,13 +164,18 @@ class OdooAPI(object):
     def write(self, res_id, data):
         pass
 
-    def browse(self, model, res_id, fields=None, context=None):
+    def browse(self, model, res_id, fields=None, context=None, get_passive=None):
+        if get_passive:
+            base_domain = ["|", ["active", "=", True], ["active", "=", False]]
+        else:
+            base_domain = []
+
         if res := self._post(
             self._build_execute_kw_payload(
                 kwargs=[
                     model,
                     "search_read",
-                    [[["id", "=", res_id]]],
+                    [base_domain + [["id", "=", res_id]]],
                     {
                         "fields": fields,
                         "context": self._build_context(context=context),

@@ -50,6 +50,9 @@ class PartnerCategoryAdapter(Component):
 
     _odoo_model = "res.partner.category"
 
+    # Set get_passive to True to get the passive records also.
+    _get_passive = True
+
 
 class PartnerCategoryListener(Component):
     _name = "res.partner.category.listener"
