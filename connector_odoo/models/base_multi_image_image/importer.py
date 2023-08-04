@@ -89,7 +89,7 @@ class BaseMultiImageImageMapper(Component):
                 )
 
                 local_attachment = self.env["odoo.ir.attachment"].search(
-                    [("store_fname", "=", external_attachment_id[["store_fname"]])],
+                    [("store_fname", "=", external_attachment_id["store_fname"])],
                     limit=1,
                 )
             vals["attachment_id"] = local_attachment.odoo_id.id

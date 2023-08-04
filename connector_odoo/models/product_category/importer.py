@@ -35,9 +35,9 @@ class ProductCategoryBatchImporter(Component):
         base_priority = 10
         for cat in updated_ids:
             cat_id = self.backend_adapter.read(cat)
-            parents = cat_id.parent_path.split("/")
+            parents = cat_id.get("parent_path", "").split("/")
             job_options = {"priority": base_priority + len(parents) or 0}
-            self._import_record(cat_id.id, job_options=job_options, force=force)
+            self._import_record(cat_id["id"], job_options=job_options, force=force)
 
 
 class ProductCategoryImporter(Component):
