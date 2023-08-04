@@ -58,4 +58,8 @@ class ProductCategoryAdapter(Component):
     _name = "odoo.product.category.adapter"
     _inherit = "odoo.adapter"
     _apply_on = "odoo.product.category"
+
     _odoo_model = "product.category"
+
+    # Set get_passive to True to get the passive records also.
+    _get_passive = False

@@ -46,6 +46,9 @@ class AccountGroupAdapter(Component):
 
     _odoo_model = "account.group"
 
+    # Set get_passive to True to get the passive records also.
+    _get_passive = False
+
 
 class AccountGroupListener(Component):
     _name = "account.group.listener"

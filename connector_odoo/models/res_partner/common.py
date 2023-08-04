@@ -68,6 +68,9 @@ class PartnerAdapter(Component):
 
     _odoo_model = "res.partner"
 
+    # Set get_passive to True to get the passive records also.
+    _get_passive = True
+
     def search(
         self, domain=None, model=None, offset=0, limit=5000, order=None
     ):  # Todo: limit none olacak debug için 5 yaptım

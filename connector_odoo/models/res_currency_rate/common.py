@@ -74,4 +74,8 @@ class ResCurrencyRateAdapter(Component):
     _name = "odoo.res.currency.rate.adapter"
     _inherit = "odoo.adapter"
     _apply_on = "odoo.res.currency.rate"
+
     _odoo_model = "res.currency.rate"
+
+    # Set get_passive to True to get the passive records also.
+    _get_passive = False

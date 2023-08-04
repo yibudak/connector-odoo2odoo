@@ -46,6 +46,9 @@ class AccountFiscalPositionAdapter(Component):
 
     _odoo_model = "account.fiscal.position"
 
+    # Set get_passive to True to get the passive records also.
+    _get_passive = True
+
 
 class AccountFiscalPositionListener(Component):
     _name = "account.fiscal.position.listener"

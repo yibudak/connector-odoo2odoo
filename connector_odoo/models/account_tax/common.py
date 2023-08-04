@@ -46,6 +46,9 @@ class AccountTaxAdapter(Component):
 
     _odoo_model = "account.tax"
 
+    # Set get_passive to True to get the passive records also.
+    _get_passive = True
+
 
 class AccountTaxListener(Component):
     _name = "account.tax.listener"

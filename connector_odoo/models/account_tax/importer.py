@@ -47,6 +47,7 @@ class AccountTaxImportMapper(Component):
         ("amount", "amount"),
         ("type_tax_use", "type_tax_use"),
         ("description", "description"),
+        ("active", "active"),
     ]
 
     @only_create

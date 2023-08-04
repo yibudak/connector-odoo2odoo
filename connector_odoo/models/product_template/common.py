@@ -118,6 +118,9 @@ class ProductTemplateAdapter(Component):
 
     _odoo_model = "product.template"
 
+    # Set get_passive to True to get the passive records also.
+    _get_passive = True
+
     def search(self, domain=None, model=None, offset=0, limit=None, order=None):
         """Search records according to some criteria
         and returns a list of ids

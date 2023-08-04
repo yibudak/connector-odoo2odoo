@@ -36,6 +36,7 @@ class DeliveryCarrierMapper(Component):
     _apply_on = ["odoo.delivery.carrier"]
 
     direct = [
+        ("active", "active"),
         ("name", "name"),
         ("carrier_barcode_type", "carrier_barcode_type"),
         ("payment_type", "payment_type"),

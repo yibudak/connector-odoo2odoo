@@ -111,4 +111,8 @@ class StockPickingAdapter(Component):
     _name = "odoo.stock.picking.adapter"
     _inherit = "odoo.adapter"
     _apply_on = "odoo.stock.picking"
+
     _odoo_model = "stock.picking"
+
+    # Set get_passive to True to get the passive records also.
+    _get_passive = False

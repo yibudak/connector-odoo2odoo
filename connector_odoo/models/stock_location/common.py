@@ -48,4 +48,8 @@ class StockLocationAdapter(Component):
     _name = "odoo.stock.location.adapter"
     _inherit = "odoo.adapter"
     _apply_on = "odoo.stock.location"
+
     _odoo_model = "stock.location"
+
+    # Set get_passive to True to get the passive records also.
+    _get_passive = True

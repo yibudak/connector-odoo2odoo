@@ -38,6 +38,7 @@ class PartnerImportMapper(Component):
     _apply_on = ["odoo.res.partner"]
 
     direct = [
+        ("active", "active"),
         ("name", "name"),
         ("street", "street"),
         ("street2", "street2"),

@@ -55,6 +55,9 @@ class BaseMultiImageImageAdapter(Component):
 
     _odoo_model = "base_multi_image.image"
 
+    # Set get_passive to True to get the passive records also.
+    _get_passive = False
+
 
 class ProductImageListener(Component):
     _name = "base_multi_image.image.listener"

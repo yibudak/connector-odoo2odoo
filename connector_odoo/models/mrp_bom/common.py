@@ -56,6 +56,9 @@ class MrpBomAdapter(Component):
 
     _odoo_model = "mrp.bom"
 
+    # Set get_passive to True to get the passive records also.
+    _get_passive = True
+
     def search(self, domain=None, model=None, offset=0, limit=None, order=None):
         """Search records according to some criteria
         and returns a list of ids

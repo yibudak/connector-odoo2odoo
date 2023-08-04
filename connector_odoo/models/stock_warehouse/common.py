@@ -48,4 +48,8 @@ class StockWarehouseAdapter(Component):
     _name = "odoo.stock.warehouse.adapter"
     _inherit = "odoo.adapter"
     _apply_on = "odoo.stock.warehouse"
+
     _odoo_model = "stock.warehouse"
+
+    # Set get_passive to True to get the passive records also.
+    _get_passive = True

@@ -46,6 +46,9 @@ class AddressRegionAdapter(Component):
 
     _odoo_model = "address.region"
 
+    # Set get_passive to True to get the passive records also.
+    _get_passive = False
+
 
 class AddressRegionListener(Component):
     _name = "address.region.listener"

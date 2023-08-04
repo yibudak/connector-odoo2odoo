@@ -58,6 +58,9 @@ class DeliveryPriceRuleAdapter(Component):
     _apply_on = "odoo.delivery.price.rule"
     _odoo_model = "delivery.price.rule"
 
+    # Set get_passive to True to get the passive records also.
+    _get_passive = False
+
     # def search(self, domain=None, model=None, offset=0, limit=None, order=None):
     #     """Search records according to some criteria
     #     and returns a list of ids

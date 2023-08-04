@@ -46,6 +46,9 @@ class AddressNeighbourAdapter(Component):
 
     _odoo_model = "address.neighbour"
 
+    # Set get_passive to True to get the passive records also.
+    _get_passive = False
+
 
 class AddressNeighbourListener(Component):
     _name = "address.neighbour.listener"

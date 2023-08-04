@@ -51,4 +51,8 @@ class ProductUoMAdapter(Component):
     _name = "odoo.uom.uom.adapter"
     _inherit = "odoo.adapter"
     _apply_on = "odoo.uom.uom"
+
     _odoo_model = "uom.uom"  # "product.uom"
+
+    # Set get_passive to True to get the passive records also.
+    _get_passive = True
