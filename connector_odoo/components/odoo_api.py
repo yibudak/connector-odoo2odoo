@@ -187,6 +187,20 @@ class OdooAPI(object):
     def unlink(self, res_id):
         pass
 
+    def execute(self, model, method, args=None, kwargs=None, context=None):
+        return self._post(
+            self._build_execute_kw_payload(
+                kwargs=[
+                    model,
+                    method,
+                    args or [],
+                    {
+                        "context": self._build_context(context=context),
+                    },
+                ],
+            )
+        )
+
 
 # class Model(object):
 #     def __init__(self, api, model):
