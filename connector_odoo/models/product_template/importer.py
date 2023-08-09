@@ -139,6 +139,20 @@ class ProductTemplateImportMapper(Component):
             vals["public_description"] = cleaner.clean_html(desc) or ""
         return vals
 
+    @mapping
+    def default_variant_id(self, record):
+        vals = {}
+        if default_variant_id := record["product_variant_id"]:
+            binder = self.binder_for("odoo.product.product")
+            product = binder.to_internal(default_variant_id[0], unwrap=True)
+            if not product:
+                raise MappingError(
+                    "Can't find external product with odoo_id: %s."
+                    % default_variant_id[0]
+                )
+            vals["default_variant_id"] = product.id
+        return vals
+
 
 class ProductTemplateImporter(Component):
     _name = "odoo.product.template.importer"
@@ -201,24 +215,27 @@ class ProductTemplateImporter(Component):
                 self.env["odoo.ir.attachment"].import_record(
                     self.backend_record, attachment_id, force=force
                 )
-            # Todo: bind_ids.external_id -> use odoo.ir.attachment
-            imported_attachments = self.env["ir.attachment"].search(
+            imported_attachments = self.env["odoo.ir.attachment"].search(
                 [
-                    ("bind_ids.external_id", "in", attachment_ids),
+                    ("external_id", "in", attachment_ids),
                     ("res_model", "=", "product.template"),
                 ]
             )
             tmpl_id.write(
                 {
-                    "website_attachment_ids": [(6, 0, imported_attachments.ids)],
+                    "website_attachment_ids": [
+                        (6, 0, imported_attachments.mapped("odoo_id.id"))
+                    ],
                 }
             )
         return True
 
-    def _import_website_images(self, force):
-        if image_ids := self.odoo_record["image_ids"]:
-            for image_id in image_ids:
-                self.env["odoo.base_multi_image.image"].with_delay().import_record(
-                    self.backend_record, image_id, force=force
-                )
-        return True
+    # We already import images with scheduled actions. No need to import them here.
+    # def _import_website_images(self, force):
+    #     # Lazy import of images
+    #     if image_ids := self.odoo_record["image_ids"]:
+    #         for image_id in image_ids:
+    #             self.env["odoo.base_multi_image.image"].with_delay().import_record(
+    #                 self.backend_record, image_id, force=force
+    #             )
+    #     return True
