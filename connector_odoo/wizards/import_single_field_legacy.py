@@ -17,7 +17,8 @@ class ImportSingleFieldLegacyWizard(models.TransientModel):
     )
     field_name = fields.Char(required=True)
     to_field_name = fields.Char(required=True)
-    force = fields.Boolean(default=True)
+    many2one_import = fields.Boolean(default=False)
+    many2one_related_model = fields.Char()
 
     def action_import(self):
         self.ensure_one()
@@ -37,10 +38,20 @@ class ImportSingleFieldLegacyWizard(models.TransientModel):
         )
         record_dict = {rec.external_id: rec for rec in imported_records}
         external_records = {rec["id"]: rec for rec in external_records}
-
+        if self.many2one_import:
+            binding_model = self.env["odoo.%s" % self.many2one_related_model]
+        else:
+            binding_model = self.env[self.model_id.model]
         for record_external_id, record in record_dict.items():
             data = external_records.get(record_external_id)
-            if data:
-                record.write({self.to_field_name: data[self.field_name]})
+            if data and (external_field := data.get(self.field_name)):
+                if self.many2one_import:
+                    related_model = binding_model.search(
+                        [("external_id", "=", external_field[0])]
+                    )
+                    if related_model:
+                        record.write({self.to_field_name: related_model.odoo_id.id})
+                else:
+                    record.write({self.to_field_name: external_field})
 
         return True
