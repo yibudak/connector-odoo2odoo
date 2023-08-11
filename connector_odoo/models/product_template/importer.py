@@ -142,7 +142,7 @@ class ProductTemplateImportMapper(Component):
     @mapping
     def default_variant_id(self, record):
         vals = {}
-        if default_variant_id := record["product_variant_id"]:
+        if default_variant_id := record.get("default_variant_id"):
             binder = self.binder_for("odoo.product.product")
             product = binder.to_internal(default_variant_id[0], unwrap=True)
             if not product:
@@ -184,11 +184,11 @@ class ProductTemplateImporter(Component):
     def _after_import(self, binding, force=False):
         imported_template = self.binder.to_internal(self.external_id)
         if imported_template:
-            # Todo: this line causes recursion
-            # self._import_website_images(force=force)
             self._import_website_attachments(imported_template, force=force)
             self._import_attribute_lines(force=force)
             self._import_feature_lines(force=force)
+            # yigit: recompute the list_price on the template
+            # imported_template.odoo_id._onchange_default_variant_id()
         super(ProductTemplateImporter, self)._after_import(binding, force=force)
 
     def _import_attribute_lines(self, force=False):
