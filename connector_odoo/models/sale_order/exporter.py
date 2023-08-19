@@ -16,12 +16,19 @@ class OdooSaleOrderExporter(Component):
     _inherit = "odoo.exporter"
     _apply_on = ["odoo.sale.order"]
 
+    def _must_skip(self):
+        """If there is no USER on the sale order, this means that the
+        order is created by guest user. We don't want to export it."""
+        return not self.binding.partner_id.user_id
+
     def _export_dependencies(self):
         if not self.binding.partner_id:
             return
 
         partner_records = self.env["res.partner"]
         partner_fields = ["partner_id", "partner_invoice_id", "partner_shipping_id"]
+
+        # try to collect all partners
         for field in partner_fields:
             partner_records |= self.binding[field]
 

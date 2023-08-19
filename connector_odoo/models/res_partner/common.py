@@ -72,8 +72,8 @@ class PartnerAdapter(Component):
     _get_passive = True
 
     def search(
-        self, domain=None, model=None, offset=0, limit=5000, order=None
-    ):  # Todo: limit none olacak debug için 5 yaptım
+        self, domain=None, model=None, offset=0, limit=None, order=None
+    ):
         """Search records according to some criteria
         and returns a list of ids
 
@@ -81,11 +81,8 @@ class PartnerAdapter(Component):
         """
         if domain is None:
             domain = []
-        ext_filter = ast.literal_eval(
-            str(self.backend_record.external_partner_domain_filter)
-        )
-        domain += ext_filter or []
-        domain += [("name", "!=", False)]  # Todo: not null constraint hatasını geçtik
+        # Fix for not null constraint bug
+        domain += [("name", "!=", False)]
         return super(PartnerAdapter, self).search(
             domain=domain, model=model, offset=offset, limit=limit, order=order
         )

@@ -90,23 +90,17 @@ class PartnerExportMapper(Component):
     ]
 
     def get_partner_by_match_field(self, record):
-        match_field = "email"
-        domain = []
-
-        if self.backend_record.matching_customer:
-            match_field = self.backend_record.matching_customer_ch
-
-        domain = ast.literal_eval(self.backend_record.external_partner_domain_filter)
-        if record[match_field]:
-            domain.append((match_field, "=", record[match_field]))
-        domain.append("|")
-        domain.append(("active", "=", False))
-        domain.append(("active", "=", True))
-
+        if not record.vat:
+            return False
+        match_domain = [
+            ("vat", "=", record.vat),
+            ("parent_id", "=", False),
+        ]
         adapter = self.component(usage="record.exporter").backend_adapter
-        partner = adapter.search(domain)
-        if len(partner) == 1:
-            return partner[0]
+        matched_partner = adapter.search(model="res.partner", domain=match_domain)
+
+        if len(matched_partner) == 1:
+            return matched_partner[0]
 
         return False
 
@@ -118,7 +112,7 @@ class PartnerExportMapper(Component):
     def address_fields(self, record):
         # Todo fix this function here and import mapper. Temiz değil.
         vals = {}
-        adapter = self.work.odoo_api.api
+        adapter = self.work.odoo_api
         if record.neighbour_id:
             odoo_neighbour = self.env["odoo.address.neighbour"].search(
                 [("odoo_id", "=", record.neighbour_id.id)]
@@ -127,18 +121,16 @@ class PartnerExportMapper(Component):
                 raise ValidationError(
                     "Neighbour %s not found in Odoo" % record.neighbour_id.name
                 )
-            remote_neighbour = adapter.env["address.neighbour"].search(
-                [
-                    ("id", "=", odoo_neighbour.external_id),
-                ],
-                limit=1,
+            remote_neighbour = adapter.browse(
+                model="address.neighbour", res_id=odoo_neighbour.external_id
             )
+            # We can use odoo_neighbour instead remote_neighbour
             if remote_neighbour:
-                vals["neighbour_id"] = remote_neighbour.id
-                vals["region_id"] = remote_neighbour.region_id.id
-                vals["district_id"] = remote_neighbour.region_id.district_id.id
-                vals["state_id"] = remote_neighbour.region_id.district_id.state_id.id
-                vals["country_id"] = remote_neighbour.region_id.district_id.state_id.country_id.id
+                vals["neighbour_id"] = remote_neighbour["id"]
+                vals["region_id"] = remote_neighbour["region_id"][0]
+                vals["district_id"] = remote_neighbour["district_id"][0]
+                vals["state_id"] = remote_neighbour["state_id"][0]
+                # vals["country_id"] = remote_neighbour["country_id"][0]
         return vals
 
     @only_create

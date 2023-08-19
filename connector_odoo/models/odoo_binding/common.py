@@ -24,7 +24,7 @@ class OdooBinding(models.AbstractModel):
         required=True,
         ondelete="restrict",
     )
-    external_id = fields.Integer(string="ID on Ext Odoo", default=-1)
+    external_id = fields.Integer(string="ID on Ext Odoo", required=False)
 
     _sql_constraints = [
         (

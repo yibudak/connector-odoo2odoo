@@ -240,21 +240,20 @@ class GenericAdapter(AbstractComponent):
     def create(self, data):
         ext_model = self._odoo_model
         try:
-            odoo_api = self.work.odoo_api.api
+            odoo_api = self.work.odoo_api
         except AttributeError as e:
             raise AttributeError(
                 "You must provide a odoo_api attribute with a "
                 "OdooAPI instance to be able to use the "
                 "Backend Adapter."
             ) from e
-        model = odoo_api.env[ext_model]
-        return model.create(data)
+        return odoo_api.create(model=ext_model, data=data)
 
     def write(self, id, data):
         arguments = [int(id)]
         ext_model = self._odoo_model
         try:
-            odoo_api = self.work.odoo_api.api
+            odoo_api = self.work.odoo_api
         except AttributeError as e:
             raise AttributeError(
                 "You must provide a odoo_api attribute with a "

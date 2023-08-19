@@ -131,8 +131,19 @@ class OdooAPI(object):
         _logger.info("OdooAPI Connection test successful, version: %s", response)
         return True
 
-    def create(self, data):
-        pass
+    def create(self, model, data):
+        return self._post(
+            self._build_execute_kw_payload(
+                kwargs=[
+                    model,
+                    "create",
+                    [data],
+                    {
+                        "context": self._build_context(),
+                    },
+                ],
+            )
+        )
 
     def search(
         self,

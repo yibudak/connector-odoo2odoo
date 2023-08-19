@@ -36,6 +36,10 @@ class OdooBaseExporter(AbstractComponent):
         self.binding = None
         self.external_id = None
 
+    def _must_skip(self):
+        """Base method to check if the export should be skipped."""
+        return False
+
     def _delay_import(self):
         """Schedule an import of the record.
 
@@ -77,11 +81,8 @@ class OdooBaseExporter(AbstractComponent):
 
         self.external_id = self.binder.to_external(self.binding, wrap=False)
 
-        # if not self.external_id:
-        #     # Todo: this is added to double check if the binding is not
-        #     # created in the meantime. you can also set the wrap=False in
-        #     # the to_external method
-        #     self.external_id = self.binding.external_id
+        if self._must_skip():
+            return _("Export skipped.")
 
         try:
             should_import = self._should_import()
@@ -400,7 +401,9 @@ class OdooExporter(AbstractComponent):
 
         map_record = self._map_data()
 
-        if self.external_id:
+        # -1 is a special value for external_id, it means that the
+        # record is not yet exported
+        if self.external_id and self.external_id != -1:
             record = self._update_data(map_record, fields=fields)
             if not record:
                 return _("Nothing to export.")

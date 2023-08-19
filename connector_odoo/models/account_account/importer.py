@@ -109,9 +109,10 @@ class AccountAccountImporter(Component):
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
         record = self.odoo_record
-        self._import_dependency(
-            record["currency_id"][0], "odoo.res.currency", force=force
-        )
+        if currency_id := record.get("currency_id"):
+            self._import_dependency(
+                currency_id[0], "odoo.res.currency", force=force
+            )
         self._import_dependency(record["group_id"][0], "odoo.account.group", force=force)
         # for tax_id in record.tax_ids:
         #     self._import_dependency(tax_id.id, "odoo.account.tax", force=force)
