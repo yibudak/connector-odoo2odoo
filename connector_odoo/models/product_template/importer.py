@@ -240,7 +240,6 @@ class ProductTemplateImporter(Component):
             imported_variant = self.env["odoo.product.product"].search(
                 [
                     ("external_id", "=", default_variant_id[0]),
-                    ("res_model", "=", "product.product"),
                 ],
                 limit=1,
             )
