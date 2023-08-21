@@ -237,7 +237,7 @@ class ProductTemplateImporter(Component):
 
     def _import_default_variant(self, tmpl_id, force=False):
         if default_variant_id := self.odoo_record["default_variant_id"]:
-            imported_variant = self.env["odoo.product.variant"].search(
+            imported_variant = self.env["odoo.product.product"].search(
                 [
                     ("external_id", "=", default_variant_id[0]),
                     ("res_model", "=", "product.product"),
