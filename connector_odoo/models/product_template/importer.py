@@ -139,19 +139,19 @@ class ProductTemplateImportMapper(Component):
             vals["public_description"] = cleaner.clean_html(desc) or ""
         return vals
 
-    @mapping
-    def default_variant_id(self, record):
-        vals = {}
-        if default_variant_id := record.get("default_variant_id"):
-            binder = self.binder_for("odoo.product.product")
-            product = binder.to_internal(default_variant_id[0], unwrap=True)
-            if not product:
-                raise MappingError(
-                    "Can't find external product with odoo_id: %s."
-                    % default_variant_id[0]
-                )
-            vals["default_variant_id"] = product.id
-        return vals
+    # @mapping
+    # def default_variant_id(self, record):
+    #     vals = {}
+    #     if default_variant_id := record.get("default_variant_id"):
+    #         binder = self.binder_for("odoo.product.product")
+    #         product = binder.to_internal(default_variant_id[0], unwrap=True)
+    #         if not product:
+    #             raise MappingError(
+    #                 "Can't find external product with odoo_id: %s."
+    #                 % default_variant_id[0]
+    #             )
+    #         vals["default_variant_id"] = product.id
+    #     return vals
 
 
 class ProductTemplateImporter(Component):
@@ -172,6 +172,12 @@ class ProductTemplateImporter(Component):
             "odoo.product.category",
             force=force,
         )
+        # if default_variant_id := self.odoo_record.get("default_variant_id"):
+        #     self._import_dependency(
+        #         default_variant_id[0],
+        #         "odoo.product.product",
+        #         force=force,
+        #     )
 
         return super()._import_dependencies(force=force)
 
@@ -187,8 +193,7 @@ class ProductTemplateImporter(Component):
             self._import_website_attachments(imported_template, force=force)
             self._import_attribute_lines(force=force)
             self._import_feature_lines(force=force)
-            # yigit: recompute the list_price on the template
-            # imported_template.odoo_id._onchange_default_variant_id()
+            self._import_default_variant(imported_template, force=force)
         super(ProductTemplateImporter, self)._after_import(binding, force=force)
 
     def _import_attribute_lines(self, force=False):
@@ -228,6 +233,27 @@ class ProductTemplateImporter(Component):
                     ],
                 }
             )
+        return True
+
+    def _import_default_variant(self, tmpl_id, force=False):
+        if default_variant_id := self.odoo_record["default_variant_id"]:
+            imported_variant = self.env["odoo.product.variant"].search(
+                [
+                    ("external_id", "=", default_variant_id[0]),
+                    ("res_model", "=", "product.product"),
+                ],
+                limit=1,
+            )
+            if imported_variant:
+                tmpl_id.write(
+                    {
+                        "default_variant_id": imported_variant.odoo_id.id,
+                    }
+                )
+            else:
+                self.env["odoo.product.product"].with_delay().import_record(
+                    self.backend_record, default_variant_id[0], force=force
+                )
         return True
 
     # We already import images with scheduled actions. No need to import them here.
