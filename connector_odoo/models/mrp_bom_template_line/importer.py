@@ -1,10 +1,12 @@
 # Copyright 2022 Yiğit Budak (https://github.com/yibudak)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-import ast
+
 import logging
 
 from odoo.addons.component.core import Component
 from odoo.addons.connector.components.mapper import mapping, only_create
+from odoo.addons.connector.exception import MappingError
+
 
 _logger = logging.getLogger(__name__)
 
@@ -18,10 +20,7 @@ class MrpBomTemplateLineBatchImporter(Component):
 
     def run(self, domain=None, force=False):
         """Run the synchronization"""
-
         external_ids = self.backend_adapter.search(domain)
-        imported_boms = self.env["odoo.mrp.bom"].search([]).mapped("external_id")
-        domain.append(("bom_id", "in", imported_boms))
         _logger.info(
             "search for MRP BoM Template line %s returned %s items",
             domain,
@@ -45,32 +44,18 @@ class MrpBomTemplateLineMapper(Component):
     @mapping
     def bom_id(self, record):
         res = {}
-        bom = record.bom_id
-        if bom:
-            local_bom = self.env["odoo.mrp.bom"].search([("external_id", "=", bom.id)])
+        if bom := record.get("bom_id"):
+            local_bom = self.env["odoo.mrp.bom"].search([("external_id", "=", bom[0])])
             if local_bom:
                 res["bom_id"] = local_bom.odoo_id.id
         return res
 
     @mapping
-    def product_id(self, record):
-        res = {}
-        product = record.product_id
-        if product:
-            local_product = self.env["odoo.product.product"].search(
-                [("external_id", "=", product.id)]
-            )
-            if local_product:
-                res["product_id"] = local_product.odoo_id.id
-        return res
-
-    @mapping
     def product_tmpl_id(self, record):
         res = {}
-        product = record.product_tmpl_id
-        if product:
+        if product := record.get("product_tmpl_id"):
             local_product = self.env["odoo.product.template"].search(
-                [("external_id", "=", product.id)]
+                [("external_id", "=", product[0])]
             )
             if local_product:
                 res["product_tmpl_id"] = local_product.odoo_id.id
@@ -79,46 +64,75 @@ class MrpBomTemplateLineMapper(Component):
     @mapping
     def product_uom_id(self, record):
         res = {}
-        uom = record.product_uom_id
-        if uom:
-            local_uom = self.env["odoo.uom.uom"].search([("external_id", "=", uom.id)])
+        if uom := record.get("product_uom_id"):
+            local_uom = self.env["odoo.uom.uom"].search([("external_id", "=", uom[0])])
             if local_uom:
                 res["product_uom_id"] = local_uom.odoo_id.id
         return res
 
     @mapping
-    def bom_product_template_attribute_value_ids(self, record):
+    def attributes(self, record):
         """
-        In Odoo 12 this field is related to bom_id.product_tmpl_id.attribute_line_ids
-        and in Odoo 16 this field is related to bom_id.product_tmpl_id.attribute_line_ids.product_template_value_ids
-        That's why we need to map it manually.
+        Odoo 12 -> Odoo 16
+        attribute_value_ids -> bom_product_template_attribute_value_ids
+        target_attribute_value_ids -> target_bom_product_template_attribute_value_ids
+        inherited_attribute_ids -> inherited_attribute_ids
         """
         res = {}
         attribute_binder = self.binder_for("odoo.product.attribute")
         attribute_value_binder = self.binder_for("odoo.product.attribute.value")
         bom_binder = self.binder_for("odoo.mrp.bom")
-        if record.attribute_value_ids:
-            attribute_ids = []
-            bom_id = bom_binder.to_internal(record.bom_id.id, unwrap=True)
-            for attr_val in record.attribute_value_ids:
-                attribute_id = attribute_binder.to_internal(
-                    attr_val.attribute_id.id, unwrap=True
+        local_bom_id = bom_binder.to_internal(record["bom_id"][0], unwrap=True)
+        if attribute_value_ids := record["attribute_value_ids"]:
+            val_ids = []
+            for attr_val in attribute_value_ids:
+                local_attr_val = attribute_value_binder.to_internal(
+                    attr_val, unwrap=True
                 )
-                attribute_value_id = attribute_value_binder.to_internal(
-                    attr_val.id, unwrap=True
-                )
-                if not (attribute_id and attribute_value_id):
-                    continue
-                ptav = self.env["product.template.attribute.value"].search(
+                if not local_attr_val:
+                    raise MappingError(
+                        f"Product Attribute Value with external id"
+                        f" {attr_val} not found."
+                    )
+                mapped_attr_val = self.env["product.template.attribute.value"].search(
                     [
-                        ("product_tmpl_id", "=", bom_id.product_tmpl_id.id),
-                        ("attribute_id", "=", attribute_id.id),
-                        ("product_attribute_value_id", "=", attribute_value_id.id),
+                        ("product_tmpl_id", "=", local_bom_id.product_tmpl_id.id),
+                        ("product_attribute_value_id", "=", local_attr_val.id),
                     ]
                 )
-                if ptav:
-                    attribute_ids.append(ptav.id)
-            res["bom_product_template_attribute_value_ids"] = [(6, 0, attribute_ids)]
+                if mapped_attr_val:
+                    val_ids.append(mapped_attr_val.id)
+            res["bom_product_template_attribute_value_ids"] = [(6, 0, val_ids)]
+        if target_attribute_value_ids := record["target_attribute_value_ids"]:
+            val_ids = []
+            for attr_val in target_attribute_value_ids:
+                local_attr_val = attribute_value_binder.to_internal(
+                    attr_val, unwrap=True
+                )
+                if not local_attr_val:
+                    raise MappingError(
+                        f"Product Attribute Value with external id"
+                        f" {attr_val} not found."
+                    )
+                mapped_attr_val = self.env["product.template.attribute.value"].search(
+                    [
+                        ("product_tmpl_id", "=", local_bom_id.product_tmpl_id.id),
+                        ("product_attribute_value_id", "=", local_attr_val.id),
+                    ]
+                )
+                if mapped_attr_val:
+                    val_ids.append(mapped_attr_val.id)
+            res["target_bom_product_template_attribute_value_ids"] = [(6, 0, val_ids)]
+        if inherited_attribute_ids := record["inherited_attribute_ids"]:
+            attr_ids = []
+            for attr in inherited_attribute_ids:
+                local_attr = attribute_binder.to_internal(attr, unwrap=True)
+                if not local_attr:
+                    raise MappingError(
+                        f"Product Attribute with external id {attr} not found."
+                    )
+                attr_ids.append(local_attr.id)
+            res["inherited_attribute_ids"] = [(6, 0, attr_ids)]
         return res
 
 
@@ -131,14 +145,8 @@ class MrpBomTemplateLineImporter(Component):
         """Import the dependencies for the record"""
         super()._import_dependencies(force=force)
         record = self.odoo_record
-        self._import_dependency(
-            record.bom_id.id, "odoo.mrp.bom", force=force
-        )
-        if record.product_tmpl_id:
-            self._import_dependency(
-                record.product_tmpl_id.id, "odoo.product.template", force=force
-            )
-        if record.product_id:
-            self._import_dependency(
-                record.product_id.id, "odoo.product.product", force=force
-            )
+        # self._import_dependency(
+        #     record.bom_id.id, "odoo.mrp.bom", force=force
+        # )
+        if tmpl_id := record.get("product_tmpl_id"):
+            self._import_dependency(tmpl_id[0], "odoo.product.template", force=force)

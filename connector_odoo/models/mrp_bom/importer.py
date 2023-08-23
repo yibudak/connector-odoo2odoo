@@ -96,13 +96,18 @@ class MrpBomImporter(Component):
         if product_id := record.get("product_id", False):
             self._import_dependency(product_id[0], "odoo.product.product", force=force)
 
-    # def _after_import(self, binding, force=False):
-    #     """Import the dependencies for the record"""
-    #     res = super()._after_import(binding, force=force)
-    #     record = self.odoo_record
-    #     if bom_lines := record.get("bom_line_ids", False):
-    #         for line_id in bom_lines:
-    #             self.env["odoo.mrp.bom.line"].with_delay().import_record(
-    #                 self.backend_record, line_id, force=force
-    #             )
-    #     return res
+    def _after_import(self, binding, force=False):
+        """Import the dependencies for the record"""
+        res = super()._after_import(binding, force=force)
+        record = self.odoo_record
+        if bom_lines := record.get("bom_line_ids", False):
+            for line_id in bom_lines:
+                self.env["odoo.mrp.bom.line"].with_delay().import_record(
+                    self.backend_record, line_id, force=force
+                )
+        if tmpl_bom_lines := record.get("bom_template_line_ids", False):
+            for line in tmpl_bom_lines:
+                self.env["odoo.mrp.bom.template.line"].with_delay().import_record(
+                    self.backend_record, line, force=force
+                )
+        return res

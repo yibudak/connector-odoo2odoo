@@ -354,9 +354,10 @@ class OdooBackend(models.Model):
 
     def import_mrp_models(self):
         # todo: burası iyi çalışmıyor. bazı bom lineları kaçırıyor
+        # yigit: bom satırlarını bom'dan sonra aktarma yaptık, belki çözüm olabilir
         mrp_models = [
-            # "odoo.mrp.bom", # We import bom in line dependencies
-            "odoo.mrp.bom.line",
+            "odoo.mrp.bom",  # We import bom in line dependencies
+            # "odoo.mrp.bom.line",
         ]
         date_field = "import_mrp_models_from_date"
         return self._cron_multi_import(models=mrp_models, date_field=date_field)
