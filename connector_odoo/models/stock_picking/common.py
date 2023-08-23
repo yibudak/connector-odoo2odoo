@@ -59,7 +59,7 @@ class OdooStockPicking(models.Model):
         if self.backend_id.read_operation_from == "odoo":
             raise NotImplementedError
         else:
-            return self.with_delay().import_record(
+            return self.delayed_import_record(
                 self.backend_id, self.external_id, force=True
             )
 

@@ -26,7 +26,7 @@ class OdooProductTemplateFeatureLine(models.Model):
         if self.backend_id.main_record == "odoo":
             return self.with_delay().export_record(self.backend_id)
         else:
-            return self.with_delay().import_record(
+            return self.delayed_import_record(
                 self.backend_id, self.external_id, force=True
             )
 

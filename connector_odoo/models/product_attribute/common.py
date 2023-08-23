@@ -21,7 +21,7 @@ class OdooProductAttribute(models.Model):
     ]
 
     def resync(self):
-        return self.with_delay().import_record(
+        return self.delayed_import_record(
             self.backend_id, self.external_id, force=True
         )
 

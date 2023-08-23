@@ -4,7 +4,7 @@
 import logging
 
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
-
+from datetime import datetime
 from odoo.addons.component.core import Component
 from odoo.addons.connector.components.mapper import ExportMapChild, mapping
 
@@ -16,10 +16,10 @@ class OdooSaleOrderExporter(Component):
     _inherit = "odoo.exporter"
     _apply_on = ["odoo.sale.order"]
 
-    def _must_skip(self):
-        """If there is no USER on the sale order, this means that the
-        order is created by guest user. We don't want to export it."""
-        return not self.binding.partner_id.user_id
+    # def _must_skip(self):
+    #     """If there is no USER on the sale order, this means that guest user creates the
+    #     order. We don't want to export it."""
+    #     return not (self.binding.partner_id.user_id or self.binding.partner_id.user_ids)
 
     def _export_dependencies(self):
         if not self.binding.partner_id:
@@ -35,12 +35,12 @@ class OdooSaleOrderExporter(Component):
         for record_partner in partner_records:
             self._export_dependency(record_partner, "odoo.res.partner")
 
-    def _after_export(self):
-        """Hook called after the export"""
-        binding = self.binding
-        if binding and binding.order_line:
-            for line in binding.order_line:
-                self._export_dependency(line, "odoo.sale.order.line")
+    # def _after_export(self):
+    #     """Hook called after the export"""
+    #     binding = self.binding
+    #     if binding and binding.order_line:
+    #         for line in binding.order_line:
+    #             self._export_dependency(line, "odoo.sale.order.line")
 
 
 class SaleOrderExportMapper(Component):
@@ -96,6 +96,10 @@ class SaleOrderExportMapper(Component):
         # Todo: müşterinin satınalma numarası için bir field yapılacak
         return {"client_order_ref": "E-commerce sale"}
 
+    @mapping
+    def confirmation_date(self, record):
+        return {"confirmation_date": datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT)}
+
 
 class SaleOrderLineExportMapper(Component):
     _name = "odoo.sale.order.line.export.mapper"
@@ -103,7 +107,7 @@ class SaleOrderLineExportMapper(Component):
     _apply_on = ["odoo.sale.order.line"]
 
     direct = [
-        ("name", "name"),
+        # ("name", "name"),
         ("price_unit", "price_unit"),
         ("product_uom_qty", "product_uom_qty"),
     ]
@@ -113,6 +117,12 @@ class SaleOrderLineExportMapper(Component):
         binder = self.binder_for("odoo.product.product")
         return {
             "product_id": binder.to_external(record.product_id, wrap=True),
+        }
+
+    @mapping
+    def name(self, record):
+        return {
+            "name": record.product_id.display_name,
         }
 
 

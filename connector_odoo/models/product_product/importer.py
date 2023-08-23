@@ -255,7 +255,7 @@ class ProductImporter(Component):
         #     )
         # )
         # for attachment_id in attachment_ids:
-        #     self.env["odoo.ir.attachment"].with_delay().import_record(
+        #     self.env["odoo.ir.attachment"].delayed_import_record(
         #         self.backend_record, attachment_id
         #     )
         return super()._after_import(binding, force)
