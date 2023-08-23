@@ -102,12 +102,12 @@ class MrpBomImporter(Component):
         record = self.odoo_record
         if bom_lines := record.get("bom_line_ids", False):
             for line_id in bom_lines:
-                self.env["odoo.mrp.bom.line"].with_delay().import_record(
+                self.env["odoo.mrp.bom.line"].delayed_import_record(
                     self.backend_record, line_id, force=force
                 )
         if tmpl_bom_lines := record.get("bom_template_line_ids", False):
             for line in tmpl_bom_lines:
-                self.env["odoo.mrp.bom.template.line"].with_delay().import_record(
+                self.env["odoo.mrp.bom.template.line"].delayed_import_record(
                     self.backend_record, line, force=force
                 )
         return res

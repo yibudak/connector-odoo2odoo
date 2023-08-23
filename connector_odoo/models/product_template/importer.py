@@ -198,7 +198,7 @@ class ProductTemplateImporter(Component):
 
     def _import_attribute_lines(self, force=False):
         for attr_line in self.odoo_record["attribute_line_ids"]:
-            self.env["odoo.product.template.attribute.line"].import_record(
+            self.env["odoo.product.template.attribute.line"].delayed_import_record(
                 self.backend_record,
                 attr_line,
                 force=force,
@@ -207,7 +207,7 @@ class ProductTemplateImporter(Component):
 
     def _import_feature_lines(self, force=False):
         for feature_line in self.odoo_record["feature_line_ids"]:
-            self.env["odoo.product.template.feature.line"].import_record(
+            self.env["odoo.product.template.feature.line"].delayed_import_record(
                 self.backend_record,
                 feature_line,
                 force=force,
@@ -217,7 +217,7 @@ class ProductTemplateImporter(Component):
     def _import_website_attachments(self, tmpl_id, force=False):
         if attachment_ids := self.odoo_record["website_attachment_ids"]:
             for attachment_id in attachment_ids:
-                self.env["odoo.ir.attachment"].import_record(
+                self.env["odoo.ir.attachment"].delayed_import_record(
                     self.backend_record, attachment_id, force=force
                 )
             imported_attachments = self.env["odoo.ir.attachment"].search(
@@ -250,7 +250,7 @@ class ProductTemplateImporter(Component):
                     }
                 )
             else:
-                self.env["odoo.product.product"].with_delay().import_record(
+                self.env["odoo.product.product"].delayed_import_record(
                     self.backend_record, default_variant_id[0], force=force
                 )
         return True
@@ -260,7 +260,7 @@ class ProductTemplateImporter(Component):
     #     # Lazy import of images
     #     if image_ids := self.odoo_record["image_ids"]:
     #         for image_id in image_ids:
-    #             self.env["odoo.base_multi_image.image"].with_delay().import_record(
+    #             self.env["odoo.base_multi_image.image"].delayed_import_record(
     #                 self.backend_record, image_id, force=force
     #             )
     #     return True

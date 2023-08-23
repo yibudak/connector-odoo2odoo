@@ -19,8 +19,6 @@ class MrpBomLineBatchImporter(Component):
         """Run the synchronization"""
 
         external_ids = self.backend_adapter.search(domain)
-        imported_boms = self.env["odoo.mrp.bom"].search([]).mapped("external_id")
-        domain.append(("bom_id", "in", imported_boms))
         _logger.info(
             "search for MRP BoM Lines %s returned %s items",
             domain,
@@ -133,7 +131,7 @@ class MrpBomLineImporter(Component):
         """Import the dependencies for the record"""
         super()._import_dependencies(force=force)
         record = self.odoo_record
-        self._import_dependency(record["bom_id"][0], "odoo.mrp.bom", force=force)
+        # self._import_dependency(record["bom_id"][0], "odoo.mrp.bom", force=force)
         if tmpl_id := record.get("product_tmpl_id"):
             self._import_dependency(tmpl_id[0], "odoo.product.template", force=force)
         if product_id := record.get("product_id"):

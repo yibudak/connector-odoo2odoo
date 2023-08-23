@@ -372,6 +372,11 @@ class DelayedBatchImporter(AbstractComponent):
     _inherit = "odoo.batch.importer"
 
     def _import_record(self, external_id, job_options=None, **kwargs):
-        """Delay the import of the records"""
-        delayable = self.model.with_delay(max_retries=10, **job_options or {})
+        """Delay the import of the records
+        """
+        delayable = self.model.with_delay(
+            channel=self.model._unique_channel_name,
+            max_retries=10,
+            **job_options or {},
+        )
         delayable.import_record(self.backend_record, external_id, **kwargs)

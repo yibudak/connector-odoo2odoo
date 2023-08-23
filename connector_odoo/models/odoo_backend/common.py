@@ -382,12 +382,13 @@ class OdooBackend(models.Model):
             self.env[model].with_delay().import_batch(backend, domain)
         return self._get_next_import_time(import_start_time)
 
-    def import_external_id(self, model, external_id, force, inmediate=True):
-        model = self.env[model]
-        if not inmediate:
-            model = model.with_delay()
-        for backend in self:
-            model.import_record(backend, external_id, force)
+    # we don't use this method.
+    # def import_external_id(self, model, external_id, force, inmediate=True):
+    #     model = self.env[model]
+    #     if not inmediate:
+    #         model = model.with_delay()
+    #     for backend in self:
+    #         model.import_record(backend, external_id, force)
 
     def _export_from_date(self, model, from_date_field):
         self.ensure_one()

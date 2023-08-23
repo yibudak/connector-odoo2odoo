@@ -39,8 +39,16 @@ class OdooBinding(models.AbstractModel):
     # def odoo_api(self):
     #     return self.backend_id.get_connection()
 
+    @property
+    def _unique_channel_name(self):
+        """
+        Split the jobs into nine channels to avoid deadlocks.
+        We use the built-in hash function to get unique integers from the model name.
+        """
+        return f"root.{hash(self._name) % 9}"
+
     def resync(self):
-        return self.with_delay().import_record(
+        return self.delayed_import_record(
             self.backend_id, self.external_id, force=True
         )
 
@@ -93,6 +101,12 @@ class OdooBinding(models.AbstractModel):
                     "Could not import record %s: \n%s" % (external_id, str(e)),
                     seconds=5,
                 )
+
+    @api.model
+    def delayed_import_record(self, backend, external_id, force=False):
+        return self.with_delay(channel=self._unique_channel_name).import_record(
+            backend, external_id, force=force
+        )
 
     @api.model
     def export_batch(self, backend, domain=None):
