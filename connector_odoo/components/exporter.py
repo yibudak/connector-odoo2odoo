@@ -132,7 +132,9 @@ class DelayedBatchExporter(AbstractComponent):
 
     def _export_record(self, external_id, job_options=None, **kwargs):
         """Delay the import of the records"""
-        delayable = external_id.with_delay(**job_options or {})
+        delayable = external_id.with_delay(
+            channel=self.model._unique_channel_name, **job_options or {}
+        )
         delayable.export_record(self.backend_record, **kwargs)
 
 

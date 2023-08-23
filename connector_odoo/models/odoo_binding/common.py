@@ -45,12 +45,10 @@ class OdooBinding(models.AbstractModel):
         Split the jobs into nine channels to avoid deadlocks.
         We use the built-in hash function to get unique integers from the model name.
         """
-        return f"root.{hash(self._name) % 9}"
+        return f"root.{hash(self._name) % 10}"
 
     def resync(self):
-        return self.delayed_import_record(
-            self.backend_id, self.external_id, force=True
-        )
+        return self.delayed_import_record(self.backend_id, self.external_id, force=True)
 
     @api.constrains("backend_id", "external_id")
     def unique_backend_external_id(self):
@@ -123,6 +121,11 @@ class OdooBinding(models.AbstractModel):
         with backend.work_on(self._name) as work:
             exporter = work.component(usage="record.exporter")
             return exporter.run(self)
+
+    def delayed_export_record(self, backend, local_id=None, fields=None):
+        return self.with_delay(channel=self._unique_channel_name).export_record(
+            backend, local_id=local_id, fields=fields
+        )
 
     def export_delete_record(self, backend, external_id):
         """Delete a record on Odoo"""
