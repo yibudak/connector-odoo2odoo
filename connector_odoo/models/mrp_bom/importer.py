@@ -49,7 +49,7 @@ class MrpBomMapper(Component):
 
     @mapping
     def product_uom_id(self, record):
-        res = {}
+        res = {"product_uom_id": False}
         if uom := record.get("product_uom_id"):
             local_uom = self.env["odoo.uom.uom"].search([("external_id", "=", uom[0])])
             if local_uom:
@@ -58,7 +58,7 @@ class MrpBomMapper(Component):
 
     @mapping
     def product_tmpl_id(self, record):
-        res = {}
+        res = {"product_tmpl_id": False}
         if product := record.get("product_tmpl_id"):
             local_product = self.env["odoo.product.template"].search(
                 [("external_id", "=", product[0])]
@@ -69,7 +69,7 @@ class MrpBomMapper(Component):
 
     @mapping
     def product_id(self, record):
-        res = {}
+        res = {"product_id": False}
         if product := record.get("product_id"):
             local_product = self.env["odoo.product.product"].search(
                 [("external_id", "=", product[0])]

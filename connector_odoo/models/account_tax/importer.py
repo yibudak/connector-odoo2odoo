@@ -96,7 +96,9 @@ class AccountTaxImportMapper(Component):
     #     return vals
 
     def group_id(self, record):
-        vals = {}
+        vals = {
+            "group_id": False,
+        }
         if record.get("group_id"):
             binder = self.binder_for("odoo.account.tax.group")
             group = binder.to_internal(record["group_id"][0], unwrap=True)
@@ -106,7 +108,7 @@ class AccountTaxImportMapper(Component):
 
     @mapping
     def children_tax_ids(self, record):
-        vals = {}
+        vals = {"children_tax_ids": []}
         binder = self.binder_for("odoo.account.tax")
         if record["amount_type"] == "group":
             children = []

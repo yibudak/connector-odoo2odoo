@@ -221,7 +221,7 @@ class ProductPricelistItemImportMapper(Component):
             binder = self.binder_for("odoo.product.product")
             product = binder.to_internal(product_id[0], unwrap=True)
             return {"product_id": product.id}
-        return {}
+        return {"product_id": False}
 
     @mapping
     def product_tmpl_id(self, record):
@@ -229,4 +229,4 @@ class ProductPricelistItemImportMapper(Component):
             binder = self.binder_for("odoo.product.template")
             product = binder.to_internal(tmpl_id[0], unwrap=True)
             return {"product_tmpl_id": product.id}
-        return {}
+        return {"product_tmpl_id": False}

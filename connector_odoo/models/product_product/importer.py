@@ -136,7 +136,9 @@ class ProductImportMapper(Component):
 
     @mapping
     def v_cari_urun(self, record):
-        vals = {}
+        vals = {
+            "v_cari_urun": False,
+        }
         if v_cari_urun := record["v_cari_urun"]:
             binder = self.binder_for("odoo.res.partner")
             partner = binder.to_internal(v_cari_urun[0], unwrap=True)

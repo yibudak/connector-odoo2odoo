@@ -61,7 +61,7 @@ class AccountAccountImportMapper(Component):
 
     @mapping
     def currency_id(self, record):
-        vals = {}
+        vals = {"currency_id": False}
         if record.get("currency_id"):
             binder = self.binder_for("odoo.res.currency")
             currency_id = binder.to_internal(record["currency_id"][0], unwrap=True)
@@ -93,7 +93,9 @@ class AccountAccountImportMapper(Component):
 
     @mapping
     def group_id(self, record):
-        vals = {}
+        vals = {
+            "group_id": False,
+        }
         if record.get("group_id"):
             binder = self.binder_for("odoo.account.group")
             group_id = binder.to_internal(record["group_id"][0], unwrap=True)
@@ -110,10 +112,10 @@ class AccountAccountImporter(Component):
         """Import the dependencies for the record"""
         record = self.odoo_record
         if currency_id := record.get("currency_id"):
-            self._import_dependency(
-                currency_id[0], "odoo.res.currency", force=force
-            )
-        self._import_dependency(record["group_id"][0], "odoo.account.group", force=force)
+            self._import_dependency(currency_id[0], "odoo.res.currency", force=force)
+        self._import_dependency(
+            record["group_id"][0], "odoo.account.group", force=force
+        )
         # for tax_id in record.tax_ids:
         #     self._import_dependency(tax_id.id, "odoo.account.tax", force=force)
 

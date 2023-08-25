@@ -54,7 +54,7 @@ class MrpBomLineMapper(Component):
 
     @mapping
     def product_id(self, record):
-        res = {}
+        res = {"product_id": False}
         if product := record.get("product_id"):
             local_product = self.binder_for("odoo.product.product").to_internal(
                 product[0], unwrap=True
@@ -65,7 +65,7 @@ class MrpBomLineMapper(Component):
 
     @mapping
     def product_tmpl_id(self, record):
-        res = {}
+        res = {"product_tmpl_id": False}
         if product := record.get("product_tmpl_id"):
             local_product = self.env["odoo.product.template"].search(
                 [("external_id", "=", product[0])]
@@ -76,7 +76,9 @@ class MrpBomLineMapper(Component):
 
     @mapping
     def product_uom_id(self, record):
-        res = {}
+        res = {
+            "product_uom_id": False,
+        }
         if uom := record.get("product_uom_id"):
             local_uom = self.env["odoo.uom.uom"].search([("external_id", "=", uom[0])])
             if local_uom:
@@ -90,7 +92,7 @@ class MrpBomLineMapper(Component):
         and in Odoo 16 this field is related to bom_id.product_tmpl_id.attribute_line_ids.product_template_value_ids
         That's why we need to map it manually.
         """
-        res = {}
+        res = {"bom_product_template_attribute_value_ids": []}
         attribute_binder = self.binder_for("odoo.product.attribute")
         attribute_value_binder = self.binder_for("odoo.product.attribute.value")
         bom_binder = self.binder_for("odoo.mrp.bom")
