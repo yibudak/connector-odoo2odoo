@@ -151,39 +151,3 @@ class SaleOrderListener(Component):
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_sale_order_confirm(self, record):
         _logger.info("Not implemented yet. Ignoring on_sale_order_confirm  %s", record)
-
-
-class OdooSaleOrderLine(models.Model):
-    _name = "odoo.sale.order.line"
-    _inherit = "odoo.binding"
-    _inherits = {"sale.order.line": "odoo_id"}
-    _description = "External Odoo Sale Order Line"
-
-    def resync(self):
-        if self.backend_id.main_record == "odoo":
-            return self.with_delay().export_record(self.backend_id)
-        else:
-            return self.delayed_import_record(
-                self.backend_id, self.external_id, force=True
-            )
-
-
-class SaleOrderLine(models.Model):
-    _inherit = "sale.order.line"
-
-    bind_ids = fields.One2many(
-        comodel_name="odoo.sale.order.line",
-        inverse_name="odoo_id",
-        string="Odoo Bindings",
-    )
-
-
-class SaleOrderLineAdapter(Component):
-    _name = "odoo.sale.order.line.adapter"
-    _inherit = "odoo.adapter"
-    _apply_on = "odoo.sale.order.line"
-
-    _odoo_model = "sale.order.line"
-
-    # Set get_passive to True to get the passive records also.
-    _get_passive = False

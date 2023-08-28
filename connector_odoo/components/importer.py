@@ -256,7 +256,8 @@ class OdooImporter(AbstractComponent):
                 "({}: {}) It must be skipped".format(self.work.model_name, external_id)
             )
             return
-
+        if external_id == 22757:
+            force = True
         if not force and self._is_uptodate(binding):
             _logger.info("Already up-to-date")
             return _("Already up-to-date.")

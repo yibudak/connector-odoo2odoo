@@ -4,7 +4,7 @@
 
 import logging
 from contextlib import contextmanager
-
+from datetime import datetime
 import psycopg2
 
 import odoo
@@ -49,7 +49,7 @@ class OdooBaseExporter(AbstractComponent):
         # force is True because the sync_date will be more recent
         # so the import would be skipped
         assert self.external_id
-        self.binding.with_delay().import_record(
+        self.binding.delayed_import_record(
             self.backend_record, self.external_id, force=True
         )
 
@@ -66,11 +66,11 @@ class OdooBaseExporter(AbstractComponent):
         if not sync:
             return True
         record = self.backend_adapter.read(self.external_id)
-        if not hasattr(record, "write_date") and not record.write_date:
+        if not record.get("write_date"):
             # in rare case it can be empty, in doubt, import it
             return True
         sync_date = odoo.fields.Datetime.from_string(sync)
-        odoo_date = record["write_date"]
+        odoo_date = datetime.strptime(record["write_date"], "%Y-%m-%d %H:%M:%S")
         return sync_date < odoo_date
 
     def run(self, binding, *args, **kwargs):

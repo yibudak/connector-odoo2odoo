@@ -16,6 +16,7 @@ class OdooSaleOrderExporter(Component):
     _inherit = "odoo.exporter"
     _apply_on = ["odoo.sale.order"]
 
+    # Todo yigit: enable this
     # def _must_skip(self):
     #     """If there is no USER on the sale order, this means that guest user creates the
     #     order. We don't want to export it."""
@@ -35,12 +36,12 @@ class OdooSaleOrderExporter(Component):
         for record_partner in partner_records:
             self._export_dependency(record_partner, "odoo.res.partner")
 
-    # def _after_export(self):
-    #     """Hook called after the export"""
-    #     binding = self.binding
-    #     if binding and binding.order_line:
-    #         for line in binding.order_line:
-    #             self._export_dependency(line, "odoo.sale.order.line")
+    def _after_export(self):
+        """Hook called after the export"""
+        binding = self.binding
+        if binding and binding.order_line:
+            for line in binding.order_line:
+                self._export_dependency(line, "odoo.sale.order.line")
 
 
 class SaleOrderExportMapper(Component):
@@ -53,7 +54,8 @@ class SaleOrderExportMapper(Component):
         ("state", "state"),
     ]
 
-    children = [("order_line", "order_line", "odoo.sale.order.line")]
+    # Todo: yigit buraya artık gerek yok cunku sale.order.line'ı mapledik.
+    # children = [("order_line", "order_line", "odoo.sale.order.line")]
 
     @mapping
     def date_order(self, record):
@@ -98,36 +100,6 @@ class SaleOrderExportMapper(Component):
 
     @mapping
     def confirmation_date(self, record):
-        return {"confirmation_date": datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT)}
-
-
-class SaleOrderLineExportMapper(Component):
-    _name = "odoo.sale.order.line.export.mapper"
-    _inherit = "odoo.export.mapper"
-    _apply_on = ["odoo.sale.order.line"]
-
-    direct = [
-        # ("name", "name"),
-        ("price_unit", "price_unit"),
-        ("product_uom_qty", "product_uom_qty"),
-    ]
-
-    @mapping
-    def product_id(self, record):
-        binder = self.binder_for("odoo.product.product")
         return {
-            "product_id": binder.to_external(record.product_id, wrap=True),
+            "confirmation_date": datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT)
         }
-
-    @mapping
-    def name(self, record):
-        return {
-            "name": record.product_id.display_name,
-        }
-
-
-class SaleOrderExportMapChild(ExportMapChild):
-    _model_name = "odoo.sale.order"
-
-    def format_items(self, items_values):
-        return [(0, 0, item) for item in items_values]

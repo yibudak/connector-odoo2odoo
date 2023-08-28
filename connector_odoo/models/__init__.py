@@ -23,6 +23,7 @@ from . import product_template_feature_line
 from . import uom_uom
 from . import account_account
 from . import sale_order
+from . import sale_order_line
 from . import ir_attachment
 from . import delivery_carrier
 from . import delivery_region

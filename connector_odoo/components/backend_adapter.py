@@ -249,8 +249,7 @@ class GenericAdapter(AbstractComponent):
             ) from e
         return odoo_api.create(model=ext_model, data=data)
 
-    def write(self, id, data):
-        arguments = [int(id)]
+    def write(self, res_id, data):
         ext_model = self._odoo_model
         try:
             odoo_api = self.work.odoo_api
@@ -260,7 +259,5 @@ class GenericAdapter(AbstractComponent):
                 "OdooAPI instance to be able to use the "
                 "Backend Adapter."
             ) from e
-        model = odoo_api.env[ext_model]
-        object_id = model.browse(arguments)
-        # TODO: Check the write implementation of odoorpc
-        return object_id.write(data)
+        return odoo_api.write(res_id=res_id, model=ext_model, data=data)
+

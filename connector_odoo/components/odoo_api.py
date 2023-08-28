@@ -172,8 +172,22 @@ class OdooAPI(object):
             )
         )
 
-    def write(self, res_id, data):
-        pass
+    def write(self, res_id, model, data):
+        """
+        Single record writes.
+        """
+        return self._post(
+            self._build_execute_kw_payload(
+                kwargs=[
+                    model,
+                    "write",
+                    [[res_id], data],
+                    {
+                        "context": self._build_context(),
+                    },
+                ],
+            )
+        )
 
     def browse(self, model, res_id, fields=None, context=None, get_passive=None):
         if get_passive:
