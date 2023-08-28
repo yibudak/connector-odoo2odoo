@@ -109,7 +109,7 @@ class ProductTemplateImportMapper(Component):
             [("origin_categ_id", "=", cat.id)], limit=1
         )
         if public_category:
-            vals["public_categ_ids"] = [(4, public_category.id)]
+            vals["public_categ_ids"] = [(6, 0, [public_category.id])]
 
         return vals
 
