@@ -90,7 +90,7 @@ class PurchaseOrderImporter(Component):
                     (6, 0, (delayed_line_ids + binding.queue_job_ids.ids))
                 ]
             else:
-                self.env["odoo.stock.picking"].import_batch(
+                self.env["odoo.stock.picking"].delayed_import_batch(
                     self.backend_record, [("purchase_id", "=", self.odoo_record.id)]
                 )
                 binding.with_delay()._set_state()
@@ -226,7 +226,7 @@ class PurchaseOrderLineImporter(Component):
                 )
                 if not len(binding.picking_ids):
                     binding.with_delay()._set_state()
-                self.env["odoo.stock.picking"].with_delay().import_batch(
+                self.env["odoo.stock.picking"].delayed_import_batch(
                     self.backend_record,
                     [("purchase_id", "=", self.odoo_record.order_id.id)],
                 )

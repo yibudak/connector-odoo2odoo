@@ -238,7 +238,7 @@ class OdooBackend(models.Model):
                     # and it is simpler to import them sequentially
                     imported_ids = self.env[model_name].search([]).mapped("external_id")
                     # bypass already imported records since this method is manually triggered
-                    self.env[model_name].with_context(lang=lang).import_batch(
+                    self.env[model_name].with_context(lang=lang).delayed_import_batch(
                         backend, [("id", "not in", imported_ids)]
                     )
             return True
@@ -379,7 +379,7 @@ class OdooBackend(models.Model):
                         from_date,
                     )
                 )
-            self.env[model].with_delay().import_batch(backend, domain)
+            self.env[model].delayed_import_batch(backend, domain)
         return self._get_next_import_time(import_start_time)
 
 

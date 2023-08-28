@@ -106,7 +106,7 @@ class ProductTemplate(models.Model):
     def import_external_variant_ids(self):
         odoo_record = fields.first(self.bind_ids)
         domain = [["product_tmpl_id", "=", odoo_record.external_id]]
-        self.env["odoo.product.product"].with_delay().import_batch(
+        self.env["odoo.product.product"].delayed_import_batch(
             odoo_record.backend_id, domain=domain, force=True
         )
 

@@ -158,7 +158,7 @@ class SaleOrderImporter(Component):
                 ]
         if not self.backend_record.delayed_import_lines:
             binding._set_state()
-            self.env["odoo.stock.picking"].with_delay().import_batch(
+            self.env["odoo.stock.picking"].delayed_import_batch(
                 self.backend_record,
                 [("sale_id", "=", self.odoo_record.id)],
             )

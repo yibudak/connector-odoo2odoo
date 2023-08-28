@@ -86,6 +86,12 @@ class OdooBinding(models.AbstractModel):
                 )
 
     @api.model
+    def delayed_import_batch(self, backend, domain=None, force=None):
+        return self.with_delay(channel=self._unique_channel_name).import_batch(
+            backend, domain=domain, force=force
+        )
+
+    @api.model
     def import_record(self, backend, external_id, force=False):
         """Import a Odoo record"""
         with backend.work_on(self._name) as work:
