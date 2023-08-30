@@ -316,7 +316,7 @@ class OdooExporter(AbstractComponent):
             # If wrap is True, relation is already a binding record.
             binding = relation
 
-        if not rel_binder.to_external(binding, wrap=wrap):
+        if not rel_binder.to_external(relation, wrap=wrap):
             exporter = self.component(usage=component_usage, model_name=binding_model)
             exporter.run(binding)
 
