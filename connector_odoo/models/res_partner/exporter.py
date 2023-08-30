@@ -105,6 +105,14 @@ class PartnerExportMapper(Component):
         return False
 
     @mapping
+    def ecommerce_partner(self, record):
+        """
+        We don't have ecommerce_partner fields in Odoo 16. So we need to write
+        a mapping function for this field.
+        """
+        return {"ecommerce_partner": True}
+
+    @mapping
     def customer(self, record):
         return {"customer": True}
 
