@@ -3,6 +3,7 @@
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 from odoo.addons.connector.exception import RetryableJobError
+import time
 
 
 class OdooBinding(models.AbstractModel):
@@ -101,6 +102,7 @@ class OdooBinding(models.AbstractModel):
             try:
                 return importer.run(external_id, force=force)
             except Exception as e:
+                time.sleep(5)
                 raise RetryableJobError(
                     "Could not import record %s: \n%s" % (external_id, str(e)),
                     seconds=5,
