@@ -29,13 +29,6 @@ class DeliveryPriceRuleBatchImporter(Component):
             job_options = {"priority": 15}
             self._import_record(external_id, job_options=job_options)
 
-    def _import_dependencies(self, force=False):
-        """Import the dependencies for the record"""
-        record = self.odoo_record
-        self._import_dependency(
-            record.product_id.id, "odoo.product.product", force=force
-        )
-
 
 class DeliveryCarrierMapper(Component):
     _name = "odoo.delivery.price.rule.import.mapper"
@@ -55,9 +48,9 @@ class DeliveryCarrierMapper(Component):
     def region_id(self, record):
         vals = {}
         binder = self.binder_for("odoo.delivery.region")
-        region = record.region_id
+        region = record.get("region_id")
         if region:
-            local_region = binder.to_internal(region.id, unwrap=True)
+            local_region = binder.to_internal(region[0], unwrap=True)
             vals["region_id"] = local_region.id
         return vals
 
@@ -65,9 +58,9 @@ class DeliveryCarrierMapper(Component):
     def carrier_id(self, record):
         vals = {}
         binder = self.binder_for("odoo.delivery.carrier")
-        carrier = record.carrier_id
+        carrier = record.get("carrier_id")
         if carrier:
-            local_carrier = binder.to_internal(carrier.id, unwrap=True)
+            local_carrier = binder.to_internal(carrier[0], unwrap=True)
             vals["carrier_id"] = local_carrier.id
         return vals
 
@@ -81,11 +74,9 @@ class DeliveryPriceRuleImporter(Component):
         """Import the dependencies for the record"""
         super()._import_dependencies(force=force)
         record = self.odoo_record
-        if record.region_id:
+        if region := record.get("region_id"):
+            self._import_dependency(region[0], "odoo.delivery.region", force=force)
+        if carrier_id := record.get("carrier_id"):
             self._import_dependency(
-                record.region_id.id, "odoo.delivery.region", force=force
-            )
-        if record.carrier_id:
-            self._import_dependency(
-                record.carrier_id.id, "odoo.delivery.carrier", force=force
+                carrier_id[0], "odoo.delivery.carrier", force=force
             )

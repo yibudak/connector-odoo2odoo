@@ -57,21 +57,24 @@ class DeliveryCarrierMapper(Component):
     @mapping
     def deci_type(self, record):
         try:
-            deci = str(record.deci_type)
+            deci = str(record.get("deci_type"))
         except ValueError:
             deci = "3000"
         return {"deci_type": deci}
 
     @mapping
     def currency_id(self, record):
-        currency = self.env["res.currency"].search(
-            [("name", "=", record.currency_id.name)]
-        )
-        return {"currency_id": currency.id}
+        vals = {}
+        if currency := record.get("currency_id"):
+            currency = self.env["res.currency"].search([("name", "=", currency[1])])
+            vals["currency_id"] = currency.id
+        else:
+            vals["currency_id"] = False
+        return vals
 
     @mapping
     def delivery_type(self, record):
-        if record.delivery_type == "fixed":
+        if record.get("delivery_type") == "fixed":
             delivery_type = "fixed"
         else:
             delivery_type = "base_on_rule"
@@ -84,10 +87,14 @@ class DeliveryCarrierMapper(Component):
 
     @mapping
     def product_id(self, record):
+        vals = {}
         binder = self.binder_for("odoo.product.product")
-        product = binder.to_internal(record.product_id.id, unwrap=True)
-        return {"product_id": product.id}
-
+        if product := record.get("product_id"):
+            local_product = binder.to_internal(product[0], unwrap=True)
+            vals["product_id"] = local_product.id
+        else:
+            vals["product_id"] = False
+        return vals
     # @only_create
     # @mapping
     # def odoo_id(self, record):
@@ -119,6 +126,5 @@ class DeliveryCarrierImporter(Component):
         """Import the dependencies for the record"""
         super()._import_dependencies(force=force)
         record = self.odoo_record
-        self._import_dependency(
-            record.product_id.id, "odoo.product.product", force=force
-        )
+        if product := record.get("product_id"):
+            self._import_dependency(product[0], "odoo.product.product", force=force)

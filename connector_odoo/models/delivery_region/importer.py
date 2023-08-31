@@ -49,11 +49,13 @@ class DeliveryRegionMapper(Component):
     @mapping
     def country_ids(self, record):
         res = {}
-        countries = record.country_ids
+        countries = record.get("country_ids")
         if countries:
-            country_codes = countries.mapped("code")
+            external_countries = self.work.odoo_api.search(
+                model="res.country", domain=[("id", "in", countries)]
+            )
             local_countries = self.env["res.country"].search(
-                [("code", "in", country_codes)]
+                [("code", "in", [x["code"] for x in external_countries])]
             )
             res["country_ids"] = [(6, 0, local_countries.ids)]
         return res
@@ -62,13 +64,16 @@ class DeliveryRegionMapper(Component):
     def state_ids(self, record):
         res = {}
         state_list = []
-        states = record.state_ids
+        states = record.get("state_ids")
         if states:
             for state in states:
+                external_state = self.work.odoo_api.browse(
+                    model="res.country.state", res_id=state
+                )
                 local_state = self.env["res.country.state"].search(
                     [
-                        ("code", "=", state.code),
-                        ("country_id.code", "=", state.country_id.code),
+                        ("code", "=", external_state["code"]),
+                        ("country_id.name", "=", external_state["country_id"][1]),
                     ]
                 )
                 if local_state:
