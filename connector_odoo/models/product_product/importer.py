@@ -35,7 +35,9 @@ def _compute_attribute_line_vals(importer, record):
                 ("product_tmpl_id", "=", local_template_id.id),
                 ("attribute_id", "=", local_attr_val_id.attribute_id.id),
                 ("product_attribute_value_id", "=", local_attr_val_id.id),
-            ]
+                ("ptav_active", "=", True)
+            ],
+            limit=1,
         )
         if ptav:
             ptav_list |= ptav
