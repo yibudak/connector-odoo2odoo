@@ -69,7 +69,7 @@ class AddressRegionImportMapper(Component):
     @mapping
     def district_id(self, record):
         district_record = self.binder_for("odoo.address.district").to_internal(
-            record["district_id"][0]
+            record["district_id"][0], unwrap=True
         )
         if not district_record:
             raise ValidationError(
