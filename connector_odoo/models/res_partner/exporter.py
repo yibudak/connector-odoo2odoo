@@ -87,6 +87,7 @@ class PartnerExportMapper(Component):
         ("phone", "phone"),
         ("mobile", "mobile"),
         ("email", "email"),
+        ("vat", "vat"),
     ]
 
     def get_partner_by_match_field(self, record):
@@ -118,7 +119,6 @@ class PartnerExportMapper(Component):
 
     @mapping
     def address_fields(self, record):
-        # Todo fix this function here and import mapper. Temiz değil.
         vals = {}
         adapter = self.work.odoo_api
         if record.neighbour_id:
