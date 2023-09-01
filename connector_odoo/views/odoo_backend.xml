@@ -81,7 +81,8 @@
                                     <button name="action_fix_product_images" type="object" string="Fix product images" />
                                     <button name="action_fix_category_seo_name" type="object" string="Fix category seo name" />
                                     <button name="action_fix_product_seo_name" type="object" string="Fix product seo name" />
-                                </group>
+									<button name="action_fix_address_models" type="object" class="oe_highlight" string="Fix Address Models"/>
+								</group>
                             </page>
 						</notebook>
 					</sheet>
