@@ -106,7 +106,7 @@ class PartnerImportMapper(Component):
                 neighbour[0], unwrap=True
             )
             if local_neighbour:
-                vals["neighbour_id"] = local_neighbour.odoo_id.id
+                vals["neighbour_id"] = local_neighbour.id
                 vals["region_id"] = local_neighbour.region_id.id
                 vals["district_id"] = local_neighbour.region_id.district_id.id
                 vals["state_id"] = local_neighbour.region_id.district_id.state_id.id
