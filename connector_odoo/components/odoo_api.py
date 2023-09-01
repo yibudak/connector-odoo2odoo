@@ -58,7 +58,7 @@ class OdooAPI(object):
                 if json_resp.get("error"):
                     raise requests.HTTPError(json_resp["error"])
 
-                return response.json()["result"]
+                return json_resp["result"] if json_resp.get("result") else None
 
             except (requests.HTTPError, KeyError) as exc:
                 _logger.error(exc)

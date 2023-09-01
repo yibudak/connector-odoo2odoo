@@ -41,45 +41,37 @@ class AddressNeighbourImportMapper(Component):
         ("code", "code"),
     ]
 
-    @only_create
-    @mapping
-    def check_address_neighbour_exists(self, record):
-        res = {}
-        ctx = {"lang": self.backend_record.get_default_language_code()}
-        neighbour_record = (
-            self.env["address.neighbour"]
-            .with_context(ctx)
-            .search(
-                [
-                    ("name", "=", record.name),
-                    ("region_id.name", "=", record.region_id.name),
-                    ("district_id.name", "=", record.district_id.name),
-                    ("state_id.name", "=", record.state_id.name)
-                ],
-                limit=1,
-            )
-        )
-        if neighbour_record:
-            _logger.info(
-                "Address Neighbour found for %s : %s" % (record, neighbour_record)
-            )
-            res.update({"odoo_id": neighbour_record.id})
-        return res
+    # We are already doing ID -> ID mapping in the backend adapter.
+    # No need to match with the name.
+    # @only_create
+    # @mapping
+    # def check_address_neighbour_exists(self, record):
+    #     res = {}
+    #     ctx = {"lang": self.backend_record.get_default_language_code()}
+    #     neighbour_record = (
+    #         self.env["address.neighbour"]
+    #         .with_context(ctx)
+    #         .search(
+    #             [
+    #                 ("name", "=", record.name),
+    #                 ("region_id.name", "=", record.region_id.name),
+    #                 ("district_id.name", "=", record.district_id.name),
+    #                 ("state_id.name", "=", record.state_id.name)
+    #             ],
+    #             limit=1,
+    #         )
+    #     )
+    #     if neighbour_record:
+    #         _logger.info(
+    #             "Address Neighbour found for %s : %s" % (record, neighbour_record)
+    #         )
+    #         res.update({"odoo_id": neighbour_record.id})
+    #     return res
 
     @mapping
     def region_id(self, record):
-        ctx = {"lang": self.backend_record.get_default_language_code()}
-        region_record = (
-            self.env["address.region"]
-            .with_context(ctx)
-            .search(
-                [
-                    ("name", "=", record.region_id.name),
-                    ("district_id.name", "=", record.district_id.name),
-                    ("state_id.name", "=", record.state_id.name)
-                ],
-                limit=1,
-            )
+        region_record = self.binder_for("odoo.address.region").to_internal(
+            record["region_id"][0], unwrap=True
         )
         if not region_record:
             raise ValidationError(
@@ -96,3 +88,9 @@ class AddressNeighbourImporter(Component):
     _inherit = "odoo.importer"
     _apply_on = ["odoo.address.neighbour"]
 
+    def _import_dependencies(self, force=False):
+        """Import the dependencies for the record"""
+        record = self.odoo_record
+        if region := record.get("region_id"):
+            self._import_dependency(region[0], "odoo.address.region")
+        return super()._import_dependencies()

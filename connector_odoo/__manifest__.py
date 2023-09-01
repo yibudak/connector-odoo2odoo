@@ -22,7 +22,7 @@
         "purchase",
         "product_dimension",
         "l10n_tr_address",
-        "altinkaya_ecommerce",
+        "altinkaya_ecommerce_sync",
         "delivery_integration_base",
     ],
     "data": [

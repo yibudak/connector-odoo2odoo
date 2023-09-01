@@ -40,43 +40,36 @@ class AddressRegionImportMapper(Component):
         ("name", "name"),
     ]
 
-    @only_create
-    @mapping
-    def check_address_region_exists(self, record):
-        res = {}
-        ctx = {"lang": self.backend_record.get_default_language_code()}
-        region_record = (
-            self.env["address.region"]
-            .with_context(ctx)
-            .search(
-                [
-                    ("name", "=", record.name),
-                    ("district_id.name", "=", record.district_id.name),
-                    ("state_id.name", "=", record.state_id.name)
-                ],
-                limit=1,
-            )
-        )
-        if region_record:
-            _logger.info(
-                "Address Region found for %s : %s" % (record, region_record)
-            )
-            res.update({"odoo_id": region_record.id})
-        return res
+    # We are already doing ID -> ID mapping in the backend adapter.
+    # No need to match with the name.
+    # @only_create
+    # @mapping
+    # def check_address_region_exists(self, record):
+    #     res = {}
+    #     ctx = {"lang": self.backend_record.get_default_language_code()}
+    #     region_record = (
+    #         self.env["address.region"]
+    #         .with_context(ctx)
+    #         .search(
+    #             [
+    #                 ("name", "=", record.name),
+    #                 ("district_id.name", "=", record.district_id.name),
+    #                 ("state_id.name", "=", record.state_id.name)
+    #             ],
+    #             limit=1,
+    #         )
+    #     )
+    #     if region_record:
+    #         _logger.info(
+    #             "Address Region found for %s : %s" % (record, region_record)
+    #         )
+    #         res.update({"odoo_id": region_record.id})
+    #     return res
 
     @mapping
     def district_id(self, record):
-        ctx = {"lang": self.backend_record.get_default_language_code()}
-        district_record = (
-            self.env["address.district"]
-            .with_context(ctx)
-            .search(
-                [
-                    ("name", "=", record.district_id.name),
-                    ("state_id.name", "=", record.district_id.state_id.name),
-                ],
-                limit=1,
-            )
+        district_record = self.binder_for("odoo.address.district").to_internal(
+            record["district_id"][0]
         )
         if not district_record:
             raise ValidationError(
@@ -93,3 +86,8 @@ class AddressRegionImporter(Component):
     _inherit = "odoo.importer"
     _apply_on = ["odoo.address.region"]
 
+    def _import_dependencies(self, force=False):
+        """Import the dependencies for the record"""
+        record = self.odoo_record
+        if district := record.get("district_id"):
+            self._import_dependency(district[0], "odoo.address.district")
