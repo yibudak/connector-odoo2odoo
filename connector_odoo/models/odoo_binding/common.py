@@ -54,7 +54,7 @@ class OdooBinding(models.AbstractModel):
         4. Return the remainder.
         """
         md5_hash = md5(self._name.encode("utf-8")).hexdigest()
-        return sum(ord(x) for x in md5_hash) % 10
+        return f"root.{sum(ord(x) for x in md5_hash) % 10}"
 
     def resync(self):
         return self.delayed_import_record(self.backend_id, self.external_id, force=True)
