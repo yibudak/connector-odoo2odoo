@@ -181,10 +181,10 @@ class OdooExporter(AbstractComponent):
                 self.model._name,
                 self.binding.id,
             )
-            raise RetryableJobError from err(
-                "A concurrent job is already exporting the same record "
-                "(%s with id %s). The job will be retried later."
-                % (self.model._name, self.binding.id)
+            raise RetryableJobError(
+                "Could not optain lock %s (%s): \n%s"
+                % (self.model._name, self.binding.id, str(err)),
+                seconds=5,
             )
 
     def _has_to_skip(self):
@@ -214,11 +214,10 @@ class OdooExporter(AbstractComponent):
             yield
         except psycopg2.IntegrityError as err:
             if err.pgcode == psycopg2.errorcodes.UNIQUE_VIOLATION:
-                raise RetryableJobError from err(
-                    "A database error caused the failure of the job:\n"
-                    "%s\n\n"
-                    "Likely due to 2 concurrent jobs wanting to create "
-                    "the same record. The job will be retried later." % err
+                raise RetryableJobError(
+                    "Database error occured when exporting %s (%s): \n%s"
+                    % (self.model._name, self.binding.id, str(err)),
+                    seconds=5,
                 )
             else:
                 raise Exception from err
