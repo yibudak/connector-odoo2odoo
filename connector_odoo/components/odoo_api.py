@@ -1,9 +1,10 @@
 # Copyright 2023 Yiğit Budak (https://github.com/yibudak)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl)
-from odoo.addons.connector.exception import IDMissingInBackend
+from odoo.addons.connector.exception import IDMissingInBackend, RetryableJobError
 from random import randint
 import requests
 import logging
+import time
 
 
 _logger = logging.getLogger(__name__)
@@ -60,9 +61,22 @@ class OdooAPI(object):
 
                 return json_resp["result"] if ("result" in json_resp) else None
 
-            except (requests.HTTPError, KeyError) as exc:
+            except Exception as exc:
                 _logger.error(exc)
-                raise exc
+                time.sleep(5)  # wait 5 seconds before retrying
+                raise RetryableJobError(
+                    "OdooAPI: Connection error: {}".format(exc),
+                    seconds=5,
+                )
+            # except (requests.HTTPError, requests.exceptions.ConnectionError) as exc:
+            #     _logger.error(exc)
+            #     raise RetryableJobError(
+            #         "OdooAPI: Connection timeout error",
+            #         seconds=5,
+            #     )
+            # except (requests.HTTPError, KeyError) as exc:
+            #     _logger.error(exc)
+            #     raise exc
 
     def _base_payload(self):
         return {
