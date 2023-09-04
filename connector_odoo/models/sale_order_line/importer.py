@@ -78,6 +78,26 @@ class SaleOrderLineImporter(Component):
     _inherit = "odoo.importer"
     _apply_on = ["odoo.sale.order.line"]
 
+    def _get_binding_with_data(self, binding):
+        """Sometimes we have trouble with import-export sale.order.line. This method
+        helps us find the binding record, so we prevent the creation of duplicate
+        records.
+        """
+        binding = super(SaleOrderLineImporter, self)._get_binding_with_data(binding)
+        if not binding:
+            domain = [("backend_id", "=", self.backend_record.id)]
+            if local_order := self.binder_for("odoo.sale.order").to_internal(
+                self.odoo_record["order_id"][0], unwrap=True
+            ):
+                domain.append(("odoo_id", "=", local_order.id))
+            if local_product := self.binder_for("odoo.product.product").to_internal(
+                self.odoo_record["product_id"][0], unwrap=True
+            ):
+                domain.append(("product_id", "=", local_product.id))
+            if local_product and local_order:
+                binding = self.model.search(domain, limit=1)
+        return binding
+
     def _import_dependencies(self, force):
         self._import_dependency(
             self.odoo_record["product_id"][0],
@@ -89,3 +109,11 @@ class SaleOrderLineImporter(Component):
             "odoo.uom.uom",
             force=force,
         )
+
+    def _get_context(self, data):
+        """
+        Do not create procurement for sale order lines.
+        """
+        ctx = super(SaleOrderLineImporter, self)._get_context(data)
+        ctx["skip_procurement"] = True
+        return ctx

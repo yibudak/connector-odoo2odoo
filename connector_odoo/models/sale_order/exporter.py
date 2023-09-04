@@ -16,11 +16,24 @@ class OdooSaleOrderExporter(Component):
     _inherit = "odoo.exporter"
     _apply_on = ["odoo.sale.order"]
 
-    # Todo yigit: enable this
-    # def _must_skip(self):
-    #     """If there is no USER on the sale order, this means that guest user creates the
-    #     order. We don't want to export it."""
-    #     return not (self.binding.partner_id.user_id or self.binding.partner_id.user_ids)
+    def _should_import(self):
+        # Search for an existing reference on Odoo backend
+        if not self.binding.external_id:
+            external_record = self.backend_adapter.search(
+                model="sale.order",
+                domain=[
+                    ("name", "=", self.binding.name),
+                ],
+                limit=1,
+            )
+            if external_record:
+                self.external_id = external_record[0]
+        return super(OdooSaleOrderExporter, self)._should_import()
+
+    def _must_skip(self):
+        """If there is no USER on the sale order, this means that guest user creates the
+        order. We don't want to export it."""
+        return not (self.binding.partner_id.user_id or self.binding.partner_id.user_ids)
 
     def _export_dependencies(self):
         if not self.binding.partner_id:
@@ -69,9 +82,11 @@ class SaleOrderExportMapper(Component):
         """
         return {"state": "draft"}
 
-    @mapping
-    def state(self, record):
-        return {"state": record.state}
+    # We should NOT send the state field. It should be set to draft and then
+    # action_%s should be called.
+    # @mapping
+    # def state(self, record):
+    #     return {"state": record.state}
 
     @mapping
     def date_order(self, record):

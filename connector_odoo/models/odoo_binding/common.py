@@ -36,11 +36,6 @@ class OdooBinding(models.AbstractModel):
         )
     ]
 
-    # note yigit: we don't need this anymore.
-    # @property
-    # def odoo_api(self):
-    #     return self.backend_id.get_connection()
-
     @property
     def _unique_channel_name(self):
         """

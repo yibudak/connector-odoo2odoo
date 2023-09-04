@@ -50,7 +50,7 @@ class OdooBaseExporter(AbstractComponent):
         # so the import would be skipped
         assert self.external_id
         self.binding.delayed_import_record(
-            self.backend_record, self.external_id, force=True
+            self.backend_record, self.external_id, force=False
         )
 
     def _should_import(self):
@@ -105,6 +105,7 @@ class OdooBaseExporter(AbstractComponent):
 
     def _after_export(self):
         """Can do several actions after exporting a record on odoo"""
+        return True
 
 
 class BatchExporter(AbstractComponent):
@@ -315,12 +316,16 @@ class OdooExporter(AbstractComponent):
             # If wrap is True, relation is already a binding record.
             binding = relation
 
-        if not rel_binder.to_external(relation, wrap=wrap):
-            exporter = self.component(usage=component_usage, model_name=binding_model)
-            exporter.run(binding)
+        exporter = self.component(usage=component_usage, model_name=binding_model)
+        exporter.run(binding)
+        return True
 
     def _export_dependencies(self):
         """Export the dependencies for the record"""
+        return
+
+    def _before_export(self):
+        """Hook called before the export"""
         return
 
     def _map_data(self):
@@ -383,6 +388,9 @@ class OdooExporter(AbstractComponent):
         if self._has_to_skip():
             return
 
+        # run some logic before the export
+        self._before_export()
+
         # export the missing linked resources
         self._export_dependencies()
 
@@ -392,9 +400,9 @@ class OdooExporter(AbstractComponent):
 
         map_record = self._map_data()
 
-        # -1 is a special value for external_id, it means that the
+        # 0 is a special value for external_id, it means that the
         # record is not yet exported
-        if self.external_id and self.external_id != -1:
+        if self.external_id and self.external_id != 0:
             record = self._update_data(map_record, fields=fields)
             if not record:
                 return _("Nothing to export.")

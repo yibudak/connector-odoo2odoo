@@ -57,11 +57,35 @@ class OdooPartnerExporter(Component):
     _inherit = "odoo.exporter"
     _apply_on = ["odoo.res.partner"]
 
+    def _before_export(self):
+        """Try to match parent partner from Odoo backend."""
+        if not self.binding.vat or self.binding.parent_id:
+            return False
+        match_domain = [
+            ("vat", "=", self.binding.vat),
+            ("parent_id", "=", False),
+        ]
+        matched_partner = self.backend_adapter.search(
+            model="res.partner",
+            domain=match_domain,
+        )
+
+        if len(matched_partner) == 1:
+            self.binding.parent_id = self.binding.search(
+                [
+                    ("external_id", "=", matched_partner[0]),
+                    ("parent_id", "=", False),
+                    ("odoo_id", "!=", self.binding.odoo_id.id),
+                ],
+                limit=1,
+            ).commercial_partner_id
+
+        return True
+
     def _export_dependencies(self):
         if not self.binding.parent_id:
             return
         parents = self.binding.parent_id.bind_ids
-        parent = self.env["odoo.res.partner"]
 
         if parents:
             parent = parents.filtered(lambda c: c.backend_id == self.backend_record)
@@ -88,22 +112,8 @@ class PartnerExportMapper(Component):
         ("mobile", "mobile"),
         ("email", "email"),
         ("vat", "vat"),
+        ("type", "type"),
     ]
-
-    def get_partner_by_match_field(self, record):
-        if not record.vat:
-            return False
-        match_domain = [
-            ("vat", "=", record.vat),
-            ("parent_id", "=", False),
-        ]
-        adapter = self.component(usage="record.exporter").backend_adapter
-        matched_partner = adapter.search(model="res.partner", domain=match_domain)
-
-        if len(matched_partner) == 1:
-            return matched_partner[0]
-
-        return False
 
     @mapping
     def ecommerce_partner(self, record):
@@ -143,16 +153,12 @@ class PartnerExportMapper(Component):
 
     @only_create
     @mapping
-    def odoo_id(self, record):
-        external_id = self.get_partner_by_match_field(record)
-
-        if external_id:
-            return {"external_id": external_id}
-
-    @only_create
-    @mapping
-    def customer_type(self, record):
+    def customer_type_and_parent_id(self, record):
+        # If partner has any parent partner on current backend
+        vals = {"customer_type": "person"}
         if record.parent_id:
-            return {"company_type": "person"}
-        else:
-            return {"company_type": "company"}
+            binder = self.binder_for("odoo.res.partner")
+            parent_id = binder.to_external(record.parent_id, wrap=True)
+            vals["parent_id"] = parent_id
+            vals["customer_type"] = "company"
+        return vals
