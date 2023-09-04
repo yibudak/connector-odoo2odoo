@@ -141,17 +141,22 @@ class BaseMultiImageImageImporter(Component):
         record = self.odoo_record
         if record["owner_model"] not in ("product.template", "product.product"):
             raise Exception(
-                "The owner model of the image is" " not a product or a product template"
+                "The owner model of the image is not a product or a product template"
             )
-        # These lines cause a circular dependency.
         self._import_dependency(
             record["owner_id"], "odoo.%s" % record["owner_model"], force=force
         )
         # We need to import the attachment as well.
         if attachment := record["attachment_id"]:
-            self._import_dependency(attachment[0], "odoo.ir.attachment", force=force)
-
-        # todo fix this line this causes timeout
-        # if record.product_variant_ids:
-        #     for variant in record.product_variant_ids:
-        #         self._import_dependency(variant.id, "odoo.product.product", force=force)
+            self._import_dependency(
+                attachment[0],
+                "odoo.ir.attachment",
+                force=force,
+            )
+        if variant_ids := record.get("product_variant_ids"):
+            for variant in variant_ids:
+                self._import_dependency(
+                    variant,
+                    "odoo.product.product",
+                    force=force,
+                )

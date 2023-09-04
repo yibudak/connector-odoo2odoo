@@ -21,7 +21,7 @@ class OdooAPI(object):
         model=None,  # todo: create a model class so we can execute methods on it
         timeout=15,
         uid=0,
-        language="tr_TR",
+        lang="tr_TR",
     ):
         self.base_url = base_url
         self.db = db
@@ -29,7 +29,7 @@ class OdooAPI(object):
         self.password = password
         self.model = model  # todo: create a model class so we can execute methods on it
         self.timeout = timeout
-        self._language = language
+        self._lang = lang
         self._session = requests.Session()
         if uid == 0:
             self._uid = self._get_uid()
@@ -87,7 +87,7 @@ class OdooAPI(object):
         }
 
     def _build_context(self, context=None):
-        _ctx = {"lang": self._language}
+        _ctx = {"lang": self._lang}
         if context:
             _ctx.update(context)
         return _ctx

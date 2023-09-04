@@ -116,7 +116,8 @@ class MrpBomLineMapper(Component):
                         ("product_tmpl_id", "=", bom_id.product_tmpl_id.id),
                         ("attribute_id", "=", attribute_id.id),
                         ("product_attribute_value_id", "=", attribute_value_id.id),
-                    ]
+                    ],
+                    limit=1,
                 )
                 if ptav:
                     attribute_ids.append(ptav.id)

@@ -181,7 +181,7 @@ class OdooBackend(models.Model):
             password=self.password,
             timeout=self.timeout,
             uid=self.uid,
-            language=self.get_default_language_code(),
+            lang=self.get_default_language_code(),
         )
 
     # def get_legacy_connection(self):
