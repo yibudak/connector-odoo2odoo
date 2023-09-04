@@ -193,6 +193,28 @@ class OdooImporter(AbstractComponent):
         _logger.info("%d updated from Odoo %s", binding, self.external_id)
         return
 
+    def _check_force_available(self, force=False):
+        """Check if force is available for the model
+        If the model is a base model, force is not available
+        """
+        base_models = [
+            "odoo.product.attribute",
+            "odoo.product.attribute.value",
+            "odoo.product.category",
+            "odoo.uom.uom",
+            "odoo.res.currency",
+            "odoo.product.pricelist",
+            "odoo.delivery.carrier",
+            "odoo.account.tax",
+            "odoo.account.tax.group",
+            "odoo.account.fiscal.position",
+            "odoo.account.journal",  # not implemented yet
+            "odoo.account.account",
+        ]
+        if self.work.model_name in base_models:
+            return False
+        return force
+
     def _init_import(self, binding, external_id):
         """Hook called at before read data from backend"""
         return True
@@ -232,6 +254,7 @@ class OdooImporter(AbstractComponent):
 
         :param external_id: identifier of the record on Odoo
         """
+        force = self._check_force_available(force=force)
         self.external_id = external_id
         binding = self._get_binding()
         must_continue = self._init_import(binding, external_id)
@@ -256,8 +279,7 @@ class OdooImporter(AbstractComponent):
                 "({}: {}) It must be skipped".format(self.work.model_name, external_id)
             )
             return
-        if external_id == 22757:
-            force = True
+
         if not force and self._is_uptodate(binding):
             _logger.info("Already up-to-date")
             return _("Already up-to-date.")
@@ -373,8 +395,7 @@ class DelayedBatchImporter(AbstractComponent):
     _inherit = "odoo.batch.importer"
 
     def _import_record(self, external_id, job_options=None, **kwargs):
-        """Delay the import of the records
-        """
+        """Delay the import of the records"""
         delayable = self.model.with_delay(
             channel=self.model._unique_channel_name,
             max_retries=10,
