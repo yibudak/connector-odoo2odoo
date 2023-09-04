@@ -74,7 +74,7 @@ class OdooSaleOrder(models.Model):
         return result
 
     def resync(self):
-        return self.with_delay().export_record(self.backend_id)
+        return self.delayed_export_record(self.backend_id)
 
     def _set_sale_state(self):
         if self.backend_state == self.odoo_id.state:

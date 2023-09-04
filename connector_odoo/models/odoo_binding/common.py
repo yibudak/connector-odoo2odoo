@@ -3,6 +3,7 @@
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 from odoo.addons.connector.exception import RetryableJobError
+from hashlib import md5
 import time
 
 
@@ -44,9 +45,16 @@ class OdooBinding(models.AbstractModel):
     def _unique_channel_name(self):
         """
         Split the jobs into nine channels to avoid deadlocks.
-        We use the built-in hash function to get unique integers from the model name.
+        Note: Do NOT use built-in hash method since it creates different hashes
+        for the same string in different processes.
+        Workflow:
+        1. Get the md5 hash of the model name.
+        2. Sum the ascii values of the hash.
+        3. Get the remainder of the sum divided by 10.
+        4. Return the remainder.
         """
-        return f"root.{hash(self._name) % 10}"
+        md5_hash = md5(self._name.encode("utf-8")).hexdigest()
+        return sum(ord(x) for x in md5_hash) % 10
 
     def resync(self):
         return self.delayed_import_record(self.backend_id, self.external_id, force=True)
