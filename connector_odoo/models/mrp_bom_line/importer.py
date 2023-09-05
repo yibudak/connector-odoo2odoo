@@ -130,6 +130,14 @@ class MrpBomLineImporter(Component):
     _inherit = "odoo.importer"
     _apply_on = ["odoo.mrp.bom.line"]
 
+    def _get_context(self, data):
+        """
+        Do not create procurement for sale order lines.
+        """
+        ctx = super(MrpBomLineImporter, self)._get_context(data)
+        ctx["skip_cycle_check"] = True
+        return ctx
+
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
         super()._import_dependencies(force=force)
