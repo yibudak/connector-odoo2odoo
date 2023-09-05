@@ -4,6 +4,7 @@ from odoo.exceptions import ValidationError
 
 class OpenERPPickingType(models.Model):
     _name = "openerp.picking.type"
+    _description = "Open ERP Picking Type"
 
     warehouse_id = fields.Many2one(
         "odoo.stock.warehouse", string="Warehouse", required=True

@@ -6,6 +6,7 @@ from odoo import fields, models
 
 class ImportExternalIdModel(models.TransientModel):
     _name = "import.external.id.wizard"
+    _description = "Import External Id Wizard"
 
     def _get_default_backend(self):
         return self.env["odoo.backend"].search([], limit=1).id
