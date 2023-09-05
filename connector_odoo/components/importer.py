@@ -260,25 +260,23 @@ class OdooImporter(AbstractComponent):
         must_continue = self._init_import(binding, external_id)
         if not must_continue:
             _logger.info(
-                "({}: {}) must no be imported!".format(
+                "({}: {}) must not be imported!".format(
                     self.work.model_name, external_id
                 )
             )
-            return
+            return _("This record must not be imported.")
 
         try:
             self.odoo_record = self._get_odoo_data()
         except (IDMissingInBackend, ValueError):
             return _("Record does no longer exist in Odoo")
 
-        binding = self._get_binding_with_data(
-            binding
-        )  # Todo experimental daha iyisini yaparsın
+        binding = self._get_binding_with_data(binding)
         if self._must_skip():
             _logger.info(
                 "({}: {}) It must be skipped".format(self.work.model_name, external_id)
             )
-            return
+            return _("Import skipped.")
 
         if not force and self._is_uptodate(binding):
             _logger.info("Already up-to-date")
