@@ -6,7 +6,7 @@ import logging
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 from datetime import datetime
 from odoo.addons.component.core import Component
-from odoo.addons.connector.components.mapper import ExportMapChild, mapping
+from odoo.addons.connector.components.mapper import only_create, mapping
 
 _logger = logging.getLogger(__name__)
 
@@ -16,11 +16,24 @@ class OdooSaleOrderExporter(Component):
     _inherit = "odoo.exporter"
     _apply_on = ["odoo.sale.order"]
 
-    # Todo yigit: enable this
-    # def _must_skip(self):
-    #     """If there is no USER on the sale order, this means that guest user creates the
-    #     order. We don't want to export it."""
-    #     return not (self.binding.partner_id.user_id or self.binding.partner_id.user_ids)
+    def _should_import(self):
+        # Search for an existing reference on Odoo backend
+        if not self.binding.external_id:
+            external_record = self.backend_adapter.search(
+                model="sale.order",
+                domain=[
+                    ("name", "=", self.binding.name),
+                ],
+                limit=1,
+            )
+            if external_record:
+                self.external_id = external_record[0]
+        return super(OdooSaleOrderExporter, self)._should_import()
+
+    def _must_skip(self):
+        """If there is no USER on the sale order, this means that guest user creates the
+        order. We don't want to export it."""
+        return not (self.binding.partner_id.user_id or self.binding.partner_id.user_ids)
 
     def _export_dependencies(self):
         if not self.binding.partner_id:
@@ -42,6 +55,9 @@ class OdooSaleOrderExporter(Component):
         if binding and binding.order_line:
             for line in binding.order_line:
                 self._export_dependency(line, "odoo.sale.order.line")
+        # if binding and binding.transaction_ids:
+        #     for tx in binding.transaction_ids:
+        #         self._export_dependency(tx, "odoo.payment.transaction")
 
 
 class SaleOrderExportMapper(Component):
@@ -51,11 +67,26 @@ class SaleOrderExportMapper(Component):
 
     direct = [
         ("name", "name"),
-        ("state", "state"),
+        # ("state", "state"),
     ]
 
-    # Todo: yigit buraya artık gerek yok cunku sale.order.line'ı mapledik.
+    # yigit: buraya artık gerek yok cunku sale.order.line'ı mapledik.
     # children = [("order_line", "order_line", "odoo.sale.order.line")]
+
+    @only_create
+    @mapping
+    def state_create(self, record):
+        """
+        Durumu taslak olarak göndermeliyiz ki böylece action_confirm çağrıldığında
+        durum düzgün bir şekilde güncellensin.
+        """
+        return {"state": "draft"}
+
+    # We should NOT send the state field. It should be set to draft and then
+    # action_%s should be called.
+    # @mapping
+    # def state(self, record):
+    #     return {"state": record.state}
 
     @mapping
     def date_order(self, record):
@@ -94,12 +125,19 @@ class SaleOrderExportMapper(Component):
         }
 
     @mapping
+    def carrier_id(self, record):
+        binder = self.binder_for("odoo.delivery.carrier")
+        return {"carrier_id": binder.to_external(record.carrier_id, wrap=True)}
+
+    @mapping
     def client_order_ref(self, record):
         # Todo: müşterinin satınalma numarası için bir field yapılacak
         return {"client_order_ref": "E-commerce sale"}
 
-    @mapping
-    def confirmation_date(self, record):
-        return {
-            "confirmation_date": datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT)
-        }
+    # todo: confirmation_date action_confirm ile oluşturulup gönderilecek. Belki de
+    # göndermeye gerek yok karşıda action_confirm çalıştırırsak problem çözülür.
+    # @mapping
+    # def confirmation_date(self, record):
+    #     return {
+    #         "confirmation_date": datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT)
+    #     }

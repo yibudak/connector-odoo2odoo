@@ -75,9 +75,31 @@ class OdooSaleOrderLineExporter(Component):
     _inherit = "odoo.exporter"
     _apply_on = ["odoo.sale.order.line"]
 
-    # def _export_dependencies(self):
-    #     # Todo: maybe we should export product.product here but it's a bit risky.
-    #     pass
+    def _should_import(self):
+        """If we don't have any external_id in order_line, and we could match
+        a record with specific elements, we should write it to Odoo."""
+        if not self.external_id:
+            external_order = self.backend_adapter.search(
+                model="sale.order",
+                domain=[("name", "=", self.binding.order_id.name)],
+                limit=1,
+            )
+            if external_order:
+                possible_line = self.backend_adapter.search(
+                    model="sale.order.line",
+                    domain=[
+                        ("order_id", "=", external_order[0]),
+                        (
+                            "product_id",
+                            "in",
+                            self.binding.mapped("product_id.bind_ids.external_id"),
+                        ),
+                    ],
+                    limit=1,
+                )
+                if possible_line:
+                    self.external_id = possible_line[0]
+        return super(OdooSaleOrderLineExporter, self)._should_import()
 
     def _create_data(self, map_record, fields=None, **kwargs):
         """Get the data to pass to :py:meth:`_create`"""

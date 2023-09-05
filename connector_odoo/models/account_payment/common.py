@@ -10,11 +10,11 @@ from odoo.addons.component.core import Component
 _logger = logging.getLogger(__name__)
 
 
-class OdooResCurrencyRate(models.Model):
-    _name = "odoo.res.currency.rate"
+class OdooAccountPayment(models.Model):
+    _name = "odoo.account.payment"
     _inherit = ["odoo.binding"]
-    _inherits = {"res.currency.rate": "odoo_id"}
-    _description = "Odoo Currency rate"
+    _inherits = {"account.payment": "odoo_id"}
+    _description = "Odoo Payment Transaction"
     _sql_constraints = [
         (
             "external_id",
@@ -32,22 +32,22 @@ class OdooResCurrencyRate(models.Model):
             )
 
 
-class ResCurrencyRate(models.Model):
-    _inherit = "res.currency.rate"
+class AccountPayment(models.Model):
+    _inherit = "account.payment"
 
     bind_ids = fields.One2many(
-        comodel_name="odoo.res.currency.rate",
+        comodel_name="odoo.account.payment",
         inverse_name="odoo_id",
         string="Odoo Bindings",
     )
 
 
-class ResCurrencyRateAdapter(Component):
-    _name = "odoo.res.currency.rate.adapter"
+class AccountPaymentAdapter(Component):
+    _name = "odoo.account.payment.adapter"
     _inherit = "odoo.adapter"
-    _apply_on = "odoo.res.currency.rate"
+    _apply_on = "odoo.account.payment"
 
-    _odoo_model = "res.currency.rate"
+    _odoo_model = "account.payment"
 
     # Set get_passive to True to get the passive records also.
     _get_passive = False

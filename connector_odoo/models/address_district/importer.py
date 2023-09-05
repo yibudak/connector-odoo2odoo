@@ -40,28 +40,30 @@ class AddressDistrictImportMapper(Component):
         ("name", "name"),
     ]
 
-    @only_create
-    @mapping
-    def check_account_group_exists(self, record):
-        res = {}
-        ctx = {"lang": self.backend_record.get_default_language_code()}
-        district_record = (
-            self.env["address.district"]
-            .with_context(ctx)
-            .search(
-                [
-                    ("name", "=", record.name),
-                    ("state_id.name", "=", record.state_id.name),
-                ],
-                limit=1,
-            )
-        )
-        if district_record:
-            _logger.info(
-                "Address District found for %s : %s" % (record, district_record)
-            )
-            res.update({"odoo_id": district_record.id})
-        return res
+    # We are already doing ID -> ID mapping in the backend adapter.
+    # No need to match with the name.
+    # @only_create
+    # @mapping
+    # def check_address_group_exists(self, record):
+    #     res = {}
+    #     ctx = {"lang": self.backend_record.get_default_language_code()}
+    #     district_record = (
+    #         self.env["address.district"]
+    #         .with_context(ctx)
+    #         .search(
+    #             [
+    #                 ("name", "=", record["name"]),
+    #                 ("state_id.display_name", "=", record["state_id"][1]),
+    #             ],
+    #             limit=1,
+    #         )
+    #     )
+    #     if district_record:
+    #         _logger.info(
+    #             "Address District found for %s : %s" % (record, district_record)
+    #         )
+    #         res.update({"odoo_id": district_record.id})
+    #     return res
 
     @mapping
     def state_id(self, record):
@@ -71,7 +73,7 @@ class AddressDistrictImportMapper(Component):
             .with_context(ctx)
             .search(
                 [
-                    ("name", "=", record.state_id.name),
+                    ("display_name", "=", record["state_id"][1]),
                     ("country_id", "=", self.env.ref("base.tr").id),
                 ],
                 limit=1,

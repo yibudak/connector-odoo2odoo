@@ -116,7 +116,8 @@ class MrpBomLineMapper(Component):
                         ("product_tmpl_id", "=", bom_id.product_tmpl_id.id),
                         ("attribute_id", "=", attribute_id.id),
                         ("product_attribute_value_id", "=", attribute_value_id.id),
-                    ]
+                    ],
+                    limit=1,
                 )
                 if ptav:
                     attribute_ids.append(ptav.id)
@@ -128,6 +129,14 @@ class MrpBomLineImporter(Component):
     _name = "odoo.mrp.bom.line.importer"
     _inherit = "odoo.importer"
     _apply_on = ["odoo.mrp.bom.line"]
+
+    def _get_context(self, data):
+        """
+        Do not create procurement for sale order lines.
+        """
+        ctx = super(MrpBomLineImporter, self)._get_context(data)
+        ctx["skip_cycle_check"] = True
+        return ctx
 
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""

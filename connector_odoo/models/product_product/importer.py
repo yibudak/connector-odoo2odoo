@@ -35,7 +35,9 @@ def _compute_attribute_line_vals(importer, record):
                 ("product_tmpl_id", "=", local_template_id.id),
                 ("attribute_id", "=", local_attr_val_id.attribute_id.id),
                 ("product_attribute_value_id", "=", local_attr_val_id.id),
-            ]
+                ("ptav_active", "=", True),
+            ],
+            limit=1,
         )
         if ptav:
             ptav_list |= ptav
@@ -208,6 +210,22 @@ class ProductImporter(Component):
     _inherit = "odoo.importer"
     _apply_on = ["odoo.product.product"]
 
+    def _must_skip(self):
+        """Return True if the import can be skipped."""
+        binding = self.model.search(
+            [
+                ("backend_id", "=", self.backend_record.id),
+                ("external_id", "=", self.external_id),
+                "|",
+                ("active", "=", True),
+                ("active", "=", False),
+            ],
+            limit=1,
+        )
+        if (binding and not binding.active) and not self.odoo_record.get("active"):
+            return True
+        return super()._must_skip()
+
     def _get_binding_with_data(self, binding):
         """Match the attachment with hashed store_fname."""
         binding = super(ProductImporter, self)._get_binding_with_data(binding)
@@ -220,7 +238,8 @@ class ProductImporter(Component):
                     [
                         ("product_tmpl_id", "=", tmpl_id.id),
                         ("combination_indices", "=", ptav_list._ids2str()),
-                    ]
+                    ],
+                    limit=1,
                 )
         return binding
 
@@ -240,24 +259,3 @@ class ProductImporter(Component):
                 )
 
         return super()._import_dependencies(force=force)
-
-    def _after_import(self, binding, force=False):
-        # attachment_model = self.work.odoo_api.api.env["ir.attachment"]
-        # attachment_ids = attachment_model.search(
-        #     [
-        #         ("res_model", "=", "product.product"),
-        #         ("res_id", "=", self.odoo_record.id),
-        #     ],
-        #     order="id",
-        # )
-        # total = len(attachment_ids)
-        # _logger.info(
-        #     "{} Attachment found for external product {}".format(
-        #         total, self.odoo_record.id
-        #     )
-        # )
-        # for attachment_id in attachment_ids:
-        #     self.env["odoo.ir.attachment"].delayed_import_record(
-        #         self.backend_record, attachment_id
-        #     )
-        return super()._after_import(binding, force)

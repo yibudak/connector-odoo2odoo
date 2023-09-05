@@ -17,7 +17,7 @@ class SaleOrderLineBatchImporter(Component):
 
     _name = "odoo.sale.order.line.batch.importer"
     _inherit = "odoo.delayed.batch.importer"
-    _apply_on = ["odoo.sale.order.item"]
+    _apply_on = ["odoo.sale.order.line"]
 
     def run(self, domain=None, force=False):
         """Run the synchronization"""
@@ -55,21 +55,21 @@ class SaleOrderLineImportMapper(Component):
     def product_id(self, record):
         binder = self.binder_for("odoo.product.product")
         return {
-            "product_id": binder.to_internal(record.product_id.id, unwrap=True).id,
+            "product_id": binder.to_internal(record["product_id"][0], unwrap=True).id,
         }
 
     @mapping
     def order_id(self, record):
         binder = self.binder_for("odoo.sale.order")
         return {
-            "order_id": binder.to_internal(record.order_id.id, unwrap=True).id,
+            "order_id": binder.to_internal(record["order_id"][0], unwrap=True).id,
         }
 
     @mapping
     def product_uom(self, record):
         binder = self.binder_for("odoo.uom.uom")
         return {
-            "product_uom": binder.to_internal(record.product_uom.id, unwrap=True).id,
+            "product_uom": binder.to_internal(record["product_uom"][0], unwrap=True).id,
         }
 
 
@@ -78,28 +78,42 @@ class SaleOrderLineImporter(Component):
     _inherit = "odoo.importer"
     _apply_on = ["odoo.sale.order.line"]
 
+    def _get_binding_with_data(self, binding):
+        """Sometimes we have trouble with import-export sale.order.line. This method
+        helps us find the binding record, so we prevent the creation of duplicate
+        records.
+        """
+        binding = super(SaleOrderLineImporter, self)._get_binding_with_data(binding)
+        if not binding:
+            domain = [("backend_id", "=", self.backend_record.id)]
+            if local_order := self.binder_for("odoo.sale.order").to_internal(
+                self.odoo_record["order_id"][0], unwrap=True
+            ):
+                domain.append(("odoo_id", "=", local_order.id))
+            if local_product := self.binder_for("odoo.product.product").to_internal(
+                self.odoo_record["product_id"][0], unwrap=True
+            ):
+                domain.append(("product_id", "=", local_product.id))
+            if local_product and local_order:
+                binding = self.model.search(domain, limit=1)
+        return binding
+
     def _import_dependencies(self, force):
         self._import_dependency(
-            self.odoo_record.product_id.id, "odoo.product.product", force=force
+            self.odoo_record["product_id"][0],
+            "odoo.product.product",
+            force=force,
         )
         self._import_dependency(
-            self.odoo_record.product_uom.id, "odoo.uom.uom", force=force
+            self.odoo_record["product_uom"][0],
+            "odoo.uom.uom",
+            force=force,
         )
 
-    def _after_import(self, binding, force=False):
-        res = super()._after_import(binding, force)
-        if self.backend_record.delayed_import_lines:
-            pending = binding.order_id.queue_job_ids.filtered(
-                lambda x: x.state != "done" and x.args[1] != self.odoo_record.id
-            )
-            if not pending:
-                binding = self.env["odoo.sale.order"].search(
-                    [("odoo_id", "=", binding.order_id.id)]
-                )
-                if not len(binding.picking_ids):
-                    binding._set_state()
-                self.env["odoo.stock.picking"].delayed_import_batch(
-                    self.backend_record,
-                    [("sale_id", "=", self.odoo_record.order_id.id)],
-                )
-        return res
+    def _get_context(self, data):
+        """
+        Do not create procurement for sale order lines.
+        """
+        ctx = super(SaleOrderLineImporter, self)._get_context(data)
+        ctx["skip_procurement"] = True
+        return ctx

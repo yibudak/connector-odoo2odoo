@@ -74,20 +74,7 @@ class OdooSaleOrder(models.Model):
         return result
 
     def resync(self):
-        return self.with_delay().export_record(self.backend_id)
-
-    def _set_state(self):
-        _logger.info("Setting state for %s", self)
-        # All data was imported. Solve the state problem and all is done
-        self._set_pickings_state()
-        self._set_sale_state()
-
-    def _set_pickings_state(self):
-        for picking_id in self.picking_ids:
-            binding_picking = self.env["odoo.stock.picking"].search(
-                [("odoo_id", "=", picking_id.id)]
-            )
-            binding_picking.with_delay()._set_state()
+        return self.delayed_export_record(self.backend_id)
 
     def _set_sale_state(self):
         if self.backend_state == self.odoo_id.state:
@@ -111,6 +98,46 @@ class OdooSaleOrder(models.Model):
             else:
                 self.odoo_id.action_done()
         self.date_order = self.backend_date_order
+
+    def _remote_action_cancel(self):
+        """
+        Single method to execute `action_cancel` on Odoo backend.
+        """
+        self.ensure_one()
+        self.delayed_execute_method(
+            self.backend_id,
+            "sale.order",
+            "action_cancel",
+            [self.external_id],
+        )
+        return True
+
+    def _remote_action_confirm(self):
+        """
+        Single method to execute `action_confirm` on Odoo backend.
+        """
+        self.ensure_one()
+        self.delayed_execute_method(
+            self.backend_id,
+            "sale.order",
+            "action_confirm",
+            [self.external_id],
+        )
+        return True
+
+    # This method just sets the state of the sale order to ~sent~. So we don't need it.
+    # def _remote_action_quotation_sent(self):
+    #     """
+    #     Single method to execute `action_quotation_send` on Odoo backend.
+    #     """
+    #     self.ensure_one()
+    #     self.delayed_execute_method(
+    #         self.backend_id,
+    #         "sale.order",
+    #         "action_quotation_sent",
+    #         [self.external_id],
+    #     )
+    #     return True
 
 
 class SaleOrder(models.Model):

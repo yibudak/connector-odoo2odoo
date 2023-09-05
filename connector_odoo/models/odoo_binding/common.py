@@ -3,6 +3,7 @@
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 from odoo.addons.connector.exception import RetryableJobError
+from hashlib import md5
 import time
 
 
@@ -35,18 +36,20 @@ class OdooBinding(models.AbstractModel):
         )
     ]
 
-    # note yigit: we don't need this anymore.
-    # @property
-    # def odoo_api(self):
-    #     return self.backend_id.get_connection()
-
     @property
     def _unique_channel_name(self):
         """
         Split the jobs into nine channels to avoid deadlocks.
-        We use the built-in hash function to get unique integers from the model name.
+        Note: Do NOT use built-in hash method since it creates different hashes
+        for the same string in different processes.
+        Workflow:
+        1. Get the md5 hash of the model name.
+        2. Sum the ascii values of the hash.
+        3. Get the remainder of the sum divided by 10.
+        4. Return the remainder.
         """
-        return f"root.{hash(self._name) % 10}"
+        md5_hash = md5(self._name.encode("utf-8")).hexdigest()
+        return f"root.{sum(ord(x) for x in md5_hash) % 10}"
 
     def resync(self):
         return self.delayed_import_record(self.backend_id, self.external_id, force=True)
@@ -88,8 +91,10 @@ class OdooBinding(models.AbstractModel):
 
     @api.model
     def delayed_import_batch(self, backend, domain=None, force=None):
-        return self.with_delay(channel=self._unique_channel_name).import_batch(
-            backend, domain=domain, force=force
+        return (
+            self.sudo()
+            .with_delay(channel=self._unique_channel_name)
+            .import_batch(backend, domain=domain, force=force)
         )
 
     @api.model
@@ -102,6 +107,9 @@ class OdooBinding(models.AbstractModel):
             try:
                 return importer.run(external_id, force=force)
             except Exception as e:
+                # Bağlantı hatalarında iş sürekli tekrar deneniyor ve delay olmadığı
+                # zaman retry_count çok hızlı bir şekilde doluyor. Delay ekleyerek
+                # aradaki bağlantının düzelmesini bekliyoruz.
                 time.sleep(5)
                 raise RetryableJobError(
                     "Could not import record %s: \n%s" % (external_id, str(e)),
@@ -110,9 +118,25 @@ class OdooBinding(models.AbstractModel):
 
     @api.model
     def delayed_import_record(self, backend, external_id, force=False):
-        return self.with_delay(channel=self._unique_channel_name).import_record(
-            backend, external_id, force=force
+        return (
+            self.sudo()
+            .with_delay(channel=self._unique_channel_name)
+            .import_record(backend, external_id, force=force)
         )
+
+    @api.model
+    def delayed_execute_method(self, backend, model, method, args=None):
+        return (
+            self.sudo()
+            .with_delay(channel=self._unique_channel_name)
+            .execute_method(backend, model, method, args=args)
+        )
+
+    @api.model
+    def execute_method(self, backend, model, method, args=None):
+        """Execute a method on Odoo"""
+        odoo_api = backend.get_connection()
+        return odoo_api.execute(model, method, args)
 
     @api.model
     def export_batch(self, backend, domain=None):
@@ -131,8 +155,10 @@ class OdooBinding(models.AbstractModel):
             return exporter.run(self)
 
     def delayed_export_record(self, backend, local_id=None, fields=None):
-        return self.with_delay(channel=self._unique_channel_name).export_record(
-            backend, local_id=local_id, fields=fields
+        return (
+            self.sudo()
+            .with_delay(channel=self._unique_channel_name)
+            .export_record(backend, local_id=local_id, fields=fields)
         )
 
     def export_delete_record(self, backend, external_id):

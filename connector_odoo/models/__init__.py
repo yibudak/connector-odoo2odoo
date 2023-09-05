@@ -39,6 +39,8 @@ from . import address_neighbour
 from . import mrp_bom
 from . import mrp_bom_line
 from . import mrp_bom_template_line
+from . import payment_transaction
+
 
 # Disabled Models
 from . import purchase_order

@@ -100,16 +100,16 @@ class PartnerImportMapper(Component):
 
     @mapping
     def address_fields(self, record):
-        # Todo fix this function here and import mapper. Temiz değil.
         vals = {}
         if neighbour := record.get("neighbour_id"):
-            local_neighbour = self.env["odoo.address.neighbour"].search(
-                [("external_id", "=", neighbour[0])], limit=1
+            local_neighbour = self.binder_for("odoo.address.neighbour").to_internal(
+                neighbour[0], unwrap=True
             )
             if local_neighbour:
-                vals["neighbour_id"] = local_neighbour.odoo_id.id
+                vals["neighbour_id"] = local_neighbour.id
                 vals["region_id"] = local_neighbour.region_id.id
                 vals["district_id"] = local_neighbour.region_id.district_id.id
+                vals["state_id"] = local_neighbour.region_id.district_id.state_id.id
         return vals
 
     @mapping

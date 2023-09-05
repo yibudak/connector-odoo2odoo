@@ -44,25 +44,25 @@ class ProductAttributeValueMapper(Component):
     def attribute_id(self, record):
         return {"attribute_id": self.get_attribute_id(record)}
 
-    # @only_create
-    # @mapping
-    # def check_att_value_exists(self, record):
-    #     # TODO: calısmıor burası aslında gerek yok check etmesine ama bakalım
-    #     lang = (
-    #         self.backend_record.default_lang_id.code
-    #         or self.env.user.lang
-    #         or self.env.context["lang"]
-    #         or "en_US"
-    #     )
-    #     att_id = self.get_attribute_id(record)
-    #
-    #     value_id = self.env["product.attribute.value"].with_context(lang=lang).search(
-    #         [
-    #             ("name", "=", record.name),
-    #             ("attribute_id", "=", att_id),
-    #         ], limit=1
-    #     )
-    #     res = {}
-    #     if len(value_id) > 0:
-    #         res.update({"odoo_id": value_id.id})
-    #     return res or False
+    @only_create
+    @mapping
+    def check_att_value_exists(self, record):
+        if not record.get("name"):
+            return {}
+        lang = self.backend_record.get_default_language_code()
+        att_id = self.get_attribute_id(record)
+        value_id = (
+            self.env["product.attribute.value"]
+            .with_context(lang=lang)
+            .search(
+                [
+                    ("attribute_id", "=", att_id),
+                    ("name", "=", record.get("name")),
+                ],
+                limit=1,
+            )
+        )
+        vals = {}
+        if value_id:
+            vals["odoo_id"] = value_id.id
+        return vals

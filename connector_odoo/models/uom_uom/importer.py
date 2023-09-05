@@ -67,15 +67,9 @@ class UomMapper(Component):
     @only_create
     @mapping
     def check_uom_exists(self, record):
-        # Todo: bu çalışmıyor ki? dict'e odoo_id ekliyor ama yine de create ediyor duplicate oluyor
         res = {}
         category_name = record["category_id"][1]
-        lang = (
-            self.backend_record.default_lang_id.code
-            or self.env.user.lang
-            or self.env.context["lang"]
-            or "tr_TR"
-        )
+        lang = self.backend_record.get_default_language_code()
         _logger.info("CHECK ONLY CREATE UOM %s with lang %s" % (record["name"], lang))
 
         local_uom_id = (
@@ -85,35 +79,13 @@ class UomMapper(Component):
                 [
                     ("name", "=", record["name"]),
                     ("category_id.name", "=", category_name),
-                ]
+                ],
+                limit=1,
             )
         )
         _logger.info("UOM found for %s : %s" % (record, local_uom_id))
-        if len(local_uom_id) == 1:
+        if local_uom_id:
             res.update({"odoo_id": local_uom_id.id})
-        # If not found test if UOM was renamed and is "reference" for its category
-        if record["uom_type"] == "reference":
-            local_uom_id = (
-                self.env["uom.uom"]
-                .with_context(lang=lang)
-                .search(
-                    [
-                        ("uom_type", "=", "reference"),
-                        ("factor", "=", record["factor"]),
-                        ("category_id.name", "=", category_name),
-                    ]
-                )
-            )
-            if len(local_uom_id) == 1:
-                res.update({"odoo_id": local_uom_id.id})
-            else:
-                raise ValidationError(
-                    _(
-                        "Unable to find Reference UOM with factor %s for"
-                        " category %s. It is possible that the UOM %s was"
-                        " renamed." % (record["factor"], category_name, record["name"])
-                    )
-                )
         return res
 
 

@@ -5,7 +5,6 @@
 import logging
 from contextlib import contextmanager
 from datetime import datetime, timedelta
-
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
@@ -182,7 +181,7 @@ class OdooBackend(models.Model):
             password=self.password,
             timeout=self.timeout,
             uid=self.uid,
-            language=self.get_default_language_code(),
+            lang=self.get_default_language_code(),
         )
 
     # def get_legacy_connection(self):
@@ -335,8 +334,9 @@ class OdooBackend(models.Model):
 
     def import_address_models(self):
         address_models = [
-            "odoo.address.district",
-            "odoo.address.region",
+            # we importing these dependencies in odoo.address.neighbour
+            # "odoo.address.district",
+            # "odoo.address.region",
             "odoo.address.neighbour",
         ]
         date_field = "import_address_models_from_date"
@@ -382,7 +382,6 @@ class OdooBackend(models.Model):
             self.env[model].delayed_import_batch(backend, domain)
         return self._get_next_import_time(import_start_time)
 
-
     def import_external_id(self, model, external_id, force):
         model = self.env[model]
         for backend in self:
@@ -402,3 +401,41 @@ class OdooBackend(models.Model):
         next_time = import_start_time - timedelta(seconds=IMPORT_DELTA_BUFFER)
         next_time = fields.Datetime.to_string(next_time)
         self.write({from_date_field: next_time})
+
+    def _fix_address_district(self):
+        self.ensure_one()
+
+        partner_districts = self.env["res.partner"].search([]).mapped("neighbour_id")
+        districts_to_unlink = self.env["address.district"].search(
+            [("id", "not in", partner_districts.mapped("district_id.id"))]
+        )
+        districts_to_unlink.unlink()
+        return True
+
+    def _fix_address_region(self):
+        self.ensure_one()
+
+        partner_regions = self.env["res.partner"].search([]).mapped("neighbour_id")
+        regions_to_unlink = self.env["address.region"].search(
+            [("id", "not in", partner_regions.mapped("region_id.id"))]
+        )
+        regions_to_unlink.unlink()
+        return True
+
+    def _fix_address_neighbour(self):
+        self.ensure_one()
+
+        partner_neighbours = self.env["res.partner"].search([]).mapped("neighbour_id")
+        neighbour_to_unlink = self.env["address.neighbour"].search(
+            [("id", "not in", partner_neighbours.ids)]
+        )
+        neighbour_to_unlink.unlink()
+        return True
+
+    def action_fix_address_models(self):
+        self.ensure_one()
+        # Executing order is IMPORTANT!
+        self._fix_address_neighbour()
+        self._fix_address_region()
+        self._fix_address_district()
+        return True
