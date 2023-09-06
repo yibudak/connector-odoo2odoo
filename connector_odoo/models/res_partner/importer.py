@@ -209,36 +209,11 @@ class PartnerImporter(Component):
     _name = "odoo.res.partner.importer"
     _inherit = "odoo.importer"
     _apply_on = ["odoo.res.partner"]
-    # _import_fields = [
-    #     "write_date",
-    #     "id",
-    #     "name",
-    #     "street",
-    #     "street2",
-    #     "city",
-    #     "zip",
-    #     "phone",
-    #     "mobile",
-    #     "email",
-    #     "website",
-    #     "lang",
-    #     "ref",
-    #     "comment",
-    #     "company_type",
-    #     "sale_warn",
-    #     "sale_warn_msg",
-    #     "vat",
-    #     "tax_office_name",
-    #     "category_id",
-    #     "neighbour_id",
-    #     "user_id",
-    #     "country_id",
-    #     "state_id",
-    #     "parent_id",
-    #     "ranking",
-    #     "property_account_payable_id",
-    #     "property_account_receivable_id",
-    # ]
+
+    def _get_context(self, data):
+        ctx = super(PartnerImporter, self)._get_context(data)
+        ctx["no_vat_validation"] = True
+        return ctx
 
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
@@ -247,19 +222,6 @@ class PartnerImporter(Component):
         if parent_id := self.odoo_record["parent_id"]:
             _logger.info("Importing parent")
             self._import_dependency(parent_id[0], "odoo.res.partner", force=force)
-        # Todo yigit: should we import users?
-        # if self.odoo_record["user_id"]:
-        #     _logger.info("Importing user")
-        #     self._import_dependency(
-        #         self.odoo_record["user_id"][0], "odoo.res.users", force=force
-        #     )
-
-        # Todo yigit: do we have partner categories in odoo?
-        # _logger.info("Importing categories")
-        # for category_id in self.odoo_record["category_id"]:
-        #     self._import_dependency(
-        #         category_id, "odoo.res.partner.category", force=force
-        #     )
 
         if payable_account_id := self.odoo_record["property_account_payable_id"]:
             _logger.info("Importing account payable")
@@ -277,36 +239,6 @@ class PartnerImporter(Component):
                 force=force,
             )
 
-        # if (
-        #     hasattr(self.odoo_record, "property_purchase_currency_id")
-        #     and self.odoo_record.property_purchase_currency_id
-        # ):
-        #     _logger.info("Importing supplier currency")
-        #     self._import_dependency(
-        #         self.odoo_record.property_purchase_currency_id.id,
-        #         "odoo.res.currency",
-        #         force=force,
-        #     )
-        #
-        # if (
-        #     self.odoo_record.property_product_pricelist_purchase
-        #     and self.odoo_record.property_product_pricelist_purchase.currency_id
-        # ):
-        #     _logger.info("Importing supplier currency")
-        #     self._import_dependency(
-        #         self.odoo_record.property_product_pricelist_purchase.currency_id.id,
-        #         "odoo.res.currency",
-        #         force=force,
-        #     )
-
         result = super()._import_dependencies(force=force)
         _logger.info("Dependencies imported for external ID %s", self.external_id)
         return result
-
-    # def _after_import(self, binding, force=False):
-    #     if self.backend_record.version == "6.1":
-    #         _logger.info(
-    #             "OpenERP detected, importing adresses for external ID %s",
-    #             self.external_id,
-    #         )
-    #     return super()._after_import(binding, force)
