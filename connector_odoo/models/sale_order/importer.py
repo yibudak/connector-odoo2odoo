@@ -25,7 +25,8 @@ class SaleOrderBatchImporter(Component):
 
     def run(self, domain=None, force=False):
         """Run the synchronization"""
-
+        exported_ids = self.model.search([("external_id", "!=", 0)]).ids
+        domain += [("id", "in", exported_ids)]
         updated_ids = self.backend_adapter.search(domain)
         _logger.info(
             "search for odoo sale orders %s returned %s items",

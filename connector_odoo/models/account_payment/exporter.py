@@ -63,6 +63,18 @@ class AccountPaymentExportMapper(Component):
             "payment_date": record.date.strftime(DEFAULT_SERVER_DATETIME_FORMAT),
         }
 
+    @mapping
+    def state(self, record):
+        # v16 -> v12
+        state_mapping = {
+            "draft": "draft",
+            "posted": "posted",
+            "cancel": "cancelled",
+        }
+        return {
+            "state": state_mapping[record.state],
+        }
+
     #
     # @mapping
     # def type(self, record):

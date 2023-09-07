@@ -125,20 +125,6 @@ class OdooSaleOrder(models.Model):
         )
         return True
 
-    # This method just sets the state of the sale order to ~sent~. So we don't need it.
-    # def _remote_action_quotation_sent(self):
-    #     """
-    #     Single method to execute `action_quotation_send` on Odoo backend.
-    #     """
-    #     self.ensure_one()
-    #     self.delayed_execute_method(
-    #         self.backend_id,
-    #         "sale.order",
-    #         "action_quotation_sent",
-    #         [self.external_id],
-    #     )
-    #     return True
-
 
 class SaleOrder(models.Model):
     _inherit = "sale.order"

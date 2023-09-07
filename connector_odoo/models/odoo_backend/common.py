@@ -83,7 +83,7 @@ class OdooBackend(models.Model):
             ("https", "JsonRPC with SSL"),
         ],
         required=True,
-        default="jsonrpc",
+        default="http",
         help="For SSL consider changing the port to 443",
     )
     default_lang_id = fields.Many2one(
@@ -152,6 +152,7 @@ class OdooBackend(models.Model):
     import_pricelist_from_date = fields.Datetime("Import pricelists from date")
     import_account_from_date = fields.Datetime("Import Account from date")
     import_mrp_models_from_date = fields.Datetime("Import MRP models from date")
+    import_sale_order_from_date = fields.Datetime("Import Sale Order from date")
 
     @api.onchange("login")
     def _onchange_login(self):
@@ -226,7 +227,6 @@ class OdooBackend(models.Model):
         try:
             for backend in self:
                 for model_name in (
-                    # Todo
                     "odoo.product.category",
                     "odoo.uom.uom",
                     "odoo.product.attribute.value",  # this gets attributes too

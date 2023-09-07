@@ -79,10 +79,11 @@ class PaymentTransactionExportMapper(Component):
 
     @mapping
     def payment_id(self, record):
-        binder = self.binder_for("odoo.account.payment")
-        return {
-            "payment_id": binder.to_external(record.payment_id, wrap=True),
-        }
+        vals = {}
+        if record.payment_id:
+            binder = self.binder_for("odoo.account.payment")
+            vals["payment_id"] = binder.to_external(record.payment_id, wrap=True)
+        return vals
 
 
 class OdooPaymentTransactionExporter(Component):
