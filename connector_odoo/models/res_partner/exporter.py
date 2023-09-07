@@ -57,6 +57,12 @@ class OdooPartnerExporter(Component):
     _inherit = "odoo.exporter"
     _apply_on = ["odoo.res.partner"]
 
+    def _has_to_skip(self):
+        if not self.binding.ecommerce_partner:
+            return True
+        else:
+            return False
+
     def _before_export(self):
         """Try to match parent partner from Odoo backend."""
         if not self.binding.vat or self.binding.parent_id:
@@ -69,16 +75,30 @@ class OdooPartnerExporter(Component):
             model="res.partner",
             domain=match_domain,
         )
-
-        if len(matched_partner) == 1:
-            self.binding.parent_id = self.binding.search(
+        # If we found a match, but it's the same partner, we don't want to set
+        # it as parent.
+        if matched_partner and matched_partner[0] != self.binding.external_id:
+            parent = self.binding.search(
                 [
                     ("external_id", "=", matched_partner[0]),
-                    ("parent_id", "=", False),
-                    ("odoo_id", "!=", self.binding.odoo_id.id),
                 ],
                 limit=1,
             ).commercial_partner_id
+            if not parent:
+                self.binding.import_record(
+                    backend=self.backend_record,
+                    external_id=matched_partner[0],
+                )
+                parent = self.binding.search(
+                    [
+                        ("external_id", "=", matched_partner[0]),
+                    ],
+                    limit=1,
+                ).commercial_partner_id
+            if self.binding.type == "other":
+                self.binding.parent_id = parent
+            else:
+                self.binding.commercial_partner_id = parent
 
         return True
 
@@ -95,6 +115,43 @@ class OdooPartnerExporter(Component):
         """Get the data to pass to :py:meth:`_create`"""
         datas = map_record.values(for_create=True, fields=fields, **kwargs)
         return datas
+
+    def _get_external_id_with_data(self):
+        """Return the external id of the record"""
+        if not self.binding.vat:
+            return False
+
+        domain = [
+            ("vat", "=", self.binding.vat),
+            "|",
+            ("name", "ilike", self.binding.name),
+            ("email", "=", self.binding.email),
+        ]
+        if (
+            self.binding.commercial_partner_id
+            and self.binding.commercial_partner_id != self.binding.odoo_id
+        ):
+            parent_ext_id = (
+                self.binding.commercial_partner_id.bind_ids.external_id
+                or self.backend_adapter.search(
+                    model="res.partner",
+                    domain=[
+                        ("parent_id", "=", False),
+                        ("vat", "=", self.binding.commercial_partner_id.vat),
+                    ],
+                )
+            )
+            if not parent_ext_id:
+                raise ValidationError(
+                    "Parent partner %s not found in Odoo"
+                    % self.binding.commercial_partner_id.name
+                )
+            domain += [("commercial_partner_id", "=", parent_ext_id)]
+
+        external_ids = self.backend_adapter.search(model="res.partner", domain=domain)
+        if external_ids:
+            self.external_id = external_ids[0]
+        return self.external_id
 
 
 class PartnerExportMapper(Component):
@@ -113,19 +170,18 @@ class PartnerExportMapper(Component):
         ("email", "email"),
         ("vat", "vat"),
         ("type", "type"),
+        ("ecommerce_partner", "ecommerce_partner"),
     ]
 
-    @mapping
-    def ecommerce_partner(self, record):
-        """
-        We don't have ecommerce_partner fields in Odoo 16. So we need to write
-        a mapping function for this field.
-        """
-        return {"ecommerce_partner": True}
+    # @mapping
+    # def customer(self, record):
+    #     return {"customer": True}
 
     @mapping
-    def customer(self, record):
-        return {"customer": True}
+    def parent_id(self, record):
+        if record.parent_id:
+            binder = self.binder_for("odoo.res.partner")
+            return {"parent_id": binder.to_external(record.parent_id, wrap=True)}
 
     @mapping
     def address_fields(self, record):

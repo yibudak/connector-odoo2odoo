@@ -4,6 +4,7 @@
 import logging
 
 from odoo.addons.component.core import Component
+from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 from odoo.addons.connector.components.mapper import mapping
 
 _logger = logging.getLogger(__name__)
@@ -22,25 +23,31 @@ class AccountPaymentExportMapper(Component):
     _apply_on = ["odoo.account.payment"]
 
     direct = [
+        ("name", "name"),
         ("amount", "amount"),
-        ("state", "state"),
+        ("ref", "communication"),
+        ("payment_type", "payment_type"),
+        ("partner_type", "partner_type"),
     ]
 
     @mapping
-    def type(self, record):
-        return {"type": "form"}
-
-    @mapping
-    def acquirer_id(self, record):
-        pass
-        # yigit elle map et
-
-    @mapping
     def partner_id(self, record):
-        # yigit partnert export_dependencies'de export et
+        # yigit partnert export_dependencies'de export etmek gerekir mi?
         binder = self.binder_for("odoo.res.partner")
         return {
             "partner_id": binder.to_external(record.partner_id, wrap=True),
+        }
+
+    @mapping
+    def journal_id(self, record):
+        return {
+            "journal_id": 37,  # Sanal POS TL
+        }
+
+    @mapping
+    def payment_method_id(self, record):
+        return {
+            "payment_method_id": 3,  # Elektronik
         }
 
     @mapping
@@ -51,24 +58,44 @@ class AccountPaymentExportMapper(Component):
         }
 
     @mapping
-    def partner_country_id(self, record):
-        binder = self.binder_for("odoo.res.country")
+    def payment_date(self, record):
         return {
-            "partner_country_id": binder.to_external(
-                record.partner_country_id, wrap=True
-            ),
+            "payment_date": record.date.strftime(DEFAULT_SERVER_DATETIME_FORMAT),
         }
 
-    @mapping
-    def sale_order_ids(self, record):
-        binder = self.binder_for("odoo.sale.order")
-        return {
-            "sale_order_ids": [(6, 0, binder.to_external(record.sale_order_ids))],
-        }
+    #
+    # @mapping
+    # def type(self, record):
+    #     return {"type": "form"}
+    #
+    # @mapping
+    # def acquirer_id(self, record):
+    #     pass
+    #     # yigit elle map et
+    #
 
-    @mapping
-    def payment_id(self, record):
-        pass
+    #
+
+    #
+    # @mapping
+    # def partner_country_id(self, record):
+    #     binder = self.binder_for("odoo.res.country")
+    #     return {
+    #         "partner_country_id": binder.to_external(
+    #             record.partner_country_id, wrap=True
+    #         ),
+    #     }
+    #
+    # @mapping
+    # def sale_order_ids(self, record):
+    #     binder = self.binder_for("odoo.sale.order")
+    #     return {
+    #         "sale_order_ids": [(6, 0, binder.to_external(record.sale_order_ids))],
+    #     }
+    #
+    # @mapping
+    # def payment_id(self, record):
+    #     pass
 
 
 class OdooAccountPaymentExporter(Component):
@@ -77,8 +104,6 @@ class OdooAccountPaymentExporter(Component):
     _apply_on = ["odoo.account.payment"]
 
     def _export_dependencies(self):
-        if self.binding.payment_id:
-            self._export_dependency(self.binding.payment_id, "odoo.account.payment")
         if self.binding.partner_id:
             self._export_dependency(self.binding.partner_id, "odoo.res.partner")
 

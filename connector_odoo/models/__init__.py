@@ -40,7 +40,7 @@ from . import mrp_bom
 from . import mrp_bom_line
 from . import mrp_bom_template_line
 from . import payment_transaction
-
+from . import account_payment
 
 # Disabled Models
 from . import purchase_order

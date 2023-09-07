@@ -108,9 +108,6 @@ class ProductImportMapper(Component):
         if vals["combination_indices"] == "":
             vals.pop("combination_indices")
 
-        # Todo yigit experimental: also try to update odoo_id -- CANCELED
-        # DROP INDEX IF EXISTS product_product_combination_indices_index;
-        # DROP INDEX IF EXISTS product_product_combination_unique;
         exist_product = self.env["product.product"].search(
             [
                 ("product_tmpl_id", "=", tmpl_id.id),

@@ -18,6 +18,14 @@ class OdooSaleOrderExporter(Component):
 
     def _should_import(self):
         # Search for an existing reference on Odoo backend
+        if self.binding.external_id and not bool(
+            self.backend_adapter.search(
+                model="sale.order", domain=[("id", "=", self.external_id)]
+            )
+        ):
+            self.external_id = 0
+            self.binding.write({"external_id": 0})
+
         if not self.binding.external_id:
             external_record = self.backend_adapter.search(
                 model="sale.order",
@@ -28,6 +36,7 @@ class OdooSaleOrderExporter(Component):
             )
             if external_record:
                 self.external_id = external_record[0]
+
         return super(OdooSaleOrderExporter, self)._should_import()
 
     def _must_skip(self):
@@ -55,9 +64,13 @@ class OdooSaleOrderExporter(Component):
         if binding and binding.order_line:
             for line in binding.order_line:
                 self._export_dependency(line, "odoo.sale.order.line")
-        # if binding and binding.transaction_ids:
-        #     for tx in binding.transaction_ids:
-        #         self._export_dependency(tx, "odoo.payment.transaction")
+        if binding and binding.transaction_ids:
+            for tx in binding.transaction_ids:
+                self._export_dependency(tx, "odoo.payment.transaction")
+            # for tx in binding.transaction_ids.filtered(
+            #         lambda t: t.provider_id.code == "garanti"
+            # ):
+            #     self._export_dependency(tx, "odoo.payment.transaction")
 
 
 class SaleOrderExportMapper(Component):
@@ -67,26 +80,36 @@ class SaleOrderExportMapper(Component):
 
     direct = [
         ("name", "name"),
-        # ("state", "state"),
+        ("state", "state"),
     ]
 
     # yigit: buraya artık gerek yok cunku sale.order.line'ı mapledik.
     # children = [("order_line", "order_line", "odoo.sale.order.line")]
 
-    @only_create
-    @mapping
-    def state_create(self, record):
-        """
-        Durumu taslak olarak göndermeliyiz ki böylece action_confirm çağrıldığında
-        durum düzgün bir şekilde güncellensin.
-        """
-        return {"state": "draft"}
+    # @only_create
+    # @mapping
+    # def state_create(self, record):
+    #     """
+    #     Durumu taslak olarak göndermeliyiz ki böylece action_confirm çağrıldığında
+    #     durum düzgün bir şekilde güncellensin.
+    #     """
+    #     return {"state": "draft"}
 
     # We should NOT send the state field. It should be set to draft and then
     # action_%s should be called.
     # @mapping
     # def state(self, record):
     #     return {"state": record.state}
+
+    @mapping
+    def confirmation_date(self, record):
+        return {"confirmation_date": datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT)} # yigit: delete this.
+        vals = {}
+        if record.confirmation_date:
+            vals["confirmation_date"] = record.confirmation_date.strftime(
+                DEFAULT_SERVER_DATETIME_FORMAT
+            )
+        return vals
 
     @mapping
     def date_order(self, record):
@@ -102,19 +125,26 @@ class SaleOrderExportMapper(Component):
 
     @mapping
     def warehouse_id(self, record):
-        binder = self.binder_for("odoo.stock.warehouse")
-        warehouse_id = binder.to_external(record.warehouse_id, wrap=True)
-        return {"warehouse_id": 2}  # Todo
+        return {"warehouse_id": 2}  # Sincan
+
+    @mapping
+    def source_id(self, record):
+        return {"source_id": 6}  # Online satış
 
     @mapping
     def partner_id(self, record):
         binder = self.binder_for("odoo.res.partner")
+
         return {
             "partner_id": binder.to_external(
                 record.partner_id,
                 wrap=True,
             ),
             "partner_invoice_id": binder.to_external(
+                record.partner_id.commercial_partner_id,
+                wrap=True,
+            )
+            or binder.to_external(
                 record.partner_invoice_id,
                 wrap=True,
             ),
@@ -133,11 +163,3 @@ class SaleOrderExportMapper(Component):
     def client_order_ref(self, record):
         # Todo: müşterinin satınalma numarası için bir field yapılacak
         return {"client_order_ref": "E-commerce sale"}
-
-    # todo: confirmation_date action_confirm ile oluşturulup gönderilecek. Belki de
-    # göndermeye gerek yok karşıda action_confirm çalıştırırsak problem çözülür.
-    # @mapping
-    # def confirmation_date(self, record):
-    #     return {
-    #         "confirmation_date": datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT)
-    #     }

@@ -20,7 +20,7 @@ class OdooProductProduct(models.Model):
     _sql_constraints = [
         (
             "external_id",
-            "UNIQUE(external_id)",
+            "UNIQUE(external_id, active)",
             "External ID (external_id) must be unique!",
         ),
     ]

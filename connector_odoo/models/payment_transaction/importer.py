@@ -19,7 +19,7 @@ class PaymentTransactionBatchImporter(Component):
 
         external_ids = self.backend_adapter.search(domain)
         _logger.info(
-            "search for odoo currency rates %s returned %s items",
+            "search for odoo payment transaction %s returned %s items",
             domain,
             len(external_ids),
         )
@@ -35,35 +35,46 @@ class PaymentTransactionMapper(Component):
     _apply_on = "odoo.payment.transaction"
 
     direct = [
-        ("name", "name"),
-        ("rate", "rate"),
+        ("garanti_xid", "garanti_xid"),
+        ("garanti_secure3d_hash", "garanti_secure3d_hash"),
+        ("callback_hash", "callback_hash"),
+        ("reference", "reference"),
+        ("amount", "amount"),
+        ("state", "state"),
+        ("partner_email", "partner_email"),
+        ("partner_phone", "partner_phone"),
+        ("partner_address", "partner_address"),
     ]
 
     @mapping
-    def check_currency_rate_exists(self, record):
-        res = {}
-        currency_id = self.binder_for("odoo.res.currency").to_internal(
-            record["currency_id"][0], unwrap=True
-        )
-        rate_id = self.env["payment.transaction"].search(
-            [
-                ("name", "=", record["name"]),
-                ("currency_id", "=", currency_id.id),
-            ]
-        )
-        if len(rate_id) == 1:
-            _logger.info(
-                "Res currency rate found for %s : %s" % (record["name"], rate_id.name)
-            )
-            res.update({"odoo_id": rate_id.id})
-        return res
-
-    @only_create
-    @mapping
     def currency_id(self, record):
         binder = self.binder_for("odoo.res.currency")
-        currency_id = binder.to_internal(record["currency_id"][0])
+        currency_id = binder.to_internal(record["currency_id"][0], unwrap=True)
         return {"currency_id": currency_id.id}
+
+    @mapping
+    def partner_id(self, record):
+        binder = self.binder_for("odoo.res.partner")
+        partner_id = binder.to_internal(record["partner_id"][0], unwrap=True)
+        return {"partner_id": partner_id.id}
+
+    @mapping
+    def sale_order_ids(self, record):
+        binder = self.binder_for("odoo.sale.order")
+        order_list = []
+        if sale_order_ids := record.get("sale_order_ids"):
+
+            for order_id in sale_order_ids:
+                order_list.append(binder.to_internal(order_id, unwrap=True).id)
+        return {"sale_order_ids": [(6, 0, order_list)]}
+
+    @mapping
+    def payment_id(self, record):
+        vals = {}
+        if payment_id := record.get("payment_id"):
+            binder = self.binder_for("odoo.account.payment")
+            vals["payment_id"] = binder.to_internal(payment_id[0], unwrap=True).id
+        return vals
 
 
 class PaymentTransactionImporter(Component):
@@ -74,8 +85,9 @@ class PaymentTransactionImporter(Component):
     _apply_on = "odoo.payment.transaction"
 
     def _import_dependencies(self, force=False):
-        raise NotImplementedError
         self._import_dependency(
-            self.odoo_record["currency_id"][0], "odoo.res.currency", force=force
+            self.odoo_record["partner_id"][0],
+            "odoo.res.partner",
+            force=force,
         )
         return super()._import_dependencies(force=force)

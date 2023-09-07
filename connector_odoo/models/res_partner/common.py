@@ -71,9 +71,7 @@ class PartnerAdapter(Component):
     # Set get_passive to True to get the passive records also.
     _get_passive = True
 
-    def search(
-        self, domain=None, model=None, offset=0, limit=None, order=None
-    ):
+    def search(self, domain=None, model=None, offset=0, limit=None, order=None):
         """Search records according to some criteria
         and returns a list of ids
 
@@ -82,7 +80,7 @@ class PartnerAdapter(Component):
         if domain is None:
             domain = []
         # Fix for not null constraint bug
-        domain += [("name", "!=", False)]
+        # domain += [("name", "!=", False)]
         return super(PartnerAdapter, self).search(
             domain=domain, model=model, offset=offset, limit=limit, order=order
         )
