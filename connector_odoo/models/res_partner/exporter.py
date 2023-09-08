@@ -146,7 +146,7 @@ class OdooPartnerExporter(Component):
                     "Parent partner %s not found in Odoo"
                     % self.binding.commercial_partner_id.name
                 )
-            domain += [("commercial_partner_id", "=", parent_ext_id)]
+            domain += [("parent_id", "=", parent_ext_id)]
 
         external_ids = self.backend_adapter.search(model="res.partner", domain=domain)
         if external_ids:

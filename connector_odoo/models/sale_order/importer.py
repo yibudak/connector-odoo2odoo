@@ -112,14 +112,19 @@ class SaleOrderImporter(Component):
             "odoo.product.pricelist",
             force=force,
         )
-        # self._import_dependency(
-        #     self.odoo_record["partner_id"][0], "odoo.res.partner", force=force
-        # )
-        # for partner_id in [
-        #     self.odoo_record["partner_shipping_id"][0],
-        #     self.odoo_record["partner_invoice_id"][0],
-        # ]:
-        #     self._import_dependency(partner_id, "odoo.res.partner", force=force)
+        partner_ids = list(
+            {
+                self.odoo_record["partner_id"][0],
+                self.odoo_record["partner_shipping_id"][0],
+                self.odoo_record["partner_invoice_id"][0],
+            }
+        )
+        for partner_id in partner_ids:
+            self._import_dependency(
+                partner_id,
+                "odoo.res.partner",
+                force=force,
+            )
 
     def _after_import(self, binding, force=False):
         res = super()._after_import(binding, force)
