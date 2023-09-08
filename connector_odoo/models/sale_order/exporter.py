@@ -65,12 +65,21 @@ class OdooSaleOrderExporter(Component):
             for line in binding.order_line:
                 self._export_dependency(line, "odoo.sale.order.line")
         if binding and binding.transaction_ids:
-            for tx in binding.transaction_ids:
+            for tx in binding.transaction_ids.filtered(
+                lambda t: t.provider_id.code == "garanti"
+            ):
                 self._export_dependency(tx, "odoo.payment.transaction")
-            # for tx in binding.transaction_ids.filtered(
-            #         lambda t: t.provider_id.code == "garanti"
-            # ):
-            #     self._export_dependency(tx, "odoo.payment.transaction")
+
+            # Update transaction_ids on sale.order
+            # yigit: I think we don't need here.
+            # self.backend_adapter.write(
+            #     res_id=binding.external_id,
+            #     data={
+            #         "transaction_ids": [
+            #             (6, 0, binding.mapped("transaction_ids.bind_ids.external_id"))
+            #         ]
+            #     },
+            # )
 
 
 class SaleOrderExportMapper(Component):
@@ -103,7 +112,9 @@ class SaleOrderExportMapper(Component):
 
     @mapping
     def confirmation_date(self, record):
-        return {"confirmation_date": datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT)} # yigit: delete this.
+        return {
+            "confirmation_date": datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT)
+        }  # yigit: delete this.
         vals = {}
         if record.confirmation_date:
             vals["confirmation_date"] = record.confirmation_date.strftime(
