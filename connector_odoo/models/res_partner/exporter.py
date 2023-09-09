@@ -127,7 +127,18 @@ class OdooPartnerExporter(Component):
             ("name", "ilike", self.binding.name),
             ("email", "=", self.binding.email),
         ]
-        if (
+        # Müşterinin alt adreslerinden biriyse bu durum çalışır.
+        if self.binding.parent_id:
+            parent_ext_id = self.binding.parent_id.external_id
+            if not parent_ext_id:
+                raise ValidationError(
+                    "Parent partner %s not found in Odoo. Export it first."
+                    % self.binding.parent_id.name
+                )
+            domain += [("parent_id", "=", parent_ext_id)]
+        # Müşteri gerçek bir kişi olarak üye olup sipariş geçtiyse ve bu müşteri
+        # bir şirkete bağlıysa bu durum çalışır.
+        elif (
             self.binding.commercial_partner_id
             and self.binding.commercial_partner_id != self.binding.odoo_id
         ):
