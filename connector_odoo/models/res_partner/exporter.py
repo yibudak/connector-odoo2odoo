@@ -129,7 +129,7 @@ class OdooPartnerExporter(Component):
         ]
         # Müşterinin alt adreslerinden biriyse bu durum çalışır.
         if self.binding.parent_id:
-            parent_ext_id = self.binding.parent_id.external_id
+            parent_ext_id = self.binding.mapped("parent_id.bind_ids.external_id")
             if not parent_ext_id:
                 raise ValidationError(
                     "Parent partner %s not found in Odoo. Export it first."
