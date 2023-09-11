@@ -182,6 +182,7 @@ class PartnerExportMapper(Component):
         ("vat", "vat"),
         ("type", "type"),
         ("ecommerce_partner", "ecommerce_partner"),
+        ("tax_office_name", "tax_office_name"),
     ]
 
     # @mapping
