@@ -4,7 +4,7 @@
 
 import logging
 
-from odoo import fields, models
+from odoo import fields, models, api
 
 from odoo.addons.component.core import Component
 from odoo.addons.component_event.components.event import skip_if
@@ -19,9 +19,9 @@ class OdooSaleOrder(models.Model):
     _description = "External Odoo Sale Order"
     backend_amount_total = fields.Float()
     backend_amount_tax = fields.Float()
-    backend_state = fields.Char()
     backend_picking_count = fields.Integer()
     backend_date_order = fields.Datetime()
+    backend_state = fields.Char()
 
     _sql_constraints = [
         (
@@ -76,54 +76,41 @@ class OdooSaleOrder(models.Model):
     def resync(self):
         return self.delayed_export_record(self.backend_id)
 
+    @api.depends("backend_state")
     def _set_sale_state(self):
-        if self.backend_state == self.odoo_id.state:
+        order = self.odoo_id.with_context(connector_no_export=True)
+        # 1- If the order has the same state as the backend, do nothing
+        if self.backend_state == order.state:
             return
-
-        if self.backend_state == "done" and self.odoo_id.state == "sale":
+        # 2- If the order is in a state that is not sale, do nothing
+        elif self.backend_state == "done" and order.state == "sale":
             return
-        if self.backend_state == "waiting":
-            self.odoo_id.action_confirm()
-        elif self.backend_state == "confirmed":
-            self.odoo_id.action_confirm()
-        elif self.backend_state == "approved":
-            self.odoo_id.action_confirm()
-        elif self.backend_state == "done":
-            self.odoo_id.action_confirm()
-        elif "except" in self.backend_state:
-            self.odoo_id.action_done()
+        # 3- If the order is sent
+        elif self.backend_state == "sent":
+            order.action_quotation_sent()
+        # 4- If the order is a sale
+        elif self.backend_state == "sale":
+            order.action_confirm()
+        # 5- If the order is cancelled
         elif self.backend_state == "cancel":
-            if not self.odoo_id.picking_ids.filtered(lambda x: x.state == "done"):
-                self.odoo_id.action_cancel()
-            else:
-                self.odoo_id.action_done()
-        self.date_order = self.backend_date_order
+            order.with_context(disable_cancel_warning=True).action_cancel()
 
-    def _remote_action_cancel(self):
-        """
-        Single method to execute `action_cancel` on Odoo backend.
-        """
-        self.ensure_one()
-        self.delayed_execute_method(
-            self.backend_id,
-            "sale.order",
-            "action_cancel",
-            [self.external_id],
-        )
-        return True
-
-    def _remote_action_confirm(self):
-        """
-        Single method to execute `action_confirm` on Odoo backend.
-        """
-        self.ensure_one()
-        self.delayed_execute_method(
-            self.backend_id,
-            "sale.order",
-            "action_confirm",
-            [self.external_id],
-        )
-        return True
+        # elif self.backend_state == "waiting":
+        #     self.odoo_id.action_confirm()
+        # elif self.backend_state == "confirmed":
+        #     self.odoo_id.action_confirm()
+        # elif self.backend_state == "approved":
+        #     self.odoo_id.action_confirm()
+        # elif self.backend_state == "done":
+        #     self.odoo_id.action_confirm()
+        # elif "except" in self.backend_state:
+        #     self.odoo_id.action_done()
+        # elif self.backend_state == "cancel":
+        #     if not self.odoo_id.picking_ids.filtered(lambda x: x.state == "done"):
+        #         self.odoo_id.action_cancel()
+        #     else:
+        #         self.odoo_id.action_done()
+        order.date_order = self.backend_date_order
 
 
 class SaleOrder(models.Model):
@@ -142,6 +129,16 @@ class SaleOrder(models.Model):
     def action_confirm(self):
         res = super(SaleOrder, self).action_confirm()
         self._event("on_sale_order_confirm").notify(self)
+        return res
+
+    def action_cancel(self):
+        res = super(SaleOrder, self).action_cancel()
+        self._event("on_sale_order_cancel").notify(self)
+        return res
+
+    def action_quotation_sent(self):
+        res = super(SaleOrder, self).action_quotation_sent()
+        self._event("on_sale_order_quotation_sent").notify(self)
         return res
 
 
@@ -163,4 +160,31 @@ class SaleOrderListener(Component):
 
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_sale_order_confirm(self, record):
-        _logger.info("Not implemented yet. Ignoring on_sale_order_confirm  %s", record)
+        binding = record.bind_ids
+        binding.ensure_one()
+        binding.delayed_execute_method(
+            binding.backend_id,
+            "sale.order",
+            "action_confirm",
+            context={"bypass_risk": True},
+        )
+
+    @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
+    def on_sale_order_cancel(self, record):
+        binding = record.bind_ids
+        binding.ensure_one()
+        binding.delayed_execute_method(
+            binding.backend_id,
+            "sale.order",
+            "action_cancel",
+        )
+
+    @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
+    def on_sale_order_quotation_sent(self, record):
+        binding = record.bind_ids
+        binding.ensure_one()
+        binding.delayed_execute_method(
+            binding.backend_id,
+            "sale.order",
+            "action_quotation_sent",
+        )

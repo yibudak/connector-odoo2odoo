@@ -208,7 +208,7 @@ class ProductImporter(Component):
     _apply_on = ["odoo.product.product"]
 
     def _must_skip(self):
-        """Return True if the import can be skipped."""
+        """If the product is not active and won't be active, we skip it"""
         binding = self.model.search(
             [
                 ("backend_id", "=", self.backend_record.id),

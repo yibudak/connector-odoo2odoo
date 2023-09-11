@@ -110,10 +110,11 @@ class SaleOrderLineImporter(Component):
             force=force,
         )
 
-    def _get_context(self, data):
+    def _get_context(self):
         """
         Do not create procurement for sale order lines.
         """
-        ctx = super(SaleOrderLineImporter, self)._get_context(data)
+        ctx = super(SaleOrderLineImporter, self)._get_context()
         ctx["skip_procurement"] = True
+        ctx["skip_price_recompute"] = True
         return ctx

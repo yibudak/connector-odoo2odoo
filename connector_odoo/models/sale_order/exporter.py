@@ -39,10 +39,11 @@ class OdooSaleOrderExporter(Component):
 
         return super(OdooSaleOrderExporter, self)._should_import()
 
-    def _must_skip(self):
-        """If there is no USER on the sale order, this means that guest user creates the
-        order. We don't want to export it."""
-        return not (self.binding.partner_id.user_id or self.binding.partner_id.user_ids)
+    # todo yigit: check this method is necessary or not
+    # def _must_skip(self):
+    #     """If there is no USER on the sale order, this means that guest user creates the
+    #     order. We don't want to export it."""
+    #     return not (self.binding.partner_id.user_id or self.binding.partner_id.user_ids)
 
     def _export_dependencies(self):
         if not self.binding.partner_id:
@@ -89,20 +90,19 @@ class SaleOrderExportMapper(Component):
 
     direct = [
         ("name", "name"),
-        ("state", "state"),
     ]
 
     # yigit: buraya artık gerek yok cunku sale.order.line'ı mapledik.
     # children = [("order_line", "order_line", "odoo.sale.order.line")]
 
-    # @only_create
-    # @mapping
-    # def state_create(self, record):
-    #     """
-    #     Durumu taslak olarak göndermeliyiz ki böylece action_confirm çağrıldığında
-    #     durum düzgün bir şekilde güncellensin.
-    #     """
-    #     return {"state": "draft"}
+    @only_create
+    @mapping
+    def state_create(self, record):
+        """
+        Durumu taslak olarak göndermeliyiz ki böylece action_confirm çağrıldığında
+        durum düzgün bir şekilde güncellensin.
+        """
+        return {"state": "draft"}
 
     # We should NOT send the state field. It should be set to draft and then
     # action_%s should be called.
@@ -112,9 +112,6 @@ class SaleOrderExportMapper(Component):
 
     @mapping
     def confirmation_date(self, record):
-        return {
-            "confirmation_date": datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT)
-        }  # yigit: delete this.
         vals = {}
         if record.confirmation_date:
             vals["confirmation_date"] = record.confirmation_date.strftime(
@@ -167,8 +164,17 @@ class SaleOrderExportMapper(Component):
 
     @mapping
     def carrier_id(self, record):
+        if not record.carrier_id:
+            return {"carrier_id": False}
         binder = self.binder_for("odoo.delivery.carrier")
         return {"carrier_id": binder.to_external(record.carrier_id, wrap=True)}
+
+    @mapping
+    def payment_term_id(self, record):
+        if not record.payment_term_id:
+            return {"payment_term_id": False}
+        binder = self.binder_for("odoo.account.payment.term")
+        return {"carrier_id": binder.to_external(record.payment_term_id, wrap=True)}
 
     @mapping
     def client_order_ref(self, record):

@@ -25,7 +25,7 @@ class SaleOrderBatchImporter(Component):
 
     def run(self, domain=None, force=False):
         """Run the synchronization"""
-        exported_ids = self.model.search([("external_id", "!=", 0)]).ids
+        exported_ids = self.model.search([("external_id", "!=", 0)]).mapped("external_id")
         domain += [("id", "in", exported_ids)]
         updated_ids = self.backend_adapter.search(domain)
         _logger.info(
@@ -128,6 +128,7 @@ class SaleOrderImporter(Component):
 
     def _after_import(self, binding, force=False):
         res = super()._after_import(binding, force)
+        # Update the sale order lines
         if self.odoo_record["order_line"]:
             for line_id in self.odoo_record["order_line"]:
                 self._import_dependency(
@@ -135,4 +136,6 @@ class SaleOrderImporter(Component):
                     "odoo.sale.order.line",
                     force=force,
                 )
+        # Compare state with backend_state
+        binding._set_sale_state()
         return res

@@ -17,6 +17,7 @@ are already bound, to update the last sync date.
 import logging
 
 from odoo import _, fields
+from odoo.tools import frozendict
 
 from odoo.addons.component.core import AbstractComponent
 from odoo.addons.connector.exception import IDMissingInBackend
@@ -168,7 +169,7 @@ class OdooImporter(AbstractComponent):
     def _create(self, data):
         """Create the Odoo record"""
         # special check on data before import
-        context = {**{"connector_no_export": True}, **self._get_context(data)}
+        context = {**{"connector_no_export": True}, **self._get_context()}
         # Todo yigit: we've added sudo here. maybe we should avoid sudo and
         # rearrange the permissions
         model = self.model.sudo().with_context(context)
@@ -177,7 +178,7 @@ class OdooImporter(AbstractComponent):
         _logger.info("%d created from Odoo %s", binding, self.external_id)
         return binding
 
-    def _get_context(self, data):
+    def _get_context(self):
         """Build the initial context for CRUD methods."""
         return {"lang": self.backend_record.default_lang_id.code}
 
@@ -186,12 +187,25 @@ class OdooImporter(AbstractComponent):
 
     def _update(self, binding, data):
         """Update an Odoo record"""
-        context = {**{"connector_no_export": True}, **self._get_context(data)}
+        context = {**{"connector_no_export": True}, **self._get_context()}
         # Todo yigit: we've added sudo here. maybe we should avoid sudo and
         # rearrange the permissions
         binding.with_context(context).sudo().write(data)
         _logger.info("%d updated from Odoo %s", binding, self.external_id)
         return
+
+    def _commit(self):
+        """Committing the current transaction will also execute compute methods.
+        We want to pass the additional context to the compute methods. That's why
+        we need this method.
+
+        flush_all methods will trigger the compute fields with only current environment.
+        """
+        context = {**{"connector_no_export": True}, **self._get_context()}
+        self.env.context = frozendict(self.env.context, **context)
+        self.env.flush_all()
+        self.env.cr.commit()
+        return True
 
     def _check_force_available(self, force=False):
         """Check if force is available for the model
@@ -319,7 +333,7 @@ class OdooImporter(AbstractComponent):
                     self.external_id, e
                 )
             )
-            raise
+            raise  # Todo: raise RetryableJobError
 
         _logger.info("Binding ({}: {})".format(self.work.model_name, external_id))
         self.binder.bind(self.external_id, binding)
@@ -330,11 +344,11 @@ class OdooImporter(AbstractComponent):
             )
         )
         # We commit the transaction before the after import
-        self.env.cr.commit()
+        self._commit()
         self._after_import(binding, force)
         _logger.info("Finished ({}: {})!".format(self.work.model_name, external_id))
         # We commit the transaction after the after import
-        self.env.cr.commit()
+        self._commit()
         return _("Imported with success.")
 
 

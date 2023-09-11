@@ -210,8 +210,8 @@ class PartnerImporter(Component):
     _inherit = "odoo.importer"
     _apply_on = ["odoo.res.partner"]
 
-    def _get_context(self, data):
-        ctx = super(PartnerImporter, self)._get_context(data)
+    def _get_context(self):
+        ctx = super(PartnerImporter, self)._get_context()
         ctx["no_vat_validation"] = True
         return ctx
 

@@ -84,11 +84,11 @@ class MrpBomImporter(Component):
     _inherit = "odoo.importer"
     _apply_on = ["odoo.mrp.bom"]
 
-    def _get_context(self, data):
+    def _get_context(self):
         """
         Do not create procurement for sale order lines.
         """
-        ctx = super(MrpBomImporter, self)._get_context(data)
+        ctx = super(MrpBomImporter, self)._get_context()
         ctx["skip_cycle_check"] = True
         return ctx
 

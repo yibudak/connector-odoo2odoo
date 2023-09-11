@@ -181,9 +181,9 @@ class ProductTemplateImporter(Component):
 
         return super()._import_dependencies(force=force)
 
-    def _get_context(self, data):
+    def _get_context(self):
         """Context for the create-write"""
-        res = super(ProductTemplateImporter, self)._get_context(data)
+        res = super(ProductTemplateImporter, self)._get_context()
         res["no_handle_variant"] = False
         return res
 

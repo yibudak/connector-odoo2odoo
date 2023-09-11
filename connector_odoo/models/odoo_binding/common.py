@@ -72,6 +72,7 @@ class OdooBinding(models.AbstractModel):
                     ).format(self.backend_id.name, self.external_id, self._name)
                 )
 
+    # Importers #
     @api.model
     def import_batch(self, backend, domain=None, force=False):
         """Prepare the import of records modified on Odoo"""
@@ -124,20 +125,7 @@ class OdooBinding(models.AbstractModel):
             .import_record(backend, external_id, force=force)
         )
 
-    @api.model
-    def delayed_execute_method(self, backend, model, method, args=None):
-        return (
-            self.sudo()
-            .with_delay(channel=self._unique_channel_name)
-            .execute_method(backend, model, method, args=args)
-        )
-
-    @api.model
-    def execute_method(self, backend, model, method, args=None):
-        """Execute a method on Odoo"""
-        odoo_api = backend.get_connection()
-        return odoo_api.execute(model, method, args)
-
+    # Exporters #
     @api.model
     def export_batch(self, backend, domain=None):
         """Prepare the import of records modified on Odoo"""
@@ -166,3 +154,21 @@ class OdooBinding(models.AbstractModel):
         with backend.work_on(self._name) as work:
             deleter = work.component(usage="record.exporter.deleter")
             return deleter.run(external_id)
+
+    # Executers #
+    @api.model
+    def delayed_execute_method(self, backend, model, method, args=None, context=None):
+        return (
+            self.sudo()
+            .with_delay(channel=self._unique_channel_name)
+            .execute_method(backend, model, method, args=args, context=context)
+        )
+
+    @api.model
+    def execute_method(self, backend, model, method, args=None, context=None):
+        """Execute a method on Odoo"""
+        odoo_api = backend.get_connection()
+        # Always pass the external_id as first argument to use as ~self~
+        if not args:
+            args = [self.external_id]
+        return odoo_api.execute(model, method, args, context)
