@@ -95,20 +95,21 @@ class OdooPartnerExporter(Component):
                     ],
                     limit=1,
                 ).commercial_partner_id
-            if self.binding.type == "other":
-                self.binding.parent_id = parent
-            else:
+            if self.binding.type == "contact":
                 self.binding.commercial_partner_id = parent
+            else:
+                self.binding.parent_id = parent
 
         return True
 
     def _export_dependencies(self):
-        if not self.binding.parent_id:
+        if not (self.binding.parent_id or self.binding.commercial_partner_id):
             return
-        parents = self.binding.parent_id.bind_ids
-
-        if parents:
-            parent = parents.filtered(lambda c: c.backend_id == self.backend_record)
+        parents = (
+            self.binding.parent_id.bind_ids
+            | self.binding.commercial_partner_id.bind_ids
+        )
+        for parent in parents.filtered(lambda c: c.backend_id == self.backend_record):
             self._export_dependency(parent, "odoo.res.partner")
 
     def _create_data(self, map_record, fields=None, **kwargs):
@@ -185,9 +186,9 @@ class PartnerExportMapper(Component):
         ("tax_office_name", "tax_office_name"),
     ]
 
-    # @mapping
-    # def customer(self, record):
-    #     return {"customer": True}
+    @mapping
+    def customer(self, record):
+        return {"customer": True}
 
     @mapping
     def parent_id(self, record):
@@ -223,10 +224,10 @@ class PartnerExportMapper(Component):
     @mapping
     def customer_type_and_parent_id(self, record):
         # If partner has any parent partner on current backend
-        vals = {"customer_type": "person"}
-        if record.parent_id:
+        vals = {"customer_type": "company"}
+        if parent := (record.parent_id or record.commercial_partner_id):
             binder = self.binder_for("odoo.res.partner")
-            parent_id = binder.to_external(record.parent_id, wrap=True)
+            parent_id = binder.to_external(parent, wrap=True)
             vals["parent_id"] = parent_id
-            vals["customer_type"] = "company"
+            vals["customer_type"] = "person"
         return vals
