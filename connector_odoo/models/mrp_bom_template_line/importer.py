@@ -98,15 +98,8 @@ class MrpBomTemplateLineMapper(Component):
                         f"Product Attribute Value with external id"
                         f" {attr_val} not found."
                     )
-                mapped_attr_val = self.env["product.template.attribute.value"].search(
-                    [
-                        ("product_tmpl_id", "=", local_bom_id.product_tmpl_id.id),
-                        ("product_attribute_value_id", "=", local_attr_val.id),
-                    ]
-                )
-                if mapped_attr_val:
-                    val_ids.append(mapped_attr_val.id)
-            res["bom_product_template_attribute_value_ids"] = [(6, 0, val_ids)]
+                val_ids.append(local_attr_val.id)
+            res["attribute_value_ids"] = [(6, 0, val_ids)]
         if target_attribute_value_ids := record["target_attribute_value_ids"]:
             val_ids = []
             for attr_val in target_attribute_value_ids:
@@ -118,15 +111,8 @@ class MrpBomTemplateLineMapper(Component):
                         f"Product Attribute Value with external id"
                         f" {attr_val} not found."
                     )
-                mapped_attr_val = self.env["product.template.attribute.value"].search(
-                    [
-                        ("product_tmpl_id", "=", local_bom_id.product_tmpl_id.id),
-                        ("product_attribute_value_id", "=", local_attr_val.id),
-                    ]
-                )
-                if mapped_attr_val:
-                    val_ids.append(mapped_attr_val.id)
-            res["target_bom_product_template_attribute_value_ids"] = [(6, 0, val_ids)]
+                val_ids.append(local_attr_val.id)
+            res["target_attribute_value_ids"] = [(6, 0, val_ids)]
         if inherited_attribute_ids := record["inherited_attribute_ids"]:
             attr_ids = []
             for attr in inherited_attribute_ids:
