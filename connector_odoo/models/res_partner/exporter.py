@@ -103,7 +103,13 @@ class OdooPartnerExporter(Component):
         return True
 
     def _export_dependencies(self):
-        if not (self.binding.parent_id or self.binding.commercial_partner_id):
+        if not (
+            self.binding.parent_id
+            or (
+                self.binding.commercial_partner_id
+                and self.binding.commercial_partner_id != self.binding.odoo_id
+            )
+        ):
             return
         parents = (
             self.binding.parent_id.bind_ids
@@ -225,7 +231,13 @@ class PartnerExportMapper(Component):
     def customer_type_and_parent_id(self, record):
         # If partner has any parent partner on current backend
         vals = {"customer_type": "company"}
-        if parent := (record.parent_id or record.commercial_partner_id):
+        if parent := (
+            record.parent_id
+            or (
+                record.commercial_partner_id != record.odoo_id
+                and record.commercial_partner_id
+            )
+        ):
             binder = self.binder_for("odoo.res.partner")
             parent_id = binder.to_external(parent, wrap=True)
             vals["parent_id"] = parent_id
