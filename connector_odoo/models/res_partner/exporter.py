@@ -57,7 +57,7 @@ class OdooPartnerExporter(Component):
     _inherit = "odoo.exporter"
     _apply_on = ["odoo.res.partner"]
 
-    def _has_to_skip(self):
+    def _must_skip(self):
         if not self.binding.ecommerce_partner:
             return True
         else:
@@ -110,11 +110,8 @@ class OdooPartnerExporter(Component):
             )
         ):
             return
-        parents = (
-            self.binding.parent_id.bind_ids
-            | self.binding.commercial_partner_id.bind_ids
-        )
-        for parent in parents.filtered(lambda c: c.backend_id == self.backend_record):
+        parents = self.binding.parent_id | self.binding.commercial_partner_id
+        for parent in parents:
             self._export_dependency(parent, "odoo.res.partner")
         return True
 
@@ -126,6 +123,10 @@ class OdooPartnerExporter(Component):
     def _get_external_id_with_data(self):
         """Return the external id of the record"""
         if not self.binding.vat:
+            return False
+
+        # See queue_job #1777246, delivery address shouldn't be matched.
+        if self.binding.type == "delivery":
             return False
 
         domain = [

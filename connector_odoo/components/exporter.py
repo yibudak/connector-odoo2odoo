@@ -189,9 +189,9 @@ class OdooExporter(AbstractComponent):
                 seconds=5,
             )
 
-    def _has_to_skip(self):
-        """Return True if the export can be skipped"""
-        return False
+    # def _has_to_skip(self):
+    #     """Return True if the export can be skipped"""
+    #     return False
 
     @contextmanager
     def _retry_unique_violation(self):
@@ -393,8 +393,8 @@ class OdooExporter(AbstractComponent):
         if not self.external_id:
             fields = None  # should be created with all the fields
 
-        if self._has_to_skip():
-            return _("Export skipped.")
+        # if self._has_to_skip():
+        #     return _("Export skipped.")
 
         # run some logic before the export
         self._before_export()

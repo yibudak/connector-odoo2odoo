@@ -17,7 +17,8 @@ class OdooSaleOrderExporter(Component):
     _apply_on = ["odoo.sale.order"]
 
     def _should_import(self):
-        # Search for an existing reference on Odoo backend
+        """Search for an existing reference on Odoo backend"""
+        # This means that the exported sale order is deleted on Odoo backend.
         if self.binding.external_id and not bool(
             self.backend_adapter.search(
                 model="sale.order", domain=[("id", "=", self.external_id)]
@@ -26,6 +27,7 @@ class OdooSaleOrderExporter(Component):
             self.external_id = 0
             self.binding.write({"external_id": 0})
 
+        # If it's exported but not binded, we should set external_id manually.
         if not self.binding.external_id:
             external_record = self.backend_adapter.search(
                 model="sale.order",
