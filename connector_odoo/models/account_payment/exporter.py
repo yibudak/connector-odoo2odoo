@@ -122,7 +122,6 @@ class OdooAccountPaymentExporter(Component):
         return datas
 
     def _after_export(self):
-        # todo: execute post() method of the model if state is posted
         if self.binding.external_id and self.binding.state == "posted":
             self.binding.delayed_execute_method(
                 self.backend_record,

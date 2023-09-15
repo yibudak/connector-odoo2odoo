@@ -66,12 +66,16 @@ class AddressDistrictImportMapper(Component):
     @mapping
     def state_id(self, record):
         ctx = {"lang": self.backend_record.get_default_language_code()}
+        remote_state = self.work.odoo_api.browse(
+            model="res.country.state", res_id=record["state_id"][0]
+        )
         state_record = (
             self.env["res.country.state"]
             .with_context(ctx)
             .search(
                 [
-                    ("display_name", "=", record["state_id"][1]),
+                    "&",
+                    ("name", "=", remote_state["name"]),
                     ("country_id", "=", self.env.ref("base.tr").id),
                 ],
                 limit=1,
@@ -82,6 +86,18 @@ class AddressDistrictImportMapper(Component):
                 _(
                     "State %s not found for country %s"
                     % (record.state_id.name, self.env.ref("base.tr").name)
+                )
+            )
+        if state_record.name != remote_state["name"]:
+            raise ValidationError(
+                _(
+                    "State found for country %s but names are different:"
+                    " Local: %s, Remote: %s"
+                    % (
+                        self.env.ref("base.tr").name,
+                        state_record.name,
+                        remote_state["name"],
+                    )
                 )
             )
         return {"state_id": state_record.id}

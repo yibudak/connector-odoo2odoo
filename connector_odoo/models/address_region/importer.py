@@ -88,4 +88,4 @@ class AddressRegionImporter(Component):
         """Import the dependencies for the record"""
         record = self.odoo_record
         if district := record.get("district_id"):
-            self._import_dependency(district[0], "odoo.address.district")
+            self._import_dependency(district[0], "odoo.address.district", force=force)

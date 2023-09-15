@@ -99,7 +99,6 @@ class OdooPartnerExporter(Component):
                 self.binding.commercial_partner_id = parent
             else:
                 self.binding.parent_id = parent
-
         return True
 
     def _export_dependencies(self):
@@ -117,6 +116,7 @@ class OdooPartnerExporter(Component):
         )
         for parent in parents.filtered(lambda c: c.backend_id == self.backend_record):
             self._export_dependency(parent, "odoo.res.partner")
+        return True
 
     def _create_data(self, map_record, fields=None, **kwargs):
         """Get the data to pass to :py:meth:`_create`"""
@@ -191,6 +191,10 @@ class PartnerExportMapper(Component):
         ("ecommerce_partner", "ecommerce_partner"),
         ("tax_office_name", "tax_office_name"),
     ]
+
+    @mapping
+    def country_id(self, record):
+        return {"country_id": 224}  # Türkiye
 
     @mapping
     def customer(self, record):

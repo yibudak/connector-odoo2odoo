@@ -74,8 +74,8 @@ class AddressNeighbourImportMapper(Component):
         if not region_record:
             raise ValidationError(
                 _(
-                    "Region %s not found for state %s"
-                    % (record.region_id.name, record.state_id.name)
+                    "Region %s not found for neighbour %s"
+                    % (record["region_id"][1], record["name"])
                 )
             )
         return {"region_id": region_record.id}
@@ -90,5 +90,5 @@ class AddressNeighbourImporter(Component):
         """Import the dependencies for the record"""
         record = self.odoo_record
         if region := record.get("region_id"):
-            self._import_dependency(region[0], "odoo.address.region")
+            self._import_dependency(region[0], "odoo.address.region", force=force)
         return super()._import_dependencies()
