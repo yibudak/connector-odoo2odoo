@@ -8,6 +8,7 @@ _logger = logging.getLogger(__name__)
 
 
 class OdooAccountPaymentTerm(models.Model):
+    _queue_priority = 5
     _name = "odoo.account.payment.term"
     _inherit = "odoo.binding"
     _inherits = {"account.payment.term": "odoo_id"}
@@ -22,7 +23,7 @@ class OdooAccountPaymentTerm(models.Model):
 
     def resync(self):
         if self.backend_id.main_record == "odoo":
-            return self.with_delay().export_record(self.backend_id)
+            return self.delayed_export_record(self.backend_id)
         else:
             return self.delayed_import_record(
                 self.backend_id, self.external_id, force=True

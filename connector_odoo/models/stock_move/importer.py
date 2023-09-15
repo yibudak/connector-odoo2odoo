@@ -24,10 +24,7 @@ class StockMoveBatchImporter(Component):
         )
         for move in updated_ids:
             move_id = self.backend_adapter.read(move)
-            job_options = {
-                "priority": 10,
-            }
-            self._import_record(move_id.id, job_options=job_options)
+            self._import_record(move_id.id, force=force)
 
 
 class StockMoveImporter(Component):

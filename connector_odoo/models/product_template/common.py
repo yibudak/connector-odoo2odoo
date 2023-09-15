@@ -13,6 +13,7 @@ _logger = logging.getLogger(__name__)
 
 
 class OdooProductTemplate(models.Model):
+    _queue_priority = 10
     _name = "odoo.product.template"
     _inherit = "odoo.binding"
     _inherits = {"product.template": "odoo_id"}
@@ -46,9 +47,7 @@ class OdooProductTemplate(models.Model):
             return exporter.run(self, fields)
 
     def resync(self):
-        return self.delayed_import_record(
-            self.backend_id, self.external_id, force=True
-        )
+        return self.delayed_import_record(self.backend_id, self.external_id, force=True)
 
 
 class ProductTemplate(models.Model):

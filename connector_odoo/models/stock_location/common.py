@@ -11,6 +11,7 @@ _logger = logging.getLogger(__name__)
 
 
 class OdooStockLocation(models.Model):
+    _queue_priority = 10
     _name = "odoo.stock.location"
     _inherit = [
         "odoo.binding",

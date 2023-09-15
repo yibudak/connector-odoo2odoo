@@ -11,6 +11,7 @@ _logger = logging.getLogger(__name__)
 
 
 class OdooAccountPayment(models.Model):
+    _queue_priority = 5
     _name = "odoo.account.payment"
     _inherit = ["odoo.binding"]
     _inherits = {"account.payment": "odoo_id"}

@@ -33,12 +33,8 @@ class SaleOrderBatchImporter(Component):
             domain,
             len(updated_ids),
         )
-        base_priority = 10
         for order_id in updated_ids:
-            job_options = {
-                "priority": base_priority,
-            }
-            self._import_record(order_id, job_options=job_options)
+            self._import_record(order_id, force=force)
 
 
 class SaleOrderImportMapper(Component):

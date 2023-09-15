@@ -379,7 +379,7 @@ class BatchImporter(AbstractComponent):
         """Run the synchronization"""
         record_ids = self.backend_adapter.search(domain)
         for record_id in record_ids:
-            self._import_record(record_id)
+            self._import_record(record_id, force=force)
 
     def _import_record(self, external_id, force=False):
         """Import a record directly or delay the import of the record.
@@ -410,6 +410,7 @@ class DelayedBatchImporter(AbstractComponent):
         """Delay the import of the records"""
         delayable = self.model.with_delay(
             channel=self.model._unique_channel_name,
+            priority=self.model._priority,
             max_retries=10,
             **job_options or {},
         )

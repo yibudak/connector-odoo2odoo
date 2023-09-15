@@ -12,6 +12,7 @@ _logger = logging.getLogger(__name__)
 
 
 class OdooPartnerCategory(models.Model):
+    _queue_priority = 5
     _name = "odoo.res.partner.category"
     _inherit = "odoo.binding"
     _inherits = {"res.partner.category": "odoo_id"}
@@ -26,7 +27,7 @@ class OdooPartnerCategory(models.Model):
 
     def resync(self):
         if self.backend_id.main_record == "odoo":
-            return self.with_delay().export_record(self.backend_id)
+            return self.delayed_export_record(self.backend_id)
         else:
             return self.delayed_import_record(
                 self.backend_id, self.external_id, force=True

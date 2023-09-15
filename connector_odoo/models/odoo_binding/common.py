@@ -51,6 +51,17 @@ class OdooBinding(models.AbstractModel):
         md5_hash = md5(self._name.encode("utf-8")).hexdigest()
         return f"root.{sum(ord(x) for x in md5_hash) % 10}"
 
+    @property
+    def _priority(self):
+        """
+        Some models are more important than others. For example, we want to
+        prioritize the import of partners over the import of product images.
+        """
+        if hasattr(self, "_queue_priority") and self._queue_priority:
+            return self._queue_priority
+        else:
+            return 99
+
     def resync(self):
         return self.delayed_import_record(self.backend_id, self.external_id, force=True)
 
@@ -72,7 +83,10 @@ class OdooBinding(models.AbstractModel):
                     ).format(self.backend_id.name, self.external_id, self._name)
                 )
 
-    # Importers #
+    """
+    IMPORTERS
+    """
+
     @api.model
     def import_batch(self, backend, domain=None, force=False):
         """Prepare the import of records modified on Odoo"""
@@ -94,7 +108,10 @@ class OdooBinding(models.AbstractModel):
     def delayed_import_batch(self, backend, domain=None, force=None):
         return (
             self.sudo()
-            .with_delay(channel=self._unique_channel_name)
+            .with_delay(
+                channel=self._unique_channel_name,
+                priority=self._priority,
+            )
             .import_batch(backend, domain=domain, force=force)
         )
 
@@ -121,11 +138,17 @@ class OdooBinding(models.AbstractModel):
     def delayed_import_record(self, backend, external_id, force=False):
         return (
             self.sudo()
-            .with_delay(channel=self._unique_channel_name)
+            .with_delay(
+                channel=self._unique_channel_name,
+                priority=self._priority,
+            )
             .import_record(backend, external_id, force=force)
         )
 
-    # Exporters #
+    """
+    EXPORTERS
+    """
+
     @api.model
     def export_batch(self, backend, domain=None):
         """Prepare the import of records modified on Odoo"""
@@ -145,7 +168,10 @@ class OdooBinding(models.AbstractModel):
     def delayed_export_record(self, backend, local_id=None, fields=None):
         return (
             self.sudo()
-            .with_delay(channel=self._unique_channel_name)
+            .with_delay(
+                channel=self._unique_channel_name,
+                priority=self._priority,
+            )
             .export_record(backend, local_id=local_id, fields=fields)
         )
 
@@ -155,12 +181,20 @@ class OdooBinding(models.AbstractModel):
             deleter = work.component(usage="record.exporter.deleter")
             return deleter.run(external_id)
 
-    # Executers #
+    """
+    EXECUTERS
+    
+    Note: Executer methods have lower priority than importers and exporters.
+    """
+
     @api.model
     def delayed_execute_method(self, backend, model, method, args=None, context=None):
         return (
             self.sudo()
-            .with_delay(channel=self._unique_channel_name)
+            .with_delay(
+                channel=self._unique_channel_name,
+                priority=self._priority + 50,
+            )
             .execute_method(backend, model, method, args=args, context=context)
         )
 
@@ -170,5 +204,9 @@ class OdooBinding(models.AbstractModel):
         odoo_api = backend.get_connection()
         # Always pass the external_id as first argument to use as ~self~
         if not args:
+            if not self.external_id:
+                raise RetryableJobError(
+                    "This record has no external_id, cannot execute method", seconds=5
+                )
             args = [self.external_id]
         return odoo_api.execute(model, method, args, context)

@@ -29,10 +29,8 @@ class AccountPaymentTermBatchImporter(Component):
             domain,
             len(external_ids),
         )
-        base_priority = 10
         for external_id in external_ids:
-            job_options = {"priority": base_priority}
-            self._import_record(external_id, job_options=job_options, force=force)
+            self._import_record(external_id, force=force)
 
 
 class AccountPaymentTermImportMapper(Component):

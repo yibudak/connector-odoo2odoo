@@ -51,7 +51,6 @@ class BatchProductTemplateExporter(Component):
         for prod in bind_ids:
             job_options = {
                 "max_retries": 0,
-                "priority": 15,
             }
             self._export_record(prod, job_options=job_options)
 
@@ -82,7 +81,7 @@ class OdooProductTemplateExporter(Component):
             # Export the parent ID if it doesn't exists
             # TODO: Check if test is necessary
             #           (export dependency probably update the record)
-            #       categ_id.with_delay().export_record()
+            #       categ_id.delayed_export_record()
             #       self.env['product.category'].export_record(
             #           self.backend_record, external_id
             #       )

@@ -11,6 +11,7 @@ _logger = logging.getLogger(__name__)
 
 
 class OdooDeliveryPriceRule(models.Model):
+    _queue_priority = 10
     _name = "odoo.delivery.price.rule"
     _inherit = "odoo.binding"
     _inherits = {"delivery.price.rule": "odoo_id"}
@@ -35,7 +36,7 @@ class OdooDeliveryPriceRule(models.Model):
 
     def resync(self):
         if self.backend_id.main_record == "odoo":
-            return self.with_delay().export_record(self.backend_id)
+            return self.delayed_export_record(self.backend_id)
         else:
             return self.delayed_import_record(
                 self.backend_id, self.external_id, force=True

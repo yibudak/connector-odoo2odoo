@@ -25,10 +25,7 @@ class StockLocationBatchImporter(Component):
             len(external_ids),
         )
         for external_id in external_ids:
-            job_options = {
-                "priority": 15,
-            }
-            self._import_record(external_id, job_options=job_options)
+            self._import_record(external_id, force=force)
 
 
 class StockLocationImporter(Component):

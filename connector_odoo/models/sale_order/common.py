@@ -13,6 +13,7 @@ _logger = logging.getLogger(__name__)
 
 
 class OdooSaleOrder(models.Model):
+    _queue_priority = 5
     _name = "odoo.sale.order"
     _inherit = "odoo.binding"
     _inherits = {"sale.order": "odoo_id"}
@@ -79,6 +80,8 @@ class OdooSaleOrder(models.Model):
     @api.depends("backend_state")
     def _set_sale_state(self):
         order = self.odoo_id.with_context(connector_no_export=True)
+        if self.backend_state == "draft":
+            return
         # 1- If the order has the same state as the backend, do nothing
         if self.backend_state == order.state:
             return
@@ -95,22 +98,8 @@ class OdooSaleOrder(models.Model):
         elif self.backend_state == "cancel":
             order.with_context(disable_cancel_warning=True).action_cancel()
 
-        # elif self.backend_state == "waiting":
-        #     self.odoo_id.action_confirm()
-        # elif self.backend_state == "confirmed":
-        #     self.odoo_id.action_confirm()
-        # elif self.backend_state == "approved":
-        #     self.odoo_id.action_confirm()
-        # elif self.backend_state == "done":
-        #     self.odoo_id.action_confirm()
-        # elif "except" in self.backend_state:
-        #     self.odoo_id.action_done()
-        # elif self.backend_state == "cancel":
-        #     if not self.odoo_id.picking_ids.filtered(lambda x: x.state == "done"):
-        #         self.odoo_id.action_cancel()
-        #     else:
-        #         self.odoo_id.action_done()
         order.date_order = self.backend_date_order
+        return True
 
 
 class SaleOrder(models.Model):

@@ -30,10 +30,7 @@ class SaleOrderLineBatchImporter(Component):
         )
         for order in updated_ids:
             order_id = self.backend_adapter.read(order)
-            job_options = {
-                "priority": 10,
-            }
-            self._import_record(order_id.id, job_options=job_options)
+            self._import_record(order_id.id, force=force)
 
 
 class SaleOrderLineImportMapper(Component):

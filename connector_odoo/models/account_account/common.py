@@ -8,6 +8,7 @@ _logger = logging.getLogger(__name__)
 
 
 class OdooAccountAccount(models.Model):
+    _queue_priority = 5
     _name = "odoo.account.account"
     _inherit = "odoo.binding"
     _inherits = {"account.account": "odoo_id"}

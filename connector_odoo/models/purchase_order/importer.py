@@ -35,13 +35,9 @@ class PurchaseOrderBatchImporter(Component):
             domain,
             len(updated_ids),
         )
-        base_priority = 10
         for order in updated_ids:
             order_id = self.backend_adapter.read(order)
-            job_options = {
-                "priority": base_priority,
-            }
-            self._import_record(order_id.id, job_options=job_options)
+            self._import_record(order_id.id, force=force)
 
 
 class PurchaseOrderImporter(Component):
@@ -197,7 +193,7 @@ class PurchaseOrderLineBatchImporter(Component):
             job_options = {
                 "priority": 10,
             }
-            self._import_record(order_id.id, job_options=job_options)
+            self._import_record(order_id.id, job_options=job_options, force=force)
 
 
 class PurchaseOrderLineImporter(Component):

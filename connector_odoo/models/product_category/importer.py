@@ -32,6 +32,7 @@ class ProductCategoryBatchImporter(Component):
             domain,
             len(updated_ids),
         )
+        # We don't use _queue_priority here.
         base_priority = 10
         for cat in updated_ids:
             cat_id = self.backend_adapter.read(cat)

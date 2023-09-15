@@ -11,6 +11,7 @@ _logger = logging.getLogger(__name__)
 
 
 class OdooMrpBomLine(models.Model):
+    _queue_priority = 10
     _name = "odoo.mrp.bom.line"
     _inherit = "odoo.binding"
     _inherits = {"mrp.bom.line": "odoo_id"}

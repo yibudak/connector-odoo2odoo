@@ -43,6 +43,7 @@ class OdooBaseExporter(AbstractComponent):
     def _after_export(self):
         """Can do several actions after exporting a record on odoo"""
         return True
+
     def _delay_import(self):
         """Schedule an import of the record.
 
@@ -132,7 +133,9 @@ class DelayedBatchExporter(AbstractComponent):
     def _export_record(self, external_id, job_options=None, **kwargs):
         """Delay the import of the records"""
         delayable = external_id.with_delay(
-            channel=self.model._unique_channel_name, **job_options or {}
+            channel=self.model._unique_channel_name,
+            priority=self.model._priority,
+            **job_options or {}
         )
         delayable.export_record(self.backend_record, **kwargs)
 

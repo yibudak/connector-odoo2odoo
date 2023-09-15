@@ -48,7 +48,7 @@ class BatchPartnerExporter(Component):
             ]
         )
         for partner in bind_ids:
-            job_options = {"max_retries": 0, "priority": 15}
+            job_options = {"max_retries": 0}
             self._export_record(partner, job_options=job_options)
 
 

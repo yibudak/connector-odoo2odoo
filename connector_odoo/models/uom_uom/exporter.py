@@ -48,9 +48,8 @@ class BatchUomExporter(Component):
         for uom in bind_ids:
             job_options = {
                 "max_retries": 0,
-                "priority": 15,
             }
-            self._export_record(uom, job_options=job_options)
+            self._export_record(uom, force=force)
 
 
 class OdooUomExporter(Component):

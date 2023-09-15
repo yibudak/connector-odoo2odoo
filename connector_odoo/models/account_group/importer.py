@@ -29,12 +29,8 @@ class AccountGroupBatchImporter(Component):
             domain,
             len(external_ids),
         )
-        base_priority = 10
         for external_id in external_ids:
-            group_id = self.backend_adapter.read(external_id)
-            parents = group_id.parent_path.split("/")
-            job_options = {"priority": base_priority + len(parents) or 0}
-            self._import_record(external_id, job_options=job_options, force=force)
+            self._import_record(external_id, force=force)
 
 
 class AccountGroupImportMapper(Component):
