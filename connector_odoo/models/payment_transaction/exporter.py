@@ -106,6 +106,9 @@ class OdooPaymentTransactionExporter(Component):
             ]
         )
         if payment_binding and payment_binding.external_id:
+            # Note: backend_adapter uses the current model's external_id as res_id,
+            # that's why we use self.work.odoo_api here since we want to update another
+            # model.
             self.work.odoo_api.write(
                 model="account.payment",
                 res_id=payment_binding.external_id,

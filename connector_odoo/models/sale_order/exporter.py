@@ -68,21 +68,21 @@ class OdooSaleOrderExporter(Component):
             for line in binding.order_line:
                 self._export_dependency(line, "odoo.sale.order.line")
         if binding and binding.transaction_ids:
-            for tx in binding.transaction_ids.filtered(
+            electronic_txs = binding.transaction_ids.filtered(
                 lambda t: t.provider_id.code == "garanti"
-            ):
+            )
+            for tx in electronic_txs:
                 self._export_dependency(tx, "odoo.payment.transaction")
 
-            # Update transaction_ids on sale.order
-            # yigit: I think we don't need here.
-            # self.backend_adapter.write(
-            #     res_id=binding.external_id,
-            #     data={
-            #         "transaction_ids": [
-            #             (6, 0, binding.mapped("transaction_ids.bind_ids.external_id"))
-            #         ]
-            #     },
-            # )
+            # Bind payments with sale order
+            exported_payments = electronic_txs.mapped("payment_id.bind_ids").filtered(
+                lambda p: p.external_id
+            )
+            if exported_payments:
+                self.backend_adapter.write(
+                    self.external_id,
+                    {"payment_ids": [(6, 0, exported_payments.mapped("external_id"))]},
+                )
 
 
 class SaleOrderExportMapper(Component):
@@ -181,4 +181,4 @@ class SaleOrderExportMapper(Component):
     @mapping
     def client_order_ref(self, record):
         # Todo: müşterinin satınalma numarası için bir field yapılacak
-        return {"client_order_ref": "E-commerce sale"}
+        return {"client_order_ref": record.name}
