@@ -5,7 +5,7 @@ import logging
 
 from odoo.addons.component.core import Component
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
-from odoo.addons.connector.components.mapper import mapping
+from odoo.addons.connector.components.mapper import mapping, only_create
 
 _logger = logging.getLogger(__name__)
 
@@ -63,6 +63,7 @@ class AccountPaymentExportMapper(Component):
             "payment_date": record.date.strftime(DEFAULT_SERVER_DATETIME_FORMAT),
         }
 
+    @only_create
     @mapping
     def state(self, record):
         # v16 -> v12 always send draft except cancelled because
