@@ -122,7 +122,19 @@ class OdooAccountPaymentExporter(Component):
         return datas
 
     def _after_export(self):
-        if self.binding.external_id and self.binding.state == "posted":
+        if not self.binding.external_id:
+            return
+
+        # Check if the payment is posted or not in Odoo to prevent
+        # double posting.
+        exported_record = self.work.odoo_api.browse(
+            model="account.payment", res_id=self.binding.external_id
+        )
+        if (
+            exported_record
+            and exported_record["state"] == "draft"
+            and self.binding.state == "posted"
+        ):
             self.binding.delayed_execute_method(
                 self.backend_record,
                 "account.payment",

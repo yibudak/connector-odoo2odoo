@@ -25,7 +25,9 @@ class SaleOrderBatchImporter(Component):
 
     def run(self, domain=None, force=False):
         """Run the synchronization"""
-        exported_ids = self.model.search([("external_id", "!=", 0)]).mapped("external_id")
+        exported_ids = self.model.search([("external_id", "!=", 0)]).mapped(
+            "external_id"
+        )
         domain += [("id", "in", exported_ids)]
         updated_ids = self.backend_adapter.search(domain)
         _logger.info(
