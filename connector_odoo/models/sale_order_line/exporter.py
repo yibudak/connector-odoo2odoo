@@ -38,9 +38,17 @@ class SaleOrderLineExportMapper(Component):
         }
 
     @mapping
+    def set_parent_product_id(self, record):
+        vals = {}
+        binder = self.binder_for("odoo.product.product")
+        if record.set_parent_product_id:
+            vals["set_parent_product_id"] = binder.to_external(
+                record.set_parent_product_id, wrap=True
+            )
+        return vals
+
+    @mapping
     def name(self, record):
-        # Todo: isimde sıkıntı var ya komple açıklamalı basıyor ya da böyle yarım basıyor.
-        # ayrıca v16 tarafında da isimi düzeltmek gerek...
         return {
             "name": record.product_id.display_name,
         }
