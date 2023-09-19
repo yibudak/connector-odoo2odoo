@@ -103,7 +103,12 @@ class PartnerImportMapper(Component):
 
     @mapping
     def address_fields(self, record):
-        vals = {}
+        vals = {
+            "neighbour_id": False,
+            "region_id": False,
+            "district_id": False,
+            "state_id": False,
+        }
         if neighbour := record.get("neighbour_id"):
             local_neighbour = self.binder_for("odoo.address.neighbour").to_internal(
                 neighbour[0], unwrap=True
@@ -117,7 +122,7 @@ class PartnerImportMapper(Component):
 
     @mapping
     def country_id(self, record):
-        vals = {}
+        vals = {"country_id": False}
         if not record.get("country_id"):
             return vals
         local_country_id = self.env["res.country"].search(
@@ -129,7 +134,7 @@ class PartnerImportMapper(Component):
 
     @mapping
     def state_id(self, record):
-        vals = {}
+        vals = {"state_id": False}
         if not record.get("state_id"):
             return vals
         else:
@@ -149,7 +154,7 @@ class PartnerImportMapper(Component):
 
     @mapping
     def parent_id(self, record):
-        vals = {}
+        vals = {"parent_id": False}
         if record.get("parent_id"):
             binder = self.binder_for("odoo.res.partner")
             vals["parent_id"] = binder.to_internal(
@@ -174,19 +179,23 @@ class PartnerImportMapper(Component):
 
     @mapping
     def property_account_receivable(self, record):
+        vals = {"property_account_receivable_id": False}
         if account_id := record.get("property_account_payable_id"):
             binder = self.binder_for("odoo.account.account")
             local_account = binder.to_internal(account_id[0], unwrap=True)
             if local_account:
-                return {"property_account_payable_id": local_account.id}
+                vals["property_account_receivable_id"] = local_account.id
+        return vals
 
     @mapping
     def property_account_receivable(self, record):
+        vals = {"property_account_payable_id": False}
         if account_id := record.get("property_account_receivable_id"):
             binder = self.binder_for("odoo.account.account")
             local_account = binder.to_internal(account_id[0], unwrap=True)
             if local_account:
-                return {"property_account_receivable_id": local_account.id}
+                vals["property_account_payable_id"] = local_account.id
+        return vals
 
     # @mapping
     # def property_purchase_currency_id(self, record):
