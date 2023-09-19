@@ -48,6 +48,8 @@ class OdooBinding(models.AbstractModel):
         3. Get the remainder of the sum divided by 10.
         4. Return the remainder.
         """
+        if hasattr(self, "_special_channel"):
+            return self._special_channel
         md5_hash = md5(self._name.encode("utf-8")).hexdigest()
         return f"root.{sum(ord(x) for x in md5_hash) % 10}"
 
