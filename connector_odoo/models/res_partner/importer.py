@@ -23,11 +23,15 @@ class PartnerBatchImporter(Component):
 
     def run(self, domain=None, force=False):
         """Run the synchronization"""
-        external_ids = self.backend_adapter.search(domain)
-        _logger.debug(
-            "search for odoo partner %s returned %s items", domain, len(external_ids)
+        exported_ids = self.model.search([("external_id", "!=", 0)]).mapped(
+            "external_id"
         )
-        for external_id in external_ids:
+        domain += [("id", "in", exported_ids)]
+        updated_ids = self.backend_adapter.search(domain)
+        _logger.debug(
+            "search for odoo partner %s returned %s items", domain, len(updated_ids)
+        )
+        for external_id in updated_ids:
             self._import_record(external_id, force=force)
 
 
