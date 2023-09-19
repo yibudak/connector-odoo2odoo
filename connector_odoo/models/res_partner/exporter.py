@@ -107,6 +107,8 @@ class OdooPartnerExporter(Component):
         # İlk defa oluşturulan şirketlerde bu durum çalışır.
         if not self.binding.parent_id and self.binding.company_name:
             self.binding.odoo_id.create_company()
+            # Şirketi e-commerce partner olarak işaretleme.
+            self.binding.parent_id.ecommerce_partner = False
 
         return True
 
