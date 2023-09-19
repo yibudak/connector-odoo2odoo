@@ -74,6 +74,7 @@ class OdooPartnerExporter(Component):
         match_domain = [
             ("vat", "=", self.binding.vat),
             ("parent_id", "=", False),
+            ("ecommerce_partner", "=", False),
         ]
         matched_partner = self.backend_adapter.search(
             model="res.partner",
@@ -107,9 +108,55 @@ class OdooPartnerExporter(Component):
                 self.binding.parent_id = parent
 
         # İlk defa oluşturulan şirketlerde bu durum çalışır.
-        if not self.binding.parent_id and self.binding.company_name:
+        if (
+            (self.binding.commercial_partner_id == self.binding.odoo_id) # This means it doesn't have any parent
+            and not self.binding.parent_id
+            and self.binding.company_name
+        ):
             self.binding.odoo_id.create_company()
+            self._check_created_company()
 
+        return True
+
+    def _check_created_company(self):
+        """
+        v16'da oluşturulan kayıtlar ecommerce_partner özelliğine sahip, bu da
+        export edilebileceği anlamına geliyor. create_company() fonsksiyonu ile
+        company_name string'inden oluşturulan bir cari belki de bizim veritabanımızda
+        olabilir. Bu yüzden create_company'den gelen cariyi kontrol etmeliyiz,
+        yapabiliyorsak import etmeliyiz.
+        """
+        created_company = self.binding.parent_id
+        if not created_company.vat:
+            raise ValidationError(
+                "Created company %s must have vat number" % created_company.name
+            )
+        external_company = self.backend_adapter.search(
+            model="res.partner",
+            domain=[
+                ("vat", "=", created_company.vat),
+                ("parent_id", "=", False),
+                ("ecommerce_partner", "=", False),
+            ],
+            limit=1,
+        )
+        if external_company:
+            # Bulduğumuz şirketi import edelim.
+            self.binding.import_record(
+                self.backend_record, external_company["id"], force=False
+            )
+            imported_partner = self.env["odoo.res.partner"].search(
+                [("external_id", "=", external_company["id"])], limit=1
+            )
+            if not imported_partner:
+                raise ValidationError(
+                    "Imported partner %s not found in Odoo."
+                    " Are you sure about import process?" % external_company["name"]
+                )
+            # Bulduğumuz şirketi şu anki carinin parentı yapalım.
+            self.binding.parent_id = imported_partner.odoo_id
+            # Bir şirketle eşleştirebildik, oluşturduğumuz dummy şirketi çöpe at.
+            created_company.unlink()
         return True
 
     def _export_dependencies(self):
