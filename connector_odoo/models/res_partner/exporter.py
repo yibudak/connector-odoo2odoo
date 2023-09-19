@@ -99,16 +99,16 @@ class OdooPartnerExporter(Component):
                     ],
                     limit=1,
                 ).commercial_partner_id
+            # Müşterinin kendisi veya şirket çalışanıysa
             if self.binding.type == "contact":
                 self.binding.commercial_partner_id = parent
+            # Adres, teslimat adresi vs. ise
             else:
                 self.binding.parent_id = parent
 
         # İlk defa oluşturulan şirketlerde bu durum çalışır.
         if not self.binding.parent_id and self.binding.company_name:
             self.binding.odoo_id.create_company()
-            # Şirketi e-commerce partner olarak işaretleme.
-            self.binding.parent_id.ecommerce_partner = False
 
         return True
 
