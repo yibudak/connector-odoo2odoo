@@ -67,6 +67,10 @@ class OdooPartnerExporter(Component):
         """Try to match parent partner from Odoo backend."""
         if not self.binding.vat or self.binding.parent_id:
             return False
+
+        if self.binding.vat in ["11111111111", "2222222222"]:
+            return False
+
         match_domain = [
             ("vat", "=", self.binding.vat),
             ("parent_id", "=", False),
@@ -99,6 +103,11 @@ class OdooPartnerExporter(Component):
                 self.binding.commercial_partner_id = parent
             else:
                 self.binding.parent_id = parent
+
+        # İlk defa oluşturulan şirketlerde bu durum çalışır.
+        if not self.binding.parent_id and self.binding.company_name:
+            self.binding.odoo_id.create_company()
+
         return True
 
     def _export_dependencies(self):

@@ -71,17 +71,30 @@ class OdooSaleOrderExporter(Component):
             electronic_txs = binding.transaction_ids.filtered(
                 lambda t: t.provider_id.code == "garanti"
             )
-            for tx in electronic_txs:
-                self._export_dependency(tx, "odoo.payment.transaction")
+            if electronic_txs:
+                for tx in electronic_txs:
+                    self._export_dependency(tx, "odoo.payment.transaction")
 
-            # Bind payments with sale order
-            exported_payments = electronic_txs.mapped("payment_id.bind_ids").filtered(
-                lambda p: p.external_id
-            )
-            if exported_payments:
+                # Bind payments with sale order
+                exported_payments = electronic_txs.mapped(
+                    "payment_id.bind_ids"
+                ).filtered(lambda p: p.external_id)
+                if exported_payments:
+                    self.backend_adapter.write(
+                        self.external_id,
+                        {
+                            "payment_ids": [
+                                (6, 0, exported_payments.mapped("external_id"))
+                            ],
+                            "payment_term_id": 24,  # Kredi kartı ile tahsilat
+                        },
+                    )
+            else:
                 self.backend_adapter.write(
                     self.external_id,
-                    {"payment_ids": [(6, 0, exported_payments.mapped("external_id"))]},
+                    {
+                        "payment_term_id": 23,  # Banka havalesi
+                    },
                 )
 
 
@@ -135,7 +148,10 @@ class SaleOrderExportMapper(Component):
 
     @mapping
     def warehouse_id(self, record):
-        return {"warehouse_id": 2}  # Sincan
+        vals = {"warehouse_id": 2}  # Sincan
+        if record.carrier_id and "Merkez" in record.carrier_id.name:
+            vals["warehouse_id"] = 1  # Merkez
+        return vals
 
     @mapping
     def source_id(self, record):
@@ -171,12 +187,13 @@ class SaleOrderExportMapper(Component):
         binder = self.binder_for("odoo.delivery.carrier")
         return {"carrier_id": binder.to_external(record.carrier_id, wrap=True)}
 
-    @mapping
-    def payment_term_id(self, record):
-        if not record.payment_term_id:
-            return {"payment_term_id": False}
-        binder = self.binder_for("odoo.account.payment.term")
-        return {"carrier_id": binder.to_external(record.payment_term_id, wrap=True)}
+    # Todo yigit: burası tam map olmuyor çünkü hedef kayıtlar da bozuk.
+    # @mapping
+    # def payment_term_id(self, record):
+    #     if not record.payment_term_id:
+    #         return {"payment_term_id": False}
+    #     binder = self.binder_for("odoo.account.payment.term")
+    #     return {"carrier_id": binder.to_external(record.payment_term_id, wrap=True)}
 
     @mapping
     def client_order_ref(self, record):
