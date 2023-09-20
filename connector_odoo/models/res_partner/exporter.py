@@ -80,32 +80,39 @@ class OdooPartnerExporter(Component):
             model="res.partner",
             domain=match_domain,
         )
-        # If we found a match, but it's the same partner, we don't want to set
-        # it as parent.
-        if matched_partner and matched_partner[0] != self.binding.external_id:
-            parent = self.binding.search(
-                [
-                    ("external_id", "=", matched_partner[0]),
-                ],
-                limit=1,
-            ).commercial_partner_id
-            if not parent:
-                self.binding.import_record(
-                    backend=self.backend_record,
-                    external_id=matched_partner[0],
-                )
+        if matched_partner:
+            # If we found a match, but it's the same partner, we don't want to set
+            # it as parent.
+            if matched_partner[0] != self.binding.external_id:
                 parent = self.binding.search(
                     [
                         ("external_id", "=", matched_partner[0]),
                     ],
                     limit=1,
                 ).commercial_partner_id
-            # Müşterinin kendisi veya şirket çalışanıysa
-            if self.binding.type == "contact":
-                self.binding.commercial_partner_id = parent
-            # Adres, teslimat adresi vs. ise
-            else:
+                if not parent:
+                    self.binding.import_record(
+                        backend=self.backend_record,
+                        external_id=matched_partner[0],
+                    )
+                    parent = self.binding.search(
+                        [
+                            ("external_id", "=", matched_partner[0]),
+                        ],
+                        limit=1,
+                    ).commercial_partner_id
+                # Müşterinin kendisi veya şirket çalışanıysa
+                # Todo yigit: buraya bak commercial diye ayırmalı mıyız bir de  company_name boşalsınmı
+                # self.binding.company_name = False
                 self.binding.parent_id = parent
+                # if self.binding.type == "contact":
+                #     self.binding.commercial_partner_id = parent
+                # # Adres, teslimat adresi vs. ise
+                # else:
+                #     self.binding.parent_id = parent
+            # Müşteri şirketin kendisiyse.
+            else:
+                return True
 
         # İlk defa oluşturulan şirketlerde bu durum çalışır.
         if (
