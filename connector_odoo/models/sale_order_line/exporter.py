@@ -28,6 +28,7 @@ class SaleOrderLineExportMapper(Component):
         ("price_unit", "price_unit"),
         ("product_uom_qty", "product_uom_qty"),
         ("is_delivery", "is_delivery"),
+        ("deci", "deci"),
     ]
 
     @mapping

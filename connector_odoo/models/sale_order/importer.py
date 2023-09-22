@@ -49,6 +49,7 @@ class SaleOrderImportMapper(Component):
         ("name", "name"),
         ("state", "backend_state"),
         ("order_state", "order_state"),
+        ("sale_deci", "sale_deci"),
     ]
 
     @mapping
