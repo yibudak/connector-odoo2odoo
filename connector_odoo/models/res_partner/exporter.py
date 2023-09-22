@@ -102,21 +102,16 @@ class OdooPartnerExporter(Component):
                         limit=1,
                     ).commercial_partner_id
                 # Müşterinin kendisi veya şirket çalışanıysa
-                # Todo yigit: buraya bak commercial diye ayırmalı mıyız bir de  company_name boşalsınmı
-                # self.binding.company_name = False
                 self.binding.parent_id = parent
-                # if self.binding.type == "contact":
-                #     self.binding.commercial_partner_id = parent
-                # # Adres, teslimat adresi vs. ise
-                # else:
-                #     self.binding.parent_id = parent
-            # Müşteri şirketin kendisiyse.
+                self.binding.company_name = False
             else:
                 return True
 
         # İlk defa oluşturulan şirketlerde bu durum çalışır.
         if (
-            (self.binding.commercial_partner_id == self.binding.odoo_id) # This means it doesn't have any parent
+            (
+                self.binding.commercial_partner_id == self.binding.odoo_id
+            )  # This means it doesn't have any parent
             and not self.binding.parent_id
             and self.binding.company_name
         ):
@@ -167,15 +162,12 @@ class OdooPartnerExporter(Component):
         return True
 
     def _export_dependencies(self):
-        if not (
-            self.binding.parent_id
-            or (
-                self.binding.commercial_partner_id
-                and self.binding.commercial_partner_id != self.binding.odoo_id
-            )
+        parents = self.binding.parent_id
+        if (
+            self.binding.commercial_partner_id
+            and self.binding.commercial_partner_id != self.binding.odoo_id
         ):
-            return
-        parents = self.binding.parent_id | self.binding.commercial_partner_id
+            parents |= self.binding.commercial_partner_id
         for parent in parents:
             self._export_dependency(parent, "odoo.res.partner")
         return True
@@ -190,7 +182,8 @@ class OdooPartnerExporter(Component):
         if not self.binding.vat:
             return False
 
-        # See queue_job #1777246, delivery address shouldn't be matched.
+        # We are mapping delivery addresses with just external_id, not with
+        # parent_id. So we don't need to search for parent_id.
         if self.binding.type == "delivery":
             return False
 
@@ -304,8 +297,8 @@ class PartnerExportMapper(Component):
         if parent := (
             record.parent_id
             or (
-                record.commercial_partner_id != record.odoo_id
-                and record.commercial_partner_id
+                record.commercial_partner_id
+                and record.commercial_partner_id != record.odoo_id
             )
         ):
             binder = self.binder_for("odoo.res.partner")

@@ -24,10 +24,10 @@ class SaleOrderLineExportMapper(Component):
     _apply_on = ["odoo.sale.order.line"]
 
     direct = [
-        # ("name", "name"),
         ("discount", "discount"),
         ("price_unit", "price_unit"),
         ("product_uom_qty", "product_uom_qty"),
+        ("is_delivery", "is_delivery"),
     ]
 
     @mapping
