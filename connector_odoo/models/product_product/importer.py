@@ -150,8 +150,8 @@ class ProductImportMapper(Component):
             "product_length": record["product_length"],
             "product_width": record["product_width"],
             "product_height": record["product_height"],
-            "weight": record["weight"],
-            "volume": record["volume"],
+            "product_weight": record["weight"],
+            "product_volume": record["volume"],
             "weight_uom_id": weight_uom.id,
             "volume_uom_id": volume_uom.id,
         }
