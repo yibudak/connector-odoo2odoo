@@ -142,16 +142,19 @@ class ProductImportMapper(Component):
     @mapping
     def dimensions(self, record):
         binder = self.binder_for("odoo.uom.uom")
-        uom = binder.to_internal(record["dimensional_uom_id"][0], unwrap=True)
+        dimensional_uom = binder.to_internal(record["dimensional_uom_id"][0], unwrap=True)
+        weight_uom = binder.to_internal(record["weight_uom_id"][0], unwrap=True)
+        volume_uom = binder.to_internal(record["volume_uom_id"][0], unwrap=True)
         return {
-            "dimensional_uom_id": uom.id,
+            "dimensional_uom_id": dimensional_uom.id,
             "product_length": record["product_length"],
             "product_width": record["product_width"],
             "product_height": record["product_height"],
             "weight": record["weight"],
             "volume": record["volume"],
+            "weight_uom_id": weight_uom.id,
+            "volume_uom_id": volume_uom.id,
         }
-        # Todo: volume ve weight'in uomu eksik, v16'da m2o yerine char yapmışlar
 
     @mapping
     def price(self, record):
