@@ -168,10 +168,6 @@ class SaleOrderExportMapper(Component):
                 wrap=True,
             ),
             "partner_invoice_id": binder.to_external(
-                record.partner_id.commercial_partner_id,
-                wrap=True,
-            )
-            or binder.to_external(
                 record.partner_invoice_id,
                 wrap=True,
             ),
