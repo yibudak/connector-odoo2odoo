@@ -5,6 +5,7 @@ from odoo import fields, models, api
 
 class ImportSingleFieldLegacyWizard(models.TransientModel):
     _name = "import.single.field.legacy.wizard"
+    _description = "Import Single Field Legacy Wizard"
 
     def _get_default_backend(self):
         return self.env["odoo.backend"].search([], limit=1).id
