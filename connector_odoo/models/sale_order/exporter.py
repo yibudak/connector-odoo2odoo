@@ -106,6 +106,7 @@ class SaleOrderExportMapper(Component):
     direct = [
         ("name", "name"),
         ("sale_deci", "sale_deci"),
+        ("delivery_rating_success", "delivery_rating_success"),
     ]
 
     # yigit: buraya artık gerek yok cunku sale.order.line'ı mapledik.
