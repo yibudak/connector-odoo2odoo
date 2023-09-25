@@ -13,6 +13,7 @@ _logger = logging.getLogger(__name__)
 
 
 class OdooProductPricelist(models.Model):
+    _queue_priority = 5
     _name = "odoo.product.pricelist"
     _inherit = "odoo.binding"
     _inherits = {"product.pricelist": "odoo_id"}
@@ -27,7 +28,7 @@ class OdooProductPricelist(models.Model):
 
     def resync(self):
         if self.backend_id.main_record == "odoo":
-            return self.with_delay().export_record(self.backend_id)
+            return self.delayed_export_record(self.backend_id)
         else:
             return self.delayed_import_record(
                 self.backend_id, self.external_id, force=True
@@ -56,6 +57,7 @@ class ProductPricelistAdapter(Component):
 
 
 class OdooProductPricelistItem(models.Model):
+    _queue_priority = 5
     _name = "odoo.product.pricelist.item"
     _inherit = "odoo.binding"
     _inherits = {"product.pricelist.item": "odoo_id"}
@@ -63,7 +65,7 @@ class OdooProductPricelistItem(models.Model):
 
     def resync(self):
         if self.backend_id.main_record == "odoo":
-            return self.with_delay().export_record(self.backend_id)
+            return self.delayed_export_record(self.backend_id)
         else:
             return self.delayed_import_record(
                 self.backend_id, self.external_id, force=True

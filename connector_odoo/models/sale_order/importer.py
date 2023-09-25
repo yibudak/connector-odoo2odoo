@@ -25,20 +25,18 @@ class SaleOrderBatchImporter(Component):
 
     def run(self, domain=None, force=False):
         """Run the synchronization"""
-
+        exported_ids = self.model.search([("external_id", "!=", 0)]).mapped(
+            "external_id"
+        )
+        domain += [("id", "in", exported_ids)]
         updated_ids = self.backend_adapter.search(domain)
         _logger.info(
             "search for odoo sale orders %s returned %s items",
             domain,
             len(updated_ids),
         )
-        base_priority = 10
-        for order in updated_ids:
-            order_id = self.backend_adapter.read(order)
-            job_options = {
-                "priority": base_priority,
-            }
-            self._import_record(order_id.id, job_options=job_options)
+        for order_id in updated_ids:
+            self._import_record(order_id, force=force)
 
 
 class SaleOrderImportMapper(Component):
@@ -51,6 +49,7 @@ class SaleOrderImportMapper(Component):
         ("name", "name"),
         ("state", "backend_state"),
         ("order_state", "order_state"),
+        ("sale_deci", "sale_deci"),
     ]
 
     @mapping
@@ -112,17 +111,23 @@ class SaleOrderImporter(Component):
             "odoo.product.pricelist",
             force=force,
         )
-        # self._import_dependency(
-        #     self.odoo_record["partner_id"][0], "odoo.res.partner", force=force
-        # )
-        # for partner_id in [
-        #     self.odoo_record["partner_shipping_id"][0],
-        #     self.odoo_record["partner_invoice_id"][0],
-        # ]:
-        #     self._import_dependency(partner_id, "odoo.res.partner", force=force)
+        partner_ids = list(
+            {
+                self.odoo_record["partner_id"][0],
+                self.odoo_record["partner_shipping_id"][0],
+                self.odoo_record["partner_invoice_id"][0],
+            }
+        )
+        for partner_id in partner_ids:
+            self._import_dependency(
+                partner_id,
+                "odoo.res.partner",
+                force=force,
+            )
 
     def _after_import(self, binding, force=False):
         res = super()._after_import(binding, force)
+        # Update the sale order lines
         if self.odoo_record["order_line"]:
             for line_id in self.odoo_record["order_line"]:
                 self._import_dependency(
@@ -130,4 +135,6 @@ class SaleOrderImporter(Component):
                     "odoo.sale.order.line",
                     force=force,
                 )
+        # Compare state with backend_state
+        binding._set_sale_state()
         return res

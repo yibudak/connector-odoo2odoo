@@ -17,7 +17,17 @@ class OdooSaleOrderExporter(Component):
     _apply_on = ["odoo.sale.order"]
 
     def _should_import(self):
-        # Search for an existing reference on Odoo backend
+        """Search for an existing reference on Odoo backend"""
+        # This means that the exported sale order is deleted on Odoo backend.
+        if self.binding.external_id and not bool(
+            self.backend_adapter.search(
+                model="sale.order", domain=[("id", "=", self.external_id)]
+            )
+        ):
+            self.external_id = 0
+            self.binding.write({"external_id": 0})
+
+        # If it's exported but not binded, we should set external_id manually.
         if not self.binding.external_id:
             external_record = self.backend_adapter.search(
                 model="sale.order",
@@ -28,12 +38,14 @@ class OdooSaleOrderExporter(Component):
             )
             if external_record:
                 self.external_id = external_record[0]
+
         return super(OdooSaleOrderExporter, self)._should_import()
 
-    def _must_skip(self):
-        """If there is no USER on the sale order, this means that guest user creates the
-        order. We don't want to export it."""
-        return not (self.binding.partner_id.user_id or self.binding.partner_id.user_ids)
+    # todo yigit: check this method is necessary or not
+    # def _must_skip(self):
+    #     """If there is no USER on the sale order, this means that guest user creates the
+    #     order. We don't want to export it."""
+    #     return not (self.binding.partner_id.user_id or self.binding.partner_id.user_ids)
 
     def _export_dependencies(self):
         if not self.binding.partner_id:
@@ -55,9 +67,35 @@ class OdooSaleOrderExporter(Component):
         if binding and binding.order_line:
             for line in binding.order_line:
                 self._export_dependency(line, "odoo.sale.order.line")
-        # if binding and binding.transaction_ids:
-        #     for tx in binding.transaction_ids:
-        #         self._export_dependency(tx, "odoo.payment.transaction")
+        if binding and binding.transaction_ids:
+            electronic_txs = binding.transaction_ids.filtered(
+                lambda t: t.provider_id.code == "garanti"
+            )
+            if electronic_txs:
+                for tx in electronic_txs:
+                    self._export_dependency(tx, "odoo.payment.transaction")
+
+                # Bind payments with sale order
+                exported_payments = electronic_txs.mapped(
+                    "payment_id.bind_ids"
+                ).filtered(lambda p: p.external_id)
+                if exported_payments:
+                    self.backend_adapter.write(
+                        self.external_id,
+                        {
+                            "payment_ids": [
+                                (6, 0, exported_payments.mapped("external_id"))
+                            ],
+                            "payment_term_id": 24,  # Kredi kartı ile tahsilat
+                        },
+                    )
+            else:
+                self.backend_adapter.write(
+                    self.external_id,
+                    {
+                        "payment_term_id": 23,  # Banka havalesi
+                    },
+                )
 
 
 class SaleOrderExportMapper(Component):
@@ -67,7 +105,7 @@ class SaleOrderExportMapper(Component):
 
     direct = [
         ("name", "name"),
-        # ("state", "state"),
+        ("sale_deci", "sale_deci"),
     ]
 
     # yigit: buraya artık gerek yok cunku sale.order.line'ı mapledik.
@@ -89,6 +127,15 @@ class SaleOrderExportMapper(Component):
     #     return {"state": record.state}
 
     @mapping
+    def confirmation_date(self, record):
+        vals = {}
+        if record.confirmation_date:
+            vals["confirmation_date"] = record.confirmation_date.strftime(
+                DEFAULT_SERVER_DATETIME_FORMAT
+            )
+        return vals
+
+    @mapping
     def date_order(self, record):
         return {
             "date_order": record.date_order.strftime(DEFAULT_SERVER_DATETIME_FORMAT)
@@ -102,13 +149,19 @@ class SaleOrderExportMapper(Component):
 
     @mapping
     def warehouse_id(self, record):
-        binder = self.binder_for("odoo.stock.warehouse")
-        warehouse_id = binder.to_external(record.warehouse_id, wrap=True)
-        return {"warehouse_id": 2}  # Todo
+        vals = {"warehouse_id": 2}  # Sincan
+        if record.carrier_id and "Merkez" in record.carrier_id.name:
+            vals["warehouse_id"] = 1  # Merkez
+        return vals
+
+    @mapping
+    def source_id(self, record):
+        return {"source_id": 6}  # Online satış
 
     @mapping
     def partner_id(self, record):
         binder = self.binder_for("odoo.res.partner")
+
         return {
             "partner_id": binder.to_external(
                 record.partner_id,
@@ -126,18 +179,20 @@ class SaleOrderExportMapper(Component):
 
     @mapping
     def carrier_id(self, record):
+        if not record.carrier_id:
+            return {"carrier_id": False}
         binder = self.binder_for("odoo.delivery.carrier")
         return {"carrier_id": binder.to_external(record.carrier_id, wrap=True)}
+
+    # Todo yigit: burası tam map olmuyor çünkü hedef kayıtlar da bozuk.
+    # @mapping
+    # def payment_term_id(self, record):
+    #     if not record.payment_term_id:
+    #         return {"payment_term_id": False}
+    #     binder = self.binder_for("odoo.account.payment.term")
+    #     return {"carrier_id": binder.to_external(record.payment_term_id, wrap=True)}
 
     @mapping
     def client_order_ref(self, record):
         # Todo: müşterinin satınalma numarası için bir field yapılacak
-        return {"client_order_ref": "E-commerce sale"}
-
-    # todo: confirmation_date action_confirm ile oluşturulup gönderilecek. Belki de
-    # göndermeye gerek yok karşıda action_confirm çalıştırırsak problem çözülür.
-    # @mapping
-    # def confirmation_date(self, record):
-    #     return {
-    #         "confirmation_date": datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT)
-    #     }
+        return {"client_order_ref": record.name}

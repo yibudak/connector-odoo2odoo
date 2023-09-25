@@ -3,7 +3,6 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html)
 
 import logging
-import random
 from odoo.addons.component.core import Component
 from odoo.addons.connector.components.mapper import mapping, only_create
 from odoo.addons.connector.exception import MappingError
@@ -61,12 +60,8 @@ class ProductBatchImporter(Component):
         _logger.info(
             "search for odoo products %s returned %s items", domain, len(external_ids)
         )
-        # We shuffle the list of products to avoid to have the same
-        # priority for all the products
-        random.shuffle(external_ids)
-        for idx, external_id in enumerate(external_ids):
-            job_options = {"priority": idx}
-            self._import_record(external_id, job_options=job_options, force=force)
+        for external_id in external_ids:
+            self._import_record(external_id, force=force)
 
 
 class ProductImportMapper(Component):
@@ -108,9 +103,6 @@ class ProductImportMapper(Component):
         if vals["combination_indices"] == "":
             vals.pop("combination_indices")
 
-        # Todo yigit experimental: also try to update odoo_id -- CANCELED
-        # DROP INDEX IF EXISTS product_product_combination_indices_index;
-        # DROP INDEX IF EXISTS product_product_combination_unique;
         exist_product = self.env["product.product"].search(
             [
                 ("product_tmpl_id", "=", tmpl_id.id),
@@ -150,16 +142,19 @@ class ProductImportMapper(Component):
     @mapping
     def dimensions(self, record):
         binder = self.binder_for("odoo.uom.uom")
-        uom = binder.to_internal(record["dimensional_uom_id"][0], unwrap=True)
+        dimensional_uom = binder.to_internal(record["dimensional_uom_id"][0], unwrap=True)
+        weight_uom = binder.to_internal(record["weight_uom_id"][0], unwrap=True)
+        volume_uom = binder.to_internal(record["volume_uom_id"][0], unwrap=True)
         return {
-            "dimensional_uom_id": uom.id,
+            "dimensional_uom_id": dimensional_uom.id,
             "product_length": record["product_length"],
             "product_width": record["product_width"],
             "product_height": record["product_height"],
-            "weight": record["weight"],
-            "volume": record["volume"],
+            "product_weight": record["weight"],
+            "product_volume": record["volume"],
+            "weight_uom_id": weight_uom.id,
+            "volume_uom_id": volume_uom.id,
         }
-        # Todo: volume ve weight'in uomu eksik, v16'da m2o yerine char yapmışlar
 
     @mapping
     def price(self, record):
@@ -211,7 +206,7 @@ class ProductImporter(Component):
     _apply_on = ["odoo.product.product"]
 
     def _must_skip(self):
-        """Return True if the import can be skipped."""
+        """If the product is not active and won't be active, we skip it"""
         binding = self.model.search(
             [
                 ("backend_id", "=", self.backend_record.id),

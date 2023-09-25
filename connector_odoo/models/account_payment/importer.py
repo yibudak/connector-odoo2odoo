@@ -19,14 +19,12 @@ class AccountPaymentBatchImporter(Component):
 
         external_ids = self.backend_adapter.search(domain)
         _logger.info(
-            "search for odoo currency rates %s returned %s items",
+            "search for odoo account payment %s returned %s items",
             domain,
             len(external_ids),
         )
-        base_priority = 10
         for external_id in external_ids:
-            job_options = {"priority": base_priority}
-            self._import_record(external_id, job_options=job_options, force=force)
+            self._import_record(external_id, force=force)
 
 
 class AccountPaymentMapper(Component):
@@ -36,46 +34,46 @@ class AccountPaymentMapper(Component):
 
     direct = [
         ("name", "name"),
-        ("rate", "rate"),
+        ("amount", "amount"),
+        ("communication", "ref"),
+        ("payment_type", "payment_type"),
+        ("partner_type", "partner_type"),
     ]
 
     @mapping
-    def check_currency_rate_exists(self, record):
-        res = {}
-        currency_id = self.binder_for("odoo.res.currency").to_internal(
-            record["currency_id"][0], unwrap=True
-        )
-        rate_id = self.env["account.payment"].search(
-            [
-                ("name", "=", record["name"]),
-                ("currency_id", "=", currency_id.id),
-            ]
-        )
-        if len(rate_id) == 1:
-            _logger.info(
-                "Res currency rate found for %s : %s" % (record["name"], rate_id.name)
-            )
-            res.update({"odoo_id": rate_id.id})
-        return res
+    def partner_id(self, record):
+        binder = self.binder_for("odoo.res.partner")
+        partner_id = binder.to_internal(record["partner_id"][0], unwrap=True)
+        return {"partner_id": partner_id.id}
 
-    @only_create
     @mapping
     def currency_id(self, record):
         binder = self.binder_for("odoo.res.currency")
-        currency_id = binder.to_internal(record["currency_id"][0])
+        currency_id = binder.to_internal(record["currency_id"][0], unwrap=True)
         return {"currency_id": currency_id.id}
 
 
 class AccountPaymentImporter(Component):
-    """Import Payment Transaction"""
+    """Import Payment"""
 
     _name = "odoo.account.payment.importer"
     _inherit = "odoo.importer"
     _apply_on = "odoo.account.payment"
 
+    def _init_import(self, binding, external_id):
+        # We should SKIP the payment import.
+        return False
+
     def _import_dependencies(self, force=False):
-        raise NotImplementedError
         self._import_dependency(
-            self.odoo_record["currency_id"][0], "odoo.res.currency", force=force
+            self.odoo_record["partner_id"][0],
+            "odoo.res.partner",
+            force=force,
         )
+        if tx_id := self.odoo_record.get("payment_transaction_id"):
+            self._import_dependency(
+                tx_id[0],
+                "odoo.payment.transaction",
+                force=force,
+            )
         return super()._import_dependencies(force=force)

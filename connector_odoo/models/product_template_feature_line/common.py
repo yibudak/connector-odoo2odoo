@@ -4,6 +4,7 @@ from odoo.addons.component.core import Component
 
 
 class OdooProductTemplateFeatureLine(models.Model):
+    _queue_priority = 10
     _name = "odoo.product.template.feature.line"
     _inherit = ["odoo.binding"]
     _inherits = {"product.template.feature.line": "odoo_id"}
@@ -24,7 +25,7 @@ class OdooProductTemplateFeatureLine(models.Model):
 
     def resync(self):
         if self.backend_id.main_record == "odoo":
-            return self.with_delay().export_record(self.backend_id)
+            return self.delayed_export_record(self.backend_id)
         else:
             return self.delayed_import_record(
                 self.backend_id, self.external_id, force=True

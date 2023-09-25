@@ -25,10 +25,8 @@ class AddressRegionBatchImporter(Component):
             domain,
             len(external_ids),
         )
-        base_priority = 10
         for external_id in external_ids:
-            job_options = {"priority": base_priority}
-            self._import_record(external_id, job_options=job_options, force=force)
+            self._import_record(external_id, force=force)
 
 
 class AddressRegionImportMapper(Component):
@@ -90,4 +88,4 @@ class AddressRegionImporter(Component):
         """Import the dependencies for the record"""
         record = self.odoo_record
         if district := record.get("district_id"):
-            self._import_dependency(district[0], "odoo.address.district")
+            self._import_dependency(district[0], "odoo.address.district", force=force)

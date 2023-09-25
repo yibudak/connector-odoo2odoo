@@ -11,14 +11,16 @@ _logger = logging.getLogger(__name__)
 
 
 class OdooAPI(object):
-    # todo: açıklama ekle neden bunu yaptığımızı anlat
+    """
+    Yet another Odoo API client with JSON-RPC.
+    """
+
     def __init__(
         self,
         base_url,
         db,
         login,
         password,
-        model=None,  # todo: create a model class so we can execute methods on it
         timeout=15,
         uid=0,
         lang="tr_TR",
@@ -27,14 +29,10 @@ class OdooAPI(object):
         self.db = db
         self.login = login
         self.password = password
-        self.model = model  # todo: create a model class so we can execute methods on it
         self.timeout = timeout
         self._lang = lang
         self._session = requests.Session()
-        if uid == 0:
-            self._uid = self._get_uid()
-        else:
-            self._uid = uid
+        self._uid = self._get_uid() if uid == 0 else uid
         if not self._uid:
             _logger.error("OdooAPI: Authentication failed. Username: %s", self.login)
 
@@ -43,7 +41,7 @@ class OdooAPI(object):
 
     @property
     def query_id(self):
-        return randint(1, 1337)
+        return randint(1, 99999)
 
     def _post(self, payload):
         with self._session as client:
@@ -68,15 +66,6 @@ class OdooAPI(object):
                     "OdooAPI: Connection error: {}".format(exc),
                     seconds=5,
                 )
-            # except (requests.HTTPError, requests.exceptions.ConnectionError) as exc:
-            #     _logger.error(exc)
-            #     raise RetryableJobError(
-            #         "OdooAPI: Connection timeout error",
-            #         seconds=5,
-            #     )
-            # except (requests.HTTPError, KeyError) as exc:
-            #     _logger.error(exc)
-            #     raise exc
 
     def _base_payload(self):
         return {
@@ -145,7 +134,7 @@ class OdooAPI(object):
         _logger.info("OdooAPI Connection test successful, version: %s", response)
         return True
 
-    def create(self, model, data):
+    def create(self, model, data, context=None):
         return self._post(
             self._build_execute_kw_payload(
                 kwargs=[
@@ -153,7 +142,7 @@ class OdooAPI(object):
                     "create",
                     [data],
                     {
-                        "context": self._build_context(),
+                        "context": self._build_context(context=context),
                     },
                 ],
             )
@@ -186,7 +175,7 @@ class OdooAPI(object):
             )
         )
 
-    def write(self, res_id, model, data):
+    def write(self, res_id, model, data, context=None):
         """
         Single record writes.
         """
@@ -197,7 +186,7 @@ class OdooAPI(object):
                     "write",
                     [[res_id], data],
                     {
-                        "context": self._build_context(),
+                        "context": self._build_context(context=context),
                     },
                 ],
             )
@@ -229,7 +218,7 @@ class OdooAPI(object):
     def unlink(self, res_id):
         pass
 
-    def execute(self, model, method, args=None, kwargs=None, context=None):
+    def execute(self, model, method, args=None, context=None):
         return self._post(
             self._build_execute_kw_payload(
                 kwargs=[
@@ -242,43 +231,3 @@ class OdooAPI(object):
                 ],
             )
         )
-
-
-# class Model(object):
-#     def __init__(self, api, model):
-#         self.api = api
-#         self.model = model
-#
-#     def __call__(self, *args, **kwargs):
-#         return self.search(*args, **kwargs)
-
-# def authenticate(self):
-#     self.session = httpx.Client()
-#     url = self.base_url + "/web/session/authenticate"
-#     data = {
-#         "jsonrpc": "2.0",
-#         "params": {
-#             "db": self.db,
-#             "login": self.username,
-#             "password": self.password,
-#         },
-#     }
-#     response = self.session.post(url, json=data)
-#     response.raise_for_status()
-#     return response.json()
-#
-
-# def execute_kw(self, model, method, args, kwargs):
-#     url = self.base_url + "/web/dataset/call_kw/" + model + "/" + method
-#     data = {
-#         "jsonrpc": "2.0",
-#         "params": {
-#             "model": model,
-#             "method": method,
-#             "args": args,
-#             "kwargs": kwargs,
-#         },
-#     }
-#     response = self.session.post(url, json=data)
-#     response.raise_for_status()
-#     return response.json()

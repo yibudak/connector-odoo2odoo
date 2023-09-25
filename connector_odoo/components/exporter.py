@@ -40,6 +40,10 @@ class OdooBaseExporter(AbstractComponent):
         """Base method to check if the export should be skipped."""
         return False
 
+    def _after_export(self):
+        """Can do several actions after exporting a record on odoo"""
+        return True
+
     def _delay_import(self):
         """Schedule an import of the record.
 
@@ -78,7 +82,6 @@ class OdooBaseExporter(AbstractComponent):
         :param binding: binding record to export
         """
         self.binding = binding
-
         self.external_id = self.binder.to_external(self.binding, wrap=False)
 
         if self._must_skip():
@@ -102,10 +105,6 @@ class OdooBaseExporter(AbstractComponent):
             self.env.cr.commit()  # pylint: disable=invalid-commit
         self._after_export()
         return result
-
-    def _after_export(self):
-        """Can do several actions after exporting a record on odoo"""
-        return True
 
 
 class BatchExporter(AbstractComponent):
@@ -134,7 +133,9 @@ class DelayedBatchExporter(AbstractComponent):
     def _export_record(self, external_id, job_options=None, **kwargs):
         """Delay the import of the records"""
         delayable = external_id.with_delay(
-            channel=self.model._unique_channel_name, **job_options or {}
+            channel=self.model._unique_channel_name,
+            priority=self.model._priority,
+            **job_options or {}
         )
         delayable.export_record(self.backend_record, **kwargs)
 
@@ -188,9 +189,9 @@ class OdooExporter(AbstractComponent):
                 seconds=5,
             )
 
-    def _has_to_skip(self):
-        """Return True if the export can be skipped"""
-        return False
+    # def _has_to_skip(self):
+    #     """Return True if the export can be skipped"""
+    #     return False
 
     @contextmanager
     def _retry_unique_violation(self):
@@ -324,6 +325,12 @@ class OdooExporter(AbstractComponent):
         """Export the dependencies for the record"""
         return
 
+    def _get_external_id_with_data(self):
+        """
+        Search for an external ID with the data of the record.
+        """
+        return
+
     def _before_export(self):
         """Hook called before the export"""
         return
@@ -385,8 +392,9 @@ class OdooExporter(AbstractComponent):
 
         if not self.external_id:
             fields = None  # should be created with all the fields
-        if self._has_to_skip():
-            return
+
+        # if self._has_to_skip():
+        #     return _("Export skipped.")
 
         # run some logic before the export
         self._before_export()
@@ -397,6 +405,10 @@ class OdooExporter(AbstractComponent):
         # prevent other jobs to export the same record
         # will be released on commit (or rollback)
         self._lock()
+
+        # try to match with data if no external id
+        if not self.external_id:
+            self._get_external_id_with_data()
 
         map_record = self._map_data()
 

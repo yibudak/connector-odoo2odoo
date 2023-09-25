@@ -7,6 +7,7 @@ from odoo.addons.component.core import Component
 
 
 class OdooResCurrency(models.Model):
+    _queue_priority = 10
     _name = "odoo.res.currency"
     _inherit = ["odoo.binding"]
     _inherits = {"res.currency": "odoo_id"}

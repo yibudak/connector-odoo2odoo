@@ -11,6 +11,7 @@ _logger = logging.getLogger(__name__)
 
 
 class OdooPaymentTransaction(models.Model):
+    _queue_priority = 5
     _name = "odoo.payment.transaction"
     _inherit = ["odoo.binding"]
     _inherits = {"payment.transaction": "odoo_id"}

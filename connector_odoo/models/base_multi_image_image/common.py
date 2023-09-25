@@ -10,7 +10,7 @@ class OdooBaseMultiImageImage(models.Model):
     This is the real mapping model for product images on version 16.0
     You can avoid product.image model and use this model instead.
     """
-
+    _queue_priority = 15
     _name = "odoo.base_multi_image.image"
     _inherit = "odoo.binding"
     _inherits = {"base_multi_image.image": "odoo_id"}
@@ -25,7 +25,7 @@ class OdooBaseMultiImageImage(models.Model):
 
     def resync(self):
         if self.backend_id.main_record == "odoo":
-            return self.with_delay().export_record(self.backend_id)
+            return self.delayed_export_record(self.backend_id)
         else:
             return self.delayed_import_record(
                 self.backend_id, self.external_id, force=True

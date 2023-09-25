@@ -29,12 +29,8 @@ class AccountTaxBatchImporter(Component):
             domain,
             len(external_ids),
         )
-        base_priority = 10
         for external_id in external_ids:
-            # tax_id = self.backend_adapter.read(external_id)
-            # extra_priority = 15 if tax_id.amount_type != "group" else 0
-            job_options = {"priority": base_priority + 0}
-            self._import_record(external_id, job_options=job_options, force=force)
+            self._import_record(external_id, force=force)
 
 
 class AccountTaxImportMapper(Component):

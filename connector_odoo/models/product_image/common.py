@@ -13,7 +13,7 @@ class OdooProductImage(models.Model):
     base_multi_image.image ->>> product.image
 
     """
-
+    _queue_priority = 15
     _name = "odoo.product.image"
     _inherit = "odoo.binding"
     _inherits = {"product.image": "odoo_id"}
@@ -28,7 +28,7 @@ class OdooProductImage(models.Model):
 
     def resync(self):
         if self.backend_id.main_record == "odoo":
-            return self.with_delay().export_record(self.backend_id)
+            return self.delayed_export_record(self.backend_id)
         else:
             return self.delayed_import_record(
                 self.backend_id, self.external_id, force=True

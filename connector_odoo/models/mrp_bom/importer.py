@@ -29,8 +29,7 @@ class MrpBomBatchImporter(Component):
             len(external_ids),
         )
         for external_id in external_ids:
-            job_options = {"priority": 15}
-            self._import_record(external_id, job_options=job_options, force=force)
+            self._import_record(external_id, force=force)
 
 
 class MrpBomMapper(Component):
@@ -84,11 +83,11 @@ class MrpBomImporter(Component):
     _inherit = "odoo.importer"
     _apply_on = ["odoo.mrp.bom"]
 
-    def _get_context(self, data):
+    def _get_context(self):
         """
         Do not create procurement for sale order lines.
         """
-        ctx = super(MrpBomImporter, self)._get_context(data)
+        ctx = super(MrpBomImporter, self)._get_context()
         ctx["skip_cycle_check"] = True
         return ctx
 

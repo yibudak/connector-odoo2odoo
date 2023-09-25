@@ -24,6 +24,7 @@
         "l10n_tr_address",
         "altinkaya_ecommerce_sync",
         "delivery_integration_base",
+        "altinkaya_mrp",
     ],
     "data": [
         "data/cron.xml",

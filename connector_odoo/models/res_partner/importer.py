@@ -23,13 +23,16 @@ class PartnerBatchImporter(Component):
 
     def run(self, domain=None, force=False):
         """Run the synchronization"""
-        external_ids = self.backend_adapter.search(domain)
-        _logger.debug(
-            "search for odoo partner %s returned %s items", domain, len(external_ids)
+        exported_ids = self.model.search([("external_id", "!=", 0)]).mapped(
+            "external_id"
         )
-        for external_id in external_ids:
-            job_options = {"priority": 15}
-            self._import_record(external_id, job_options=job_options)
+        domain += [("id", "in", exported_ids)]
+        updated_ids = self.backend_adapter.search(domain)
+        _logger.debug(
+            "search for odoo partner %s returned %s items", domain, len(updated_ids)
+        )
+        for external_id in updated_ids:
+            self._import_record(external_id, force=force)
 
 
 class PartnerImportMapper(Component):
@@ -100,7 +103,12 @@ class PartnerImportMapper(Component):
 
     @mapping
     def address_fields(self, record):
-        vals = {}
+        vals = {
+            "neighbour_id": False,
+            "region_id": False,
+            "district_id": False,
+            "state_id": False,
+        }
         if neighbour := record.get("neighbour_id"):
             local_neighbour = self.binder_for("odoo.address.neighbour").to_internal(
                 neighbour[0], unwrap=True
@@ -114,7 +122,7 @@ class PartnerImportMapper(Component):
 
     @mapping
     def country_id(self, record):
-        vals = {}
+        vals = {"country_id": False}
         if not record.get("country_id"):
             return vals
         local_country_id = self.env["res.country"].search(
@@ -126,7 +134,7 @@ class PartnerImportMapper(Component):
 
     @mapping
     def state_id(self, record):
-        vals = {}
+        vals = {"state_id": False}
         if not record.get("state_id"):
             return vals
         else:
@@ -146,7 +154,7 @@ class PartnerImportMapper(Component):
 
     @mapping
     def parent_id(self, record):
-        vals = {}
+        vals = {"parent_id": False}
         if record.get("parent_id"):
             binder = self.binder_for("odoo.res.partner")
             vals["parent_id"] = binder.to_internal(
@@ -171,19 +179,23 @@ class PartnerImportMapper(Component):
 
     @mapping
     def property_account_receivable(self, record):
+        vals = {"property_account_receivable_id": False}
         if account_id := record.get("property_account_payable_id"):
             binder = self.binder_for("odoo.account.account")
             local_account = binder.to_internal(account_id[0], unwrap=True)
             if local_account:
-                return {"property_account_payable_id": local_account.id}
+                vals["property_account_receivable_id"] = local_account.id
+        return vals
 
     @mapping
     def property_account_receivable(self, record):
+        vals = {"property_account_payable_id": False}
         if account_id := record.get("property_account_receivable_id"):
             binder = self.binder_for("odoo.account.account")
             local_account = binder.to_internal(account_id[0], unwrap=True)
             if local_account:
-                return {"property_account_receivable_id": local_account.id}
+                vals["property_account_payable_id"] = local_account.id
+        return vals
 
     # @mapping
     # def property_purchase_currency_id(self, record):
@@ -210,8 +222,8 @@ class PartnerImporter(Component):
     _inherit = "odoo.importer"
     _apply_on = ["odoo.res.partner"]
 
-    def _get_context(self, data):
-        ctx = super(PartnerImporter, self)._get_context(data)
+    def _get_context(self):
+        ctx = super(PartnerImporter, self)._get_context()
         ctx["no_vat_validation"] = True
         return ctx
 

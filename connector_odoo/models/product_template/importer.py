@@ -34,7 +34,7 @@ class ProductTemplateBatchImporter(Component):
         )
         for external_id in external_ids:
             job_options = {"priority": 15}
-            self._import_record(external_id, job_options=job_options, force=force)
+            self._import_record(external_id, force=force)
 
 
 class ProductTemplateImportMapper(Component):
@@ -181,9 +181,9 @@ class ProductTemplateImporter(Component):
 
         return super()._import_dependencies(force=force)
 
-    def _get_context(self, data):
+    def _get_context(self):
         """Context for the create-write"""
-        res = super(ProductTemplateImporter, self)._get_context(data)
+        res = super(ProductTemplateImporter, self)._get_context()
         res["no_handle_variant"] = False
         return res
 

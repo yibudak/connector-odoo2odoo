@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo noupdate="1">
 
+    <record forcecreate="True" id="ir_cron_import_sales" model="ir.cron">
+        <field name="name">Odoo2Odoo - Sync Sale Orders</field>
+        <field name="active" eval="True"/>
+        <field name="user_id" ref="base.user_root"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_import("odoo.sale.order", "import_sale_order_from_date")</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">minutes</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+        <field name="model_id" ref="connector_odoo.model_odoo_backend"/>
+    </record>
+
     <record forcecreate="True" id="ir_cron_import_products" model="ir.cron">
         <field name="name">Odoo2Odoo - Sync Products</field>
         <field name="active" eval="True"/>

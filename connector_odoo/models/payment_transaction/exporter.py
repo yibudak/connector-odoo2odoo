@@ -24,7 +24,7 @@ class PaymentTransactionExportMapper(Component):
     direct = [
         ("garanti_xid", "garanti_xid"),
         ("garanti_secure3d_hash", "garanti_secure3d_hash"),
-        ("callback_hash", "callback_hash"),
+        # ("callback_hash", "callback_hash"), # todo: yigit fix permission issue and enable this line.
         ("reference", "reference"),
         ("amount", "amount"),
         ("state", "state"),
@@ -39,12 +39,11 @@ class PaymentTransactionExportMapper(Component):
 
     @mapping
     def acquirer_id(self, record):
-        pass
-        # yigit elle map et
+        return {"acquirer_id": 29}  # Garanti Sanal POS
 
     @mapping
     def partner_id(self, record):
-        # yigit partnert export_dependencies'de export et
+        # yigit partnert export_dependencies'de export etmek gerekir mi
         binder = self.binder_for("odoo.res.partner")
         return {
             "partner_id": binder.to_external(record.partner_id, wrap=True),
@@ -59,23 +58,32 @@ class PaymentTransactionExportMapper(Component):
 
     @mapping
     def partner_country_id(self, record):
-        binder = self.binder_for("odoo.res.country")
+        ext_counry = self.work.odoo_api.search(
+            model="res.country",
+            domain=[("code", "=", record.partner_country_id.code)],
+            fields=["id"],
+        )
         return {
-            "partner_country_id": binder.to_external(
-                record.partner_country_id, wrap=True
-            ),
+            "partner_country_id": ext_counry[0]["id"],
         }
 
     @mapping
     def sale_order_ids(self, record):
         binder = self.binder_for("odoo.sale.order")
+        orders = []
+        for order in record.sale_order_ids:
+            orders.append(binder.to_external(order, wrap=True))
         return {
-            "sale_order_ids": [(6, 0, binder.to_external(record.sale_order_ids))],
+            "sale_order_ids": [(6, 0, orders)],
         }
 
     @mapping
     def payment_id(self, record):
-        pass
+        vals = {}
+        if record.payment_id:
+            binder = self.binder_for("odoo.account.payment")
+            vals["payment_id"] = binder.to_external(record.payment_id, wrap=True)
+        return vals
 
 
 class OdooPaymentTransactionExporter(Component):
@@ -88,6 +96,25 @@ class OdooPaymentTransactionExporter(Component):
             self._export_dependency(self.binding.payment_id, "odoo.account.payment")
         if self.binding.partner_id:
             self._export_dependency(self.binding.partner_id, "odoo.res.partner")
+
+    def _after_export(self):
+        # Update payment_id's transaction_id
+        payment_binding = self.env["odoo.account.payment"].search(
+            [
+                ("backend_id", "=", self.backend_record.id),
+                ("odoo_id", "=", self.binding.payment_id.id),
+            ]
+        )
+        if payment_binding and payment_binding.external_id:
+            # Note: backend_adapter uses the current model's external_id as res_id,
+            # that's why we use self.work.odoo_api here since we want to update another
+            # model.
+            self.work.odoo_api.write(
+                model="account.payment",
+                res_id=payment_binding.external_id,
+                data={"payment_transaction_id": self.binding.external_id},
+            )
+        return True
 
     def _create_data(self, map_record, fields=None, **kwargs):
         """Get the data to pass to :py:meth:`_create`"""

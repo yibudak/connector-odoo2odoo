@@ -30,10 +30,7 @@ class SaleOrderLineBatchImporter(Component):
         )
         for order in updated_ids:
             order_id = self.backend_adapter.read(order)
-            job_options = {
-                "priority": 10,
-            }
-            self._import_record(order_id.id, job_options=job_options)
+            self._import_record(order_id.id, force=force)
 
 
 class SaleOrderLineImportMapper(Component):
@@ -49,6 +46,7 @@ class SaleOrderLineImportMapper(Component):
         ("display_type", "display_type"),
         ("customer_lead", "customer_lead"),
         ("discount", "discount"),
+        ("deci", "deci"),
     ]
 
     @mapping
@@ -110,10 +108,11 @@ class SaleOrderLineImporter(Component):
             force=force,
         )
 
-    def _get_context(self, data):
+    def _get_context(self):
         """
         Do not create procurement for sale order lines.
         """
-        ctx = super(SaleOrderLineImporter, self)._get_context(data)
+        ctx = super(SaleOrderLineImporter, self)._get_context()
         ctx["skip_procurement"] = True
+        ctx["skip_price_recompute"] = True
         return ctx

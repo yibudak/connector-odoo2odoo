@@ -32,12 +32,8 @@ class ProductPricelistBatchImporter(Component):
             domain,
             len(updated_ids),
         )
-        base_priority = 10
         for pricelist in updated_ids:
-            job_options = {
-                "priority": base_priority,
-            }
-            self._import_record(pricelist, job_options=job_options, force=force)
+            self._import_record(pricelist, force=force)
 
 
 class ProductPricelistImporter(Component):
@@ -126,10 +122,7 @@ class ProductPricelistItemBatchImporter(Component):
             len(updated_ids),
         )
         for pricelist in updated_ids:
-            job_options = {
-                "priority": 10,
-            }
-            self._import_record(pricelist, job_options=job_options, force=force)
+            self._import_record(pricelist, force=force)
 
 
 class ProductPricelistItemImporter(Component):

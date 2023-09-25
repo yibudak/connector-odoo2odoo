@@ -26,8 +26,7 @@ class DeliveryPriceRuleBatchImporter(Component):
             len(external_ids),
         )
         for external_id in external_ids:
-            job_options = {"priority": 15}
-            self._import_record(external_id, job_options=job_options)
+            self._import_record(external_id, force=force)
 
 
 class DeliveryCarrierMapper(Component):
@@ -36,6 +35,7 @@ class DeliveryCarrierMapper(Component):
     _apply_on = ["odoo.delivery.price.rule"]
 
     direct = [
+        ("sequence", "sequence"),
         ("variable", "variable"),
         ("operator", "operator"),
         ("max_value", "max_value"),
@@ -77,6 +77,4 @@ class DeliveryPriceRuleImporter(Component):
         if region := record.get("region_id"):
             self._import_dependency(region[0], "odoo.delivery.region", force=force)
         if carrier_id := record.get("carrier_id"):
-            self._import_dependency(
-                carrier_id[0], "odoo.delivery.carrier", force=force
-            )
+            self._import_dependency(carrier_id[0], "odoo.delivery.carrier", force=force)

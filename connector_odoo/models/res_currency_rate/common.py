@@ -11,6 +11,7 @@ _logger = logging.getLogger(__name__)
 
 
 class OdooResCurrencyRate(models.Model):
+    _queue_priority = 5
     _name = "odoo.res.currency.rate"
     _inherit = ["odoo.binding"]
     _inherits = {"res.currency.rate": "odoo_id"}

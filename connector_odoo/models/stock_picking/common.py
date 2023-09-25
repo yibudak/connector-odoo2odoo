@@ -12,6 +12,7 @@ _logger = logging.getLogger(__name__)
 
 
 class OdooStockPicking(models.Model):
+    _queue_priority = 10
     _name = "odoo.stock.picking"
     _inherit = [
         "odoo.binding",

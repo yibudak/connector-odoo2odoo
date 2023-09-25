@@ -62,6 +62,7 @@
                                     <field name="import_partner_from_date"/>
                                     <field name="import_account_from_date"/>
                                     <field name="import_mrp_models_from_date"/>
+									<field name="import_sale_order_from_date"/>
                                 </group>
                             </page>
 							<page string="Domains" name="domains_page">
