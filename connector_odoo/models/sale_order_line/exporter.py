@@ -94,16 +94,30 @@ class OdooSaleOrderLineExporter(Component):
                 limit=1,
             )
             if external_order:
+                domain = [
+                    ("order_id", "=", external_order[0]),
+                    (
+                        "product_id",
+                        "in",
+                        self.binding.mapped("product_id.bind_ids.external_id"),
+                    ),
+                ]
+
+                if self.binding.set_parent_product_id:
+                    product_binder = self.binder_for("odoo.product.product")
+                    domain.append(
+                        (
+                            "set_parent_product_id",
+                            "=",
+                            product_binder.to_external(
+                                self.binding.set_parent_product_id, wrap=True
+                            ),
+                        )
+                    )
+
                 possible_line = self.backend_adapter.search(
                     model="sale.order.line",
-                    domain=[
-                        ("order_id", "=", external_order[0]),
-                        (
-                            "product_id",
-                            "in",
-                            self.binding.mapped("product_id.bind_ids.external_id"),
-                        ),
-                    ],
+                    domain=domain,
                     limit=1,
                 )
                 if possible_line:
