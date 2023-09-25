@@ -83,7 +83,7 @@ class OdooBackend(models.Model):
             ("https", "JsonRPC with SSL"),
         ],
         required=True,
-        default="http",
+        default="https",
         help="For SSL consider changing the port to 443",
     )
     default_lang_id = fields.Many2one(
@@ -116,7 +116,7 @@ class OdooBackend(models.Model):
         help="Filter in the Odoo Destination",
     )
     external_product_template_domain_filter = fields.Char(
-        string="External Product domain filter",
+        string="External Product template domain filter",
         default="[]",
         help="Filter in the Odoo Destination",
     )
