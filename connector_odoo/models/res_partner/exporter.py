@@ -291,7 +291,7 @@ class PartnerExportMapper(Component):
     @mapping
     def is_company_and_parent_id(self, record):
         # If partner has any parent partner on current backend
-        vals = {"is_company": True}
+        vals = {"is_company": record.is_company}
         if parent := (
             record.parent_id
             or (
