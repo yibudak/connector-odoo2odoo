@@ -189,6 +189,7 @@ class OdooPartnerExporter(Component):
 
         domain = [
             ("vat", "=", self.binding.vat),
+            ("is_company", "=", self.binding.is_company)
         ]
         # Müşterinin alt adreslerinden biriyse bu durum çalışır.
         if self.binding.parent_id:
@@ -286,11 +287,11 @@ class PartnerExportMapper(Component):
                 # vals["country_id"] = remote_neighbour["country_id"][0]
         return vals
 
-    @only_create
+    # @only_create
     @mapping
-    def customer_type_and_parent_id(self, record):
+    def is_company_and_parent_id(self, record):
         # If partner has any parent partner on current backend
-        vals = {"customer_type": "company"}
+        vals = {"is_company": True}
         if parent := (
             record.parent_id
             or (
@@ -301,5 +302,5 @@ class PartnerExportMapper(Component):
             binder = self.binder_for("odoo.res.partner")
             parent_id = binder.to_external(parent, wrap=True)
             vals["parent_id"] = parent_id
-            vals["customer_type"] = "person"
+            vals["is_company"] = False
         return vals
