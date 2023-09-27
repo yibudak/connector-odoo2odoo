@@ -159,6 +159,8 @@ class OdooPartnerExporter(Component):
             self.binding.parent_id = imported_partner.odoo_id
             # Bir şirketle eşleştirebildik, oluşturduğumuz dummy şirketi çöpe at.
             created_company.unlink()
+        else:
+            created_company.ecommerce_partner = True
         return True
 
     def _export_dependencies(self):
@@ -189,7 +191,7 @@ class OdooPartnerExporter(Component):
 
         domain = [
             ("vat", "=", self.binding.vat),
-            ("is_company", "=", self.binding.is_company)
+            ("is_company", "=", self.binding.is_company),
         ]
         # Müşterinin alt adreslerinden biriyse bu durum çalışır.
         if self.binding.parent_id:
