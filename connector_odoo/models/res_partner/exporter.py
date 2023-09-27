@@ -189,9 +189,6 @@ class OdooPartnerExporter(Component):
 
         domain = [
             ("vat", "=", self.binding.vat),
-            "|",
-            ("name", "ilike", self.binding.name),
-            ("email", "=", self.binding.email),
         ]
         # Müşterinin alt adreslerinden biriyse bu durum çalışır.
         if self.binding.parent_id:
