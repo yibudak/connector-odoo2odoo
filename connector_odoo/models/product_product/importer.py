@@ -85,6 +85,16 @@ class ProductImportMapper(Component):
     ]
 
     @mapping
+    def taxes_id(self, record):
+        binder = self.binder_for("odoo.account.tax")
+        tax_ids = []
+        for tax_id in record["taxes_id"]:
+            tax = binder.to_internal(tax_id, unwrap=True)
+            if tax:
+                tax_ids.append(tax.id)
+        return {"taxes_id": [(6, 0, tax_ids)]}
+
+    @mapping
     def template_and_attributes(self, record):
         """Map template and attributes"""
         tmpl_id, ptav_list = _compute_attribute_line_vals(importer=self, record=record)

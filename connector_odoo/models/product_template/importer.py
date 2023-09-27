@@ -62,6 +62,16 @@ class ProductTemplateImportMapper(Component):
     ]
 
     @mapping
+    def taxes_id(self, record):
+        binder = self.binder_for("odoo.account.tax")
+        tax_ids = []
+        for tax_id in record["taxes_id"]:
+            tax = binder.to_internal(tax_id, unwrap=True)
+            if tax:
+                tax_ids.append(tax.id)
+        return {"taxes_id": [(6, 0, tax_ids)]}
+
+    @mapping
     def company_id(self, record):
         return {"company_id": self.env.user.company_id.id}
 
