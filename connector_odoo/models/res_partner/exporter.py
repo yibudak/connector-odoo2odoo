@@ -189,6 +189,9 @@ class OdooPartnerExporter(Component):
         if self.binding.type == "delivery":
             return False
 
+        if self.binding.vat in ["11111111111", "2222222222"]:
+            return False
+
         domain = [
             ("vat", "=", self.binding.vat),
             ("is_company", "=", self.binding.is_company),
