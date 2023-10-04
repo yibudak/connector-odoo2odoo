@@ -290,15 +290,6 @@ class OdooBackend(models.Model):
         else:
             return next_time
 
-    def action_fix_product_images(self):
-        """
-        Action to call the multi_fix_product_images method from
-        product.template model.
-        """
-        self.ensure_one()
-        self.env["product.template"].with_delay().multi_fix_product_images()
-        return True
-
     def action_fix_category_seo_name(self):
         self.ensure_one()
         self.env["product.public.category"].with_delay().multi_fix_category_seo_name()

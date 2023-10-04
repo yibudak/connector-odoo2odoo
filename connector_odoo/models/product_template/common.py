@@ -78,32 +78,6 @@ class ProductTemplate(models.Model):
         for record in self:
             record.product_bind_ids = record.product_variant_ids.mapped("bind_ids")
 
-    def multi_fix_product_images(self):
-        """This method fixes main image of the all the products."""
-        website_products = self.search([("is_published", "=", True)])
-        for product in website_products:
-            variant_img = fields.first(product.image_ids)
-            if variant_img:
-                product.write(
-                    {
-                        "image_1920": variant_img.image_1920,
-                        "image_1024": variant_img.image_1024,
-                        "image_512": variant_img.image_512,
-                    }
-                )
-                product._compute_can_image_1024_be_zoomed()
-                for variant in product.product_variant_ids:
-                    variant.write(
-                        {
-                            "image_1920": variant_img.image_1920,
-                            "image_1024": variant_img.image_1024,
-                            "image_512": variant_img.image_512,
-                        }
-                    )
-                    variant._compute_can_image_1024_be_zoomed()
-            self.env.cr.commit()
-        return True
-
     def import_external_variant_ids(self):
         odoo_record = fields.first(self.bind_ids)
         domain = [["product_tmpl_id", "=", odoo_record.external_id]]

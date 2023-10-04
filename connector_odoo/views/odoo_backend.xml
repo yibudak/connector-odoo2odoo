@@ -78,11 +78,11 @@
 								</group>
 							</page>
                             <page string="Helpers" name="helpers_page">
+								<strong>AVOID USING THESE BUTTONS.</strong>
                                 <group name="helper_group">
-                                    <button name="action_fix_product_images" type="object" string="Fix product images" />
                                     <button name="action_fix_category_seo_name" type="object" string="Fix category seo name" />
                                     <button name="action_fix_product_seo_name" type="object" string="Fix product seo name" />
-									<button name="action_fix_address_models" type="object" class="oe_highlight" string="Fix Address Models"/>
+									<button name="action_fix_address_models" type="object" string="Fix Address Models"/>
 								</group>
                             </page>
 						</notebook>
