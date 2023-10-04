@@ -101,6 +101,7 @@ class ProductTemplate(models.Model):
                         }
                     )
                     variant._compute_can_image_1024_be_zoomed()
+            self.env.cr.commit()
         return True
 
     def import_external_variant_ids(self):

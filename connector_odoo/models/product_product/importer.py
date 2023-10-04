@@ -152,7 +152,9 @@ class ProductImportMapper(Component):
     @mapping
     def dimensions(self, record):
         binder = self.binder_for("odoo.uom.uom")
-        dimensional_uom = binder.to_internal(record["dimensional_uom_id"][0], unwrap=True)
+        dimensional_uom = binder.to_internal(
+            record["dimensional_uom_id"][0], unwrap=True
+        )
         weight_uom = binder.to_internal(record["weight_uom_id"][0], unwrap=True)
         volume_uom = binder.to_internal(record["volume_uom_id"][0], unwrap=True)
         return {
@@ -161,7 +163,9 @@ class ProductImportMapper(Component):
             "product_width": record["product_width"],
             "product_height": record["product_height"],
             "product_weight": record["weight"],
+            "weight": record["weight"],
             "product_volume": record["volume"],
+            "volume": record["volume"],
             "weight_uom_id": weight_uom.id,
             "volume_uom_id": volume_uom.id,
         }
