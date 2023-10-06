@@ -61,14 +61,13 @@ class PaymentTransactionMapper(Component):
         binder = self.binder_for("odoo.sale.order")
         order_list = []
         if sale_order_ids := record.get("sale_order_ids"):
-
             for order_id in sale_order_ids:
                 order_list.append(binder.to_internal(order_id, unwrap=True).id)
         return {"sale_order_ids": [(6, 0, order_list)]}
 
     @mapping
     def payment_id(self, record):
-        vals = {}
+        vals = {"payment_id": False}
         if payment_id := record.get("payment_id"):
             binder = self.binder_for("odoo.account.payment")
             vals["payment_id"] = binder.to_internal(payment_id[0], unwrap=True).id

@@ -69,7 +69,10 @@ class BaseMultiImageImageMapper(Component):
 
     @mapping
     def owner_ref_model(self, record):
-        vals = {}
+        vals = {
+            "owner_model": False,
+            "owner_id": False,
+        }
         owner = self._get_owner(record)
         if owner:
             vals["owner_model"] = record["owner_model"]

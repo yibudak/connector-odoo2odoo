@@ -163,7 +163,9 @@ class ProductTemplateImportMapper(Component):
         """Sometimes user can edit HTML field with JS editor.
         This may lead to add some old styles from the main instance.
         So we are cleaning the HTML before importing it."""
-        vals = {}
+        vals = {
+            "public_description": False,
+        }
         if desc := record["public_description"]:
             cleaner = Cleaner(style=True, remove_unknown_tags=False)
             vals["public_description"] = cleaner.clean_html(desc) or ""

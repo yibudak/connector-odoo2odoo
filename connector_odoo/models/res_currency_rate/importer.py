@@ -61,7 +61,7 @@ class ResCurrencyRateMapper(Component):
     @mapping
     def currency_id(self, record):
         binder = self.binder_for("odoo.res.currency")
-        currency_id = binder.to_internal(record["currency_id"][0])
+        currency_id = binder.to_internal(record["currency_id"][0], unwrap=True)
         return {"currency_id": currency_id.id}
 
 
@@ -74,6 +74,8 @@ class CurrencyRateImporter(Component):
 
     def _import_dependencies(self, force=False):
         self._import_dependency(
-            self.odoo_record["currency_id"][0], "odoo.res.currency", force=force
+            self.odoo_record["currency_id"][0],
+            "odoo.res.currency",
+            force=force,
         )
         return super()._import_dependencies(force=force)
