@@ -225,6 +225,7 @@ class OdooPickingMapper(Component):
 
     @mapping
     def partner_id(self, record):
+        # todo: samet
         if record["partner_id"]:
             binder = self.binder_for("odoo.res.partner")
             partner_id = binder.to_internal(record["partner_id"].id, unwrap=True)

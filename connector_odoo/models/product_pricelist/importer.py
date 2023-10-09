@@ -69,6 +69,7 @@ class ProductPricelistImportMapper(Component):
     # @only_create # todo enable
     @mapping
     def odoo_id(self, record):
+        # todo: samet
         # TODO: Improve the matching on name and position in the tree so that
         # multiple pricelist with the same name will be allowed and not
         # duplicated
@@ -88,6 +89,7 @@ class ProductPricelistImportMapper(Component):
 
     @mapping
     def currency_id(self, record):
+        # todo: samet
         if not (currency_id := record.get("currency_id")):
             return
         currency = self.env["res.currency"].search([("name", "=", currency_id[1])])
@@ -173,6 +175,7 @@ class ProductPricelistItemImportMapper(Component):
 
     @mapping
     def pricelist_id(self, record):
+        # todo: samet
         binder = self.binder_for("odoo.product.pricelist")
         pricelist = binder.to_internal(record["pricelist_id"][0], unwrap=True)
         if not pricelist:
@@ -181,6 +184,7 @@ class ProductPricelistItemImportMapper(Component):
 
     @mapping
     def categ_id(self, record):
+        # todo: samet
         if categ_id := record.get("categ_id"):
             binder = self.binder_for("odoo.product.category")
             categ = binder.to_internal(categ_id[0], unwrap=True)
@@ -188,6 +192,7 @@ class ProductPricelistItemImportMapper(Component):
 
     @mapping
     def base_pricelist_id(self, record):
+        # todo: samet
         if base_pricelist_id := record.get("base_pricelist_id"):
             binder = self.binder_for("odoo.product.pricelist")
             pricelist = binder.to_internal(base_pricelist_id[0], unwrap=True)
@@ -195,6 +200,7 @@ class ProductPricelistItemImportMapper(Component):
 
     @mapping
     def base(self, record):
+        # todo: samet
         base = record.get("base")
         if base == "-1":
             pricelist_base = "pricelist"

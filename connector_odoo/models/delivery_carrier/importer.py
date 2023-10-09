@@ -55,6 +55,7 @@ class DeliveryCarrierMapper(Component):
 
     @mapping
     def deci_type(self, record):
+        # todo: samet (bunu da diğerleri gibi yapabiliriz)
         try:
             deci = str(record.get("deci_type"))
         except ValueError:
@@ -63,6 +64,7 @@ class DeliveryCarrierMapper(Component):
 
     @mapping
     def currency_id(self, record):
+        # todo: samet (bunu da diğerleri gibi yapabiliriz)
         vals = {}
         if currency := record.get("currency_id"):
             currency = self.env["res.currency"].search([("name", "=", currency[1])])
@@ -73,6 +75,7 @@ class DeliveryCarrierMapper(Component):
 
     @mapping
     def delivery_type(self, record):
+        # todo: samet (null durumda base_on_rule yazması doğru mu?)
         if record.get("delivery_type") == "fixed":
             delivery_type = "fixed"
         else:
@@ -86,6 +89,7 @@ class DeliveryCarrierMapper(Component):
 
     @mapping
     def product_id(self, record):
+        # todo: samet (bunu da diğerleri gibi yapabiliriz)
         vals = {}
         binder = self.binder_for("odoo.product.product")
         if product := record.get("product_id"):

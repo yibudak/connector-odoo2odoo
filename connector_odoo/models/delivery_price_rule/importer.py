@@ -46,6 +46,7 @@ class DeliveryCarrierMapper(Component):
 
     @mapping
     def region_id(self, record):
+        # todo: samet
         vals = {}
         binder = self.binder_for("odoo.delivery.region")
         region = record.get("region_id")
@@ -56,6 +57,7 @@ class DeliveryCarrierMapper(Component):
 
     @mapping
     def carrier_id(self, record):
+        # todo: samet
         vals = {}
         binder = self.binder_for("odoo.delivery.carrier")
         carrier = record.get("carrier_id")

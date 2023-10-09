@@ -68,6 +68,7 @@ class AccountPaymentTermImportMapper(Component):
 
     @mapping
     def line_ids(self, record):
+        # todo: samet
         res = {}
         if record.line_ids:
             lines = []

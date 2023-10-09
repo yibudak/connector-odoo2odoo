@@ -60,6 +60,7 @@ class ProductTemplateFeatureLineMapper(Component):
         return {"value_ids": [(6, 0, self._get_feature_value_id(record))]}
 
     def _get_product_tmpl_id(self, record):
+        # todo: samet (diğerleri gibi yapalım)
         binder = self.binder_for("odoo.product.template")
         return binder.to_internal(record["product_tmpl_id"][0], unwrap=True).id
 
