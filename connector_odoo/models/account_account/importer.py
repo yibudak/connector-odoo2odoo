@@ -71,6 +71,7 @@ class AccountAccountImportMapper(Component):
     def user_type_id(self, record):
         """Account types is not modelized in Odoo 16.
         So we are mapping available account types from v12.0"""
+        # todo samet
         vals = {}
         available_types = map(
             lambda f: f[0],

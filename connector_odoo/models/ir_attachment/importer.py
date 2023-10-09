@@ -52,6 +52,7 @@ class IrAttachmentImportMapper(Component):
     @only_create
     @mapping
     def check_ir_attachment_exists(self, record):
+        # todo: samet (_logger_info if ile çalışmalı)
         res = {}
         attachment_id = self.env["ir.attachment"].search(
             [("store_fname", "=", record["store_fname"])]
@@ -67,6 +68,7 @@ class IrAttachmentImportMapper(Component):
 
     @mapping
     def res_id(self, record):
+        # todo: samet
         vals = {}
         if model := record["res_model"]:
             binder = self.binder_for("odoo.{}".format(model))

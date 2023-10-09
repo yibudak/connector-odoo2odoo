@@ -81,6 +81,7 @@ class BaseMultiImageImageMapper(Component):
 
     @mapping
     def attachment_id(self, record):
+        # todo: samet (bunu da diğerleri gibi yapabiliriz)
         vals = {}
         if (attachment_id := record["attachment_id"]) and record["storage"] != "db":
             binder = self.binder_for("odoo.ir.attachment")
@@ -101,6 +102,7 @@ class BaseMultiImageImageMapper(Component):
 
     @mapping
     def file_db_store(self, record):
+        # todo: samet (bunu da diğerleri gibi yapabiliriz)
         vals = {}
         if record["storage"] == "db" and record["file_db_store"]:
             vals["file_db_store"] = record["file_db_store"].replace("\n", "")
@@ -110,6 +112,7 @@ class BaseMultiImageImageMapper(Component):
 
     @mapping
     def product_variant_ids(self, record):
+        # todo: samet (bunu da diğerleri gibi yapabiliriz)
         vals = {}
         if variant_ids := record["product_variant_ids"]:
             binder = self.binder_for("odoo.product.product")

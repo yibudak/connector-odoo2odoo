@@ -47,6 +47,7 @@ class DeliveryRegionMapper(Component):
 
     @mapping
     def country_ids(self, record):
+        # todo: samet
         res = {}
         countries = record.get("country_ids")
         if countries:
@@ -61,6 +62,7 @@ class DeliveryRegionMapper(Component):
 
     @mapping
     def state_ids(self, record):
+        # todo: samet
         res = {}
         state_list = []
         states = record.get("state_ids")

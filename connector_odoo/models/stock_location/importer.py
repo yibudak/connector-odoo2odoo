@@ -98,6 +98,7 @@ class StockLocationImportMapper(Component):
 
     @mapping
     def location_id(self, record):
+        # todo: samet
         location_id = False
         if record.location_id:
             binder = self.binder_for("odoo.stock.location")

@@ -96,6 +96,7 @@ class ProductImportMapper(Component):
 
     @mapping
     def template_and_attributes(self, record):
+        # todo: samet
         """Map template and attributes"""
         tmpl_id, ptav_list = _compute_attribute_line_vals(importer=self, record=record)
 
@@ -134,6 +135,7 @@ class ProductImportMapper(Component):
 
     @mapping
     def uom_id(self, record):
+        # todo: samet
         binder = self.binder_for("odoo.uom.uom")
         uom = binder.to_internal(record["uom_id"][0], unwrap=True)
         return {"uom_id": uom.id, "uom_po_id": uom.id}
@@ -151,6 +153,7 @@ class ProductImportMapper(Component):
 
     @mapping
     def dimensions(self, record):
+        # todo: samet
         binder = self.binder_for("odoo.uom.uom")
         dimensional_uom = binder.to_internal(
             record["dimensional_uom_id"][0], unwrap=True
