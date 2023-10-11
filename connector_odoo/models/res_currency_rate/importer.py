@@ -40,6 +40,7 @@ class ResCurrencyRateMapper(Component):
 
     @mapping
     def check_currency_rate_exists(self, record):
+        # todo: samet
         res = {}
         currency_id = self.binder_for("odoo.res.currency").to_internal(
             record["currency_id"][0], unwrap=True

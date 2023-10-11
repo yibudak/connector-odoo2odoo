@@ -42,6 +42,7 @@ class MrpBomTemplateLineMapper(Component):
 
     @mapping
     def bom_id(self, record):
+        # todo: samet
         res = {
             "bom_id": False,
         }
@@ -53,6 +54,7 @@ class MrpBomTemplateLineMapper(Component):
 
     @mapping
     def product_tmpl_id(self, record):
+        # todo: samet
         res = {
             "product_tmpl_id": False,
         }
@@ -66,6 +68,7 @@ class MrpBomTemplateLineMapper(Component):
 
     @mapping
     def product_uom_id(self, record):
+        # todo: samet
         res = {"product_uom_id": False}
         if uom := record.get("product_uom_id"):
             local_uom = self.env["odoo.uom.uom"].search([("external_id", "=", uom[0])])
@@ -75,6 +78,7 @@ class MrpBomTemplateLineMapper(Component):
 
     @mapping
     def attributes(self, record):
+        # todo: samet
         """
         Odoo 12 -> Odoo 16
         attribute_value_ids -> bom_product_template_attribute_value_ids

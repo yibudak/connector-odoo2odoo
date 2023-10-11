@@ -107,6 +107,7 @@ class ProductTemplateImportMapper(Component):
 
     @mapping
     def default_code(self, record):
+        # todo: samet
         if not (code := record["default_code"]):
             return {}
         if not code:
@@ -115,6 +116,7 @@ class ProductTemplateImportMapper(Component):
 
     @mapping
     def name(self, record):
+        # todo: samet
         if not (name := record["name"]):
             return {}
         if not name:
@@ -123,6 +125,7 @@ class ProductTemplateImportMapper(Component):
 
     @mapping
     def category(self, record):
+        # todo: samet
         """This method is used to map the category of the product,
         also it will map the public category of the product."""
         vals = {}
