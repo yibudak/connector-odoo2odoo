@@ -251,34 +251,31 @@ class OdooBackend(models.Model):
                 % e
             ) from e
 
-    def _get_backend(self):
+    def _get_backends(self):
         """
         Get the backend to use for the import. Usually we use this method
         for cron jobs that are not linked to a specific backend.
         """
-        backend = self
-        if not backend:
-            backend = self.env["res.company"].browse(1).default_odoo_backend_id
-        return backend
+        active_backends = self.env["odoo.backend"].search([("state", "!=", "draft")])
+        return active_backends
 
     def _cron_multi_import(self, models, date_field):
         """
         Multi-way to import data from Odoo with cron.
         """
-        backend = self._get_backend()
-        for model in models:
-            next_time = self._cron_import(
-                model, date_field, is_single=False, backend=backend
-            )
-        backend.write({date_field: next_time})
+        backends = self._get_backends()
+        for backend in backends:
+            for model in models:
+                next_time = self._cron_import(
+                    model, date_field, backend, is_single=False
+                )
+            backend.write({date_field: next_time})
         return True
 
-    def _cron_import(self, model_name, from_date_field, is_single=True, backend=None):
+    def _cron_import(self, model_name, from_date_field, backend, is_single=True):
         """
         Base method to import data from Odoo with cron.
         """
-        if not backend:
-            backend = self._get_backend()
         # When we call this method for a single model, we pass the field name
         # Otherwise we pass the field itself to avoid time inconsistencies
         # between grouped models.
@@ -396,32 +393,20 @@ class OdooBackend(models.Model):
 
     def _fix_address_district(self):
         self.ensure_one()
-
-        partner_districts = self.env["res.partner"].search([]).mapped("neighbour_id")
-        districts_to_unlink = self.env["address.district"].search(
-            [("id", "not in", partner_districts.mapped("district_id.id"))]
-        )
-        districts_to_unlink.unlink()
+        imported = self.env["odoo.address.district"].search([]).mapped("odoo_id")
+        self.env["address.district"].search([("id", "not in", imported.ids)]).unlink()
         return True
 
     def _fix_address_region(self):
         self.ensure_one()
-
-        partner_regions = self.env["res.partner"].search([]).mapped("neighbour_id")
-        regions_to_unlink = self.env["address.region"].search(
-            [("id", "not in", partner_regions.mapped("region_id.id"))]
-        )
-        regions_to_unlink.unlink()
+        imported = self.env["odoo.address.region"].search([]).mapped("odoo_id")
+        self.env["address.region"].search([("id", "not in", imported.ids)]).unlink()
         return True
 
     def _fix_address_neighbour(self):
         self.ensure_one()
-
-        partner_neighbours = self.env["res.partner"].search([]).mapped("neighbour_id")
-        neighbour_to_unlink = self.env["address.neighbour"].search(
-            [("id", "not in", partner_neighbours.ids)]
-        )
-        neighbour_to_unlink.unlink()
+        imported = self.env["odoo.address.neighbour"].search([]).mapped("odoo_id")
+        self.env["address.neighbour"].search([("id", "not in", imported.ids)]).unlink()
         return True
 
     def action_fix_address_models(self):

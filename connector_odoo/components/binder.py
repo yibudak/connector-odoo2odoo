@@ -3,6 +3,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 from odoo.addons.component.core import Component
+from odoo import tools
 
 
 class OdooModelBinder(Component):
@@ -17,6 +18,38 @@ class OdooModelBinder(Component):
 
     _name = "odoo.binder"
     _inherit = ["base.binder", "base.odoo.connector"]
+
+    def to_internal(self, external_id, unwrap=False):
+        """
+        INHERITED to use default_backend_id instead of backend_id
+
+        Give the Odoo recordset for an external ID
+
+        :param external_id: external ID for which we want
+                            the Odoo ID
+        :param unwrap: if True, returns the normal record
+                       else return the binding record
+        :return: a recordset, depending on the value of unwrap,
+                 or an empty recordset if the external_id is not mapped
+        :rtype: recordset
+        """
+        context = self.env.context
+        default_backend_id = self.env.company.default_odoo_backend_id
+        bindings = self.model.with_context(active_test=False).search(
+            [
+                (self._external_field, "=", tools.ustr(external_id)),
+                (self._backend_field, "=", default_backend_id.id),
+            ]
+        )
+        if not bindings:
+            if unwrap:
+                return self.model.browse()[self._odoo_field]
+            return self.model.browse()
+        bindings.ensure_one()
+        if unwrap:
+            bindings = bindings[self._odoo_field]
+        bindings = bindings.with_context(**context)
+        return bindings
 
     def wrap_binding(self, regular, browse=False):
         """For a normal record, gives the binding record.
