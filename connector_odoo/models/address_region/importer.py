@@ -66,17 +66,19 @@ class AddressRegionImportMapper(Component):
 
     @mapping
     def district_id(self, record):
-        district_record = self.binder_for("odoo.address.district").to_internal(
-            record["district_id"][0], unwrap=True
-        )
-        if not district_record:
-            raise ValidationError(
-                _(
-                    "District %s not found for state %s"
-                    % (record.district_id.name, record.state_id.name)
+        vals = {}
+        if district_id := record["district_id"]:
+            binder = self.binder_for("odoo.address.district")
+            local_district_id = binder.to_internal(district_id[0], unwrap=True)
+            if not local_district_id:
+                raise ValidationError(
+                    _(
+                        "District %s not found for state %s"
+                        % (record.district_id.name, record.state_id.name)
+                    )
                 )
-            )
-        return {"district_id": district_record.id}
+            vals.update({"district_id": local_district_id.id})
+        return vals
 
 
 class AddressRegionImporter(Component):

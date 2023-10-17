@@ -86,17 +86,19 @@ class ProductImportMapper(Component):
 
     @mapping
     def taxes_id(self, record):
-        binder = self.binder_for("odoo.account.tax")
-        tax_ids = []
-        for tax_id in record["taxes_id"]:
-            tax = binder.to_internal(tax_id, unwrap=True)
-            if tax:
-                tax_ids.append(tax.id)
-        return {"taxes_id": [(6, 0, tax_ids)]}
+        res = {}
+        if taxes_id := record.get("taxes_id"):
+            tax_ids = []
+            binder = self.binder_for("odoo.account.tax")
+            for tax_id in taxes_id:
+                local_tax = binder.to_internal(tax_id, unwrap=True)
+                tax_ids.append(local_tax.id)
+            if len(tax_ids) != 0:
+                res["taxes_id"] = [(6, 0, tax_ids)]
+        return res
 
     @mapping
     def template_and_attributes(self, record):
-        # todo: samet
         """Map template and attributes"""
         tmpl_id, ptav_list = _compute_attribute_line_vals(importer=self, record=record)
 
@@ -135,43 +137,63 @@ class ProductImportMapper(Component):
 
     @mapping
     def uom_id(self, record):
-        # todo: samet
         binder = self.binder_for("odoo.uom.uom")
-        uom = binder.to_internal(record["uom_id"][0], unwrap=True)
-        return {"uom_id": uom.id, "uom_po_id": uom.id}
+        local_uom_id = binder.to_internal(record["uom_id"][0], unwrap=True)
+        return {"uom_id": local_uom_id.id, "uom_po_id": local_uom_id.id}
 
     @mapping
     def v_cari_urun(self, record):
         vals = {
             "v_cari_urun": False,
         }
-        if v_cari_urun := record["v_cari_urun"]:
+        if v_cari_urun := record.get("v_cari_urun"):
             binder = self.binder_for("odoo.res.partner")
-            partner = binder.to_internal(v_cari_urun[0], unwrap=True)
-            vals.update({"v_cari_urun": partner.id})
+            local_partner_id = binder.to_internal(v_cari_urun[0], unwrap=True)
+            vals.update({"v_cari_urun": local_partner_id.id})
         return vals
 
     @mapping
     def dimensions(self, record):
-        # todo: samet
-        binder = self.binder_for("odoo.uom.uom")
-        dimensional_uom = binder.to_internal(
-            record["dimensional_uom_id"][0], unwrap=True
-        )
-        weight_uom = binder.to_internal(record["weight_uom_id"][0], unwrap=True)
-        volume_uom = binder.to_internal(record["volume_uom_id"][0], unwrap=True)
-        return {
-            "dimensional_uom_id": dimensional_uom.id,
-            "product_length": record["product_length"],
-            "product_width": record["product_width"],
-            "product_height": record["product_height"],
-            "product_weight": record["weight"],
-            "weight": record["weight"],
-            "product_volume": record["volume"],
-            "volume": record["volume"],
-            "weight_uom_id": weight_uom.id,
-            "volume_uom_id": volume_uom.id,
+        res = {
+            "dimensional_uom_id": False,
+            "product_length": False,
+            "product_width": False,
+            "product_height": False,
+            "product_weight": False,
+            "volume": False,
+            "weight_uom_id": False,
+            "volume_uom_id": False,
         }
+        binder = self.binder_for("odoo.uom.uom")
+        if record.get("dimensional_uom_id"):
+            local_dimensional_uom_id = binder.to_internal(
+                record.get("dimensional_uom_id")[0], unwrap=True
+            )
+            if local_dimensional_uom_id:
+                res.update({"dimensional_uom_id": local_dimensional_uom_id.id})
+        if record.get("weight_uom_id"):
+            local_weight_uom_id = binder.to_internal(
+                record.get("weight_uom_id")[0], unwrap=True
+            )
+            if local_weight_uom_id:
+                res.update({"weight_uom_id": local_weight_uom_id.id})
+        if record.get("volume_uom_id"):
+            local_volume_uom_id = binder.to_internal(
+                record.get("volume_uom_id")[0], unwrap=True
+            )
+            if local_volume_uom_id:
+                res.update({"volume_uom_id": local_volume_uom_id.id})
+
+        res.update(
+            {  # if some "Falsy" values then they are going to be Falsy in local
+                "product_length": record.get("product_length"),
+                "product_width": record.get("product_width"),
+                "product_height": record.get("product_height"),
+                "product_weight": record.get("weight"),
+                "volume": record.get("volume"),
+            }
+        )
+        return res
 
     @mapping
     def price(self, record):
@@ -186,7 +208,7 @@ class ProductImportMapper(Component):
         return {"name": record.get("name", "/")}
 
     @mapping
-    def category(self, record):
+    def categ_id(self, record):
         categ_id = record["categ_id"]
         binder = self.binder_for("odoo.product.category")
         cat = binder.to_internal(categ_id[0], unwrap=True)
@@ -198,6 +220,7 @@ class ProductImportMapper(Component):
 
     @mapping
     def image(self, record):
+        res = {"image_1920": False}
         if self.backend_record.version in (
             "6.1",
             "7.0",
@@ -207,9 +230,10 @@ class ProductImportMapper(Component):
             "11.0",
             "12.0",
         ):
-            return {"image_1920": record["image_main"]}
+            res.update({"image_1920": record.get("image_main")})
         else:
-            return {"image_1920": record["image_1920"]}
+            res.update({"image_1920": record.get("image_1920")})
+        return res
 
     @mapping
     def barcode(self, record):

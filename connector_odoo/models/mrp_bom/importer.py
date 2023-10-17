@@ -48,36 +48,29 @@ class MrpBomMapper(Component):
 
     @mapping
     def product_uom_id(self, record):
-        # todo: samet (binder kullanmalı mıyız?)
-        res = {"product_uom_id": False}
-        if uom := record.get("product_uom_id"):
-            local_uom = self.env["odoo.uom.uom"].search([("external_id", "=", uom[0])])
-            if local_uom:
-                res["product_uom_id"] = local_uom.odoo_id.id
+        res = {}
+        uom = record["product_uom_id"]
+        binder = self.binder_for("odoo.uom.uom")
+        if local_uom := binder.to_internal(uom[0], unwrap=True):
+            res.update({"product_uom_id": local_uom.id})
         return res
 
     @mapping
     def product_tmpl_id(self, record):
-        # todo: samet (binder kullanmalı mıyız?)
-        res = {"product_tmpl_id": False}
-        if product := record.get("product_tmpl_id"):
-            local_product = self.env["odoo.product.template"].search(
-                [("external_id", "=", product[0])]
-            )
-            if local_product:
-                res["product_tmpl_id"] = local_product.odoo_id.id
+        res = {}
+        product_tmpl = record["product_tmpl_id"]
+        binder = self.binder_for("odoo.product.template")
+        if local_product_tmpl := binder.to_internal(product_tmpl[0], unwrap=True):
+            res.update({"product_tmpl_id": local_product_tmpl.id})
         return res
 
     @mapping
     def product_id(self, record):
-        # todo: samet
         res = {"product_id": False}
         if product := record.get("product_id"):
-            local_product = self.env["odoo.product.product"].search(
-                [("external_id", "=", product[0])]
-            )
-            if local_product:
-                res["product_id"] = local_product.odoo_id.id
+            binder = self.binder_for("odoo.product.product")
+            if local_product := binder.to_internal(product[0], unwrap=True):
+                res.update({"product_id": local_product.id})
         return res
 
 

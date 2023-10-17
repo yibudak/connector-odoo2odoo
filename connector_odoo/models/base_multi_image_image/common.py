@@ -10,6 +10,7 @@ class OdooBaseMultiImageImage(models.Model):
     This is the real mapping model for product images on version 16.0
     You can avoid product.image model and use this model instead.
     """
+
     _queue_priority = 15
     _name = "odoo.base_multi_image.image"
     _inherit = "odoo.binding"

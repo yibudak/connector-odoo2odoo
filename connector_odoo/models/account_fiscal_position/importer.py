@@ -55,7 +55,7 @@ class AccountFiscalPositionImportMapper(Component):
             .with_context(ctx)
             .search(
                 [
-                    ("name", "=", record.name),
+                    ("name", "=", record["name"]),
                 ],
                 limit=1,
             )
@@ -93,9 +93,7 @@ class AccountFiscalPositionImporter(Component):
                 for item in sublist
             )
             for tax_id in list(taxes_set):
-                self._import_dependency(
-                    tax_id, "odoo.account.tax", force=force
-                )
+                self._import_dependency(tax_id, "odoo.account.tax", force=force)
 
         if account_ids := record.get("account_ids"):
             # todo: this part is missing.

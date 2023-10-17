@@ -46,37 +46,37 @@ class AccountGroupImportMapper(Component):
     @mapping
     def check_account_group_exists(self, record):
         res = {}
-        prefix = record["code_prefix"].split(".")
-        domain = [("code_prefix_start", "=", prefix[0])]
-        if len(prefix) > 1:
-            domain.append(("code_prefix_end", "=", prefix[1]))
-        account_id = self.env["account.group"].search(domain)
-        if len(account_id) == 1:
-            _logger.info(
-                "Account Group found for %s : %s" % (record["name"], account_id.name)
-            )
-            res.update({"odoo_id": account_id.id})
+        if code_prefix := record.get("code_prefix"):
+            splitted_code_prefix = code_prefix.split(".")
+            domain = [("code_prefix_start", "=", splitted_code_prefix[0])]
+            if len(splitted_code_prefix) > 1:
+                domain.append(("code_prefix_end", "=", splitted_code_prefix[1]))
+            if account_id := self.env["account.group"].search(domain):
+                _logger.info(
+                    "Account Group found for %s : %s"
+                    % (record["name"], account_id.name)
+                )
+                res.update({"odoo_id": account_id.id})
         return res
 
     @mapping
     def parent_id(self, record):
-        # todo: samet
-        res = {}
-        parent_id = record.get("parent_id")
-        if parent_id:
+        vals = {"parent_id": False}
+        if parent_id := record.get("parent_id"):
             binder = self.binder_for("odoo.account.group")
-            local_parent = binder.to_internal(parent_id[0], unwrap=True)
-            if local_parent:
-                res.update({"parent_id": local_parent.id})
-        return res
+            local_parent_id = binder.to_internal(parent_id[0], unwrap=True)
+            if local_parent_id:
+                vals.update({"parent_id": local_parent_id.id})
+        return vals
 
     @mapping
     def prefix(self, record):
-        # todo: samet
-        code_prefix = record["code_prefix"].split(".")
-        vals = {"code_prefix_start": code_prefix[0], "code_prefix_end": ""}
-        if len(code_prefix) > 1:
-            vals.update({"code_prefix_end": code_prefix[1]})
+        vals = {"code_prefix_start": False, "code_prefix_end": False}
+        if code_prefix := record.get("code_prefix"):
+            splitted_code_prefix = code_prefix.split(".")
+            vals.update({"code_prefix_start": splitted_code_prefix[0]})
+            if len(splitted_code_prefix) > 1:
+                vals.update({"code_prefix_end": splitted_code_prefix[1]})
         return vals
 
 

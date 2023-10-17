@@ -53,7 +53,6 @@ class ProductImageImportMapper(Component):
 
     @mapping
     def name(self, record):
-        # todo: samet (binder model neden kullanmadık?)
         if record.name:
             return {"name": record.name}
         else:
@@ -61,15 +60,12 @@ class ProductImageImportMapper(Component):
 
     @mapping
     def product_tmpl_id(self, record):
-        # todo: samet
         vals = {"product_tmpl_id": False}
-        imported_tmpl_id = self.env["odoo.product.template"].search(
-            [
-                ("external_id", "=", record.owner_id)
-            ]
-        )
-        if imported_tmpl_id:
-            vals.update({"product_tmpl_id": imported_tmpl_id.odoo_id.id})
+        if product_tmpl_id := record.get("product_tmpl_id"):
+            binder = self.binder_for("odoo.product.template")
+            local_tmpl_id = binder.to_internal(product_tmpl_id[0], unwrap=True)
+            if local_tmpl_id:
+                vals.update({"product_tmpl_id": local_tmpl_id.id})
         return vals
 
 

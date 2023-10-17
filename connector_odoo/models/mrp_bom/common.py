@@ -35,9 +35,7 @@ class OdooMrpBom(models.Model):
         return result
 
     def resync(self):
-        return self.delayed_import_record(
-            self.backend_id, self.external_id, force=True
-        )
+        return self.delayed_import_record(self.backend_id, self.external_id, force=True)
 
 
 class MrpBom(models.Model):

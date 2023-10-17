@@ -42,14 +42,12 @@ class AccountPaymentMapper(Component):
 
     @mapping
     def partner_id(self, record):
-        # todo: samet
         binder = self.binder_for("odoo.res.partner")
         partner_id = binder.to_internal(record["partner_id"][0], unwrap=True)
         return {"partner_id": partner_id.id}
 
     @mapping
     def currency_id(self, record):
-        # todo: samet
         binder = self.binder_for("odoo.res.currency")
         currency_id = binder.to_internal(record["currency_id"][0], unwrap=True)
         return {"currency_id": currency_id.id}

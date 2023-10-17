@@ -46,40 +46,41 @@ class AccountPaymentTermImportMapper(Component):
 
     @only_create
     @mapping
-    def check_account_fiscal_position_exists(self, record):
-        res = {}
+    def check_account_payment_term_exists(self, record):
+        vals = {}
         ctx = {"lang": self.backend_record.get_default_language_code()}
         pt_record = (
             self.env["account.payment.term"]
             .with_context(ctx)
             .search(
                 [
-                    ("name", "=", record.name),
+                    ("name", "=", record["name"]),
                 ],
                 limit=1,
             )
         )
         if pt_record:
-            _logger.info(
-                "Account Fiscal Position found for %s : %s" % (record, pt_record)
-            )
-            res.update({"odoo_id": pt_record.id})
-        return res
+            _logger.info("Account Payment Term found for %s : %s" % (record, pt_record))
+            vals.update({"odoo_id": pt_record.id})
+        return vals
 
     @mapping
     def line_ids(self, record):
-        # todo: samet
-        res = {}
-        if record.line_ids:
+        res = {"line_ids": False}
+        if record["line_ids"]:
             lines = []
-            for line in record.line_ids:
+            for line in record["line_ids"]:
+                external_line = self.work.odoo_api.browse(
+                    model="account.payment.term.line",
+                    res_id=line,
+                )
                 create_vals = {
-                    "value": line.value,
-                    "value_amount": line.value_amount,
-                    "days": line.days,
+                    "value": external_line["value"],
+                    "value_amount": external_line.get("value_amount"),
+                    "days": external_line["days"],
                 }
                 lines.append((0, 0, create_vals))
-            res.update({"line_ids": lines})
+            res["line_ids"] = lines
         return res
 
 

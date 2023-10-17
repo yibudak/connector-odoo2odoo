@@ -68,18 +68,19 @@ class AddressNeighbourImportMapper(Component):
 
     @mapping
     def region_id(self, record):
-        # todo: samet
-        region_record = self.binder_for("odoo.address.region").to_internal(
-            record["region_id"][0], unwrap=True
-        )
-        if not region_record:
-            raise ValidationError(
-                _(
-                    "Region %s not found for neighbour %s"
-                    % (record["region_id"][1], record["name"])
+        vals = {}
+        if region_id := record["region_id"]:
+            binder = self.binder_for("odoo.address.region")
+            local_region_id = binder.to_internal(region_id[0], unwrap=True)
+            if not local_region_id:
+                raise ValidationError(
+                    _(
+                        "Region %s not found for neighbour %s"
+                        % (record["region_id"][1], record["name"])
+                    )
                 )
-            )
-        return {"region_id": region_record.id}
+            vals.update({"region_id": local_region_id.id})
+        return vals
 
 
 class AddressNeighbourImporter(Component):

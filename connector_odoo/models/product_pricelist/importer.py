@@ -66,13 +66,13 @@ class ProductPricelistImportMapper(Component):
         ("sequence", "sequence"),
     ]
 
-    # @only_create # todo enable
+    @only_create
     @mapping
-    def odoo_id(self, record):
-        # todo: samet
+    def check_product_pricelist_exists(self, record):
         # TODO: Improve the matching on name and position in the tree so that
         # multiple pricelist with the same name will be allowed and not
         # duplicated
+        res = {}
         pricelist = self.env["product.pricelist"].search(
             [
                 ("name", "=", record["name"]),
@@ -84,21 +84,23 @@ class ProductPricelistImportMapper(Component):
             _logger.info(
                 "found pricelist %s for record %s" % (pricelist.name, record["name"])
             )
-            return {"odoo_id": pricelist.id}
+            res.update({"odoo_id": pricelist.id})
         return {}
 
     @mapping
     def currency_id(self, record):
-        # todo: samet
-        if not (currency_id := record.get("currency_id")):
-            return
-        currency = self.env["res.currency"].search([("name", "=", currency_id[1])])
-        if len(currency) == 1:
+        res = {}
+        currency_id = record["currency_id"]
+
+        binder = self.binder_for("odoo.res.currency")
+        if local_currency_id := binder.to_internal(currency_id[0], unwrap=True):
             _logger.info(
-                "found currency %s for record %s" % (currency.name, record["name"])
+                "found currency %s for record %s"
+                % (local_currency_id.name, record["name"])
             )
-            return {"currency_id": currency.id}
-        raise MappingError("No currency found %s" % currency.name)
+            res.update({"currency_id": local_currency_id.id})
+            return res
+        raise MappingError("No currency found %s" % local_currency_id.name)
 
     @mapping
     def company_id(self, record):
@@ -175,40 +177,45 @@ class ProductPricelistItemImportMapper(Component):
 
     @mapping
     def pricelist_id(self, record):
-        # todo: samet
-        binder = self.binder_for("odoo.product.pricelist")
-        pricelist = binder.to_internal(record["pricelist_id"][0], unwrap=True)
-        if not pricelist:
-            raise MappingError("No pricelist found for %s" % record["pricelist_id"])
-        return {"pricelist_id": pricelist.id}
+        res = {"pricelist_id": False}
+        if pricelist_id := record.get("pricelist_id"):
+            binder = self.binder_for("odoo.product.pricelist")
+            local_pricelist = binder.to_internal(pricelist_id[0], unwrap=True)
+            if not local_pricelist:
+                raise MappingError("No pricelist found for %s" % record["pricelist_id"])
+            res.update({"pricelist_id": local_pricelist.id})
+        return res
 
     @mapping
     def categ_id(self, record):
-        # todo: samet
+        res = {"categ_id": False}
         if categ_id := record.get("categ_id"):
             binder = self.binder_for("odoo.product.category")
-            categ = binder.to_internal(categ_id[0], unwrap=True)
-            return {"categ_id": categ.id}
+            local_categ_id = binder.to_internal(categ_id[0], unwrap=True)
+            res.update({"categ_id": local_categ_id.id})
+        return res
 
     @mapping
     def base_pricelist_id(self, record):
-        # todo: samet
+        res = {}
         if base_pricelist_id := record.get("base_pricelist_id"):
             binder = self.binder_for("odoo.product.pricelist")
-            pricelist = binder.to_internal(base_pricelist_id[0], unwrap=True)
-            return {"base_pricelist_id": pricelist.id}
+            local_pricelist = binder.to_internal(base_pricelist_id[0], unwrap=True)
+            res.update({"base_pricelist_id": local_pricelist.id})
+        return res
 
     @mapping
     def base(self, record):
-        # todo: samet
-        base = record.get("base")
+        res = {}
+        base = record["base"]
         if base == "-1":
             pricelist_base = "pricelist"
         elif base == "list_price":
             pricelist_base = "standard_price"
         else:
             pricelist_base = "sale_price"
-        return {"base": pricelist_base}
+        res.update({"base": pricelist_base})
+        return res
 
     @mapping
     def company_id(self, record):
@@ -216,16 +223,18 @@ class ProductPricelistItemImportMapper(Component):
 
     @mapping
     def product_id(self, record):
+        res = {}
         if product_id := record.get("product_id"):
             binder = self.binder_for("odoo.product.product")
-            product = binder.to_internal(product_id[0], unwrap=True)
-            return {"product_id": product.id}
-        return {"product_id": False}
+            if local_product := binder.to_internal(product_id[0], unwrap=True):
+                res.update({"product_id": local_product.id})
+        return res
 
     @mapping
     def product_tmpl_id(self, record):
+        res = {}
         if tmpl_id := record.get("base_pricelist_id"):
             binder = self.binder_for("odoo.product.template")
-            product = binder.to_internal(tmpl_id[0], unwrap=True)
-            return {"product_tmpl_id": product.id}
-        return {"product_tmpl_id": False}
+            if local_product := binder.to_internal(tmpl_id[0], unwrap=True):
+                res.update({"product_tmpl_id": local_product.id})
+        return res

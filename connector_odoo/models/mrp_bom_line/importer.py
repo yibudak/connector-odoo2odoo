@@ -40,12 +40,12 @@ class MrpBomLineMapper(Component):
 
     @mapping
     def bom_id(self, record):
-        # todo: samet
         res = {}
-        if bom := record.get("bom_id"):
-            local_bom = self.env["odoo.mrp.bom"].search([("external_id", "=", bom[0])])
+        if bom := record["bom_id"]:
+            binder = self.binder_for("odoo.mrp.bom")
+            local_bom = binder.to_internal(bom[0], unwrap=True)
             if local_bom:
-                res["bom_id"] = local_bom.odoo_id.id
+                res["bom_id"] = local_bom.id
             else:
                 raise Exception(
                     "BOM not found, please import it first" f"External ID: {bom[0]}"
@@ -54,12 +54,10 @@ class MrpBomLineMapper(Component):
 
     @mapping
     def product_id(self, record):
-        # todo: samet
-        res = {"product_id": False}
+        res = {}
         if product := record.get("product_id"):
-            local_product = self.binder_for("odoo.product.product").to_internal(
-                product[0], unwrap=True
-            )
+            binder = self.binder_for("odoo.product.product")
+            local_product = binder.to_internal(product[0], unwrap=True)
             if local_product:
                 res["product_id"] = local_product.id
         return res
@@ -76,9 +74,7 @@ class MrpBomLineMapper(Component):
 
     @mapping
     def product_uom_id(self, record):
-        res = {
-            "product_uom_id": False,
-        }
+        res = {}
         if uom := record.get("product_uom_id"):
             binder = self.binder_for("odoo.uom.uom")
             local_uom = binder.to_internal(uom[0], unwrap=True)

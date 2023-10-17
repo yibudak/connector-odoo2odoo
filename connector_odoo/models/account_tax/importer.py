@@ -91,28 +91,27 @@ class AccountTaxImportMapper(Component):
     #             vals.update({"refund_account_id": account.id})
     #     return vals
 
-    def group_id(self, record):
-        vals = {
-            "group_id": False,
-        }
-        if record.get("group_id"):
+    @mapping
+    def tax_group_id(self, record):
+        vals = {}
+        if tax_group_id := record["tax_group_id"]:
             binder = self.binder_for("odoo.account.tax.group")
-            group = binder.to_internal(record["group_id"][0], unwrap=True)
-            if group:
-                vals.update({"group_id": group.id})
+            local_tax_group_id = binder.to_internal(tax_group_id[0], unwrap=True)
+            if local_tax_group_id:
+                vals.update({"tax_group_id": local_tax_group_id.id})
         return vals
 
     @mapping
     def children_tax_ids(self, record):
         vals = {"children_tax_ids": []}
-        binder = self.binder_for("odoo.account.tax")
         if record["amount_type"] == "group":
-            children = []
-            for tax_id in record["children_tax_ids"]:
-                local_tax = binder.to_internal(tax_id, unwrap=True)
-                if local_tax:
-                    children.append(local_tax.id)
-            vals.update({"children_tax_ids": [(6, 0, children)]})
+            if children_tax_ids := record.get("children_tax_ids"):
+                binder = self.binder_for("odoo.account.tax")
+                children = []
+                for tax_id in children_tax_ids:
+                    if local_tax := binder.to_internal(tax_id, unwrap=True):
+                        children.append(local_tax.id)
+                vals["children_tax_ids"] = [(6, 0, children)]
         return vals
 
 

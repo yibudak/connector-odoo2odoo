@@ -55,7 +55,6 @@ class DeliveryCarrierMapper(Component):
 
     @mapping
     def deci_type(self, record):
-        # todo: samet (bunu da diğerleri gibi yapabiliriz)
         try:
             deci = str(record.get("deci_type"))
         except ValueError:
@@ -64,23 +63,19 @@ class DeliveryCarrierMapper(Component):
 
     @mapping
     def currency_id(self, record):
-        # todo: samet (bunu da diğerleri gibi yapabiliriz)
         vals = {}
-        if currency := record.get("currency_id"):
-            currency = self.env["res.currency"].search([("name", "=", currency[1])])
-            vals["currency_id"] = currency.id
-        else:
-            vals["currency_id"] = False
+        if currency_id := record["currency_id"]:
+            binder = self.binder_for("odoo.res.currency")
+            local_currency = binder.to_internal(currency_id[0], unwrap=True)
+            vals.update({"currency_id": local_currency.id})
         return vals
 
     @mapping
     def delivery_type(self, record):
-        # todo: samet (null durumda base_on_rule yazması doğru mu?)
-        if record.get("delivery_type") == "fixed":
-            delivery_type = "fixed"
-        else:
-            delivery_type = "base_on_rule"
-        return {"delivery_type": delivery_type}
+        vals = {"delivery_type": "base_on_rule"}
+        if record["delivery_type"] == "fixed":
+            vals.update({"delivery_type": "fixed"})
+        return vals
 
     @only_create
     @mapping
@@ -89,15 +84,13 @@ class DeliveryCarrierMapper(Component):
 
     @mapping
     def product_id(self, record):
-        # todo: samet (bunu da diğerleri gibi yapabiliriz)
         vals = {}
-        binder = self.binder_for("odoo.product.product")
-        if product := record.get("product_id"):
-            local_product = binder.to_internal(product[0], unwrap=True)
+        if product_id := record["product_id"]:
+            binder = self.binder_for("odoo.product.product")
+            local_product = binder.to_internal(product_id[0], unwrap=True)
             vals["product_id"] = local_product.id
-        else:
-            vals["product_id"] = False
         return vals
+
     # @only_create
     # @mapping
     # def odoo_id(self, record):

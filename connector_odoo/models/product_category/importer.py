@@ -46,7 +46,7 @@ class ProductCategoryImporter(Component):
         record = self.odoo_record
         # import parent category
         # the root category has a 0 parent_id
-        if parent := record["parent_id"]:
+        if parent := record.get("parent_id"):
             self._import_dependency(parent[0], self.model, force=force)
 
     def _after_import(self, binding, force=False):

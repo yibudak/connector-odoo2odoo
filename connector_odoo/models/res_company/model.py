@@ -4,9 +4,9 @@ from odoo import models, fields
 
 
 class ResCompany(models.Model):
-    _inherit = 'res.company'
+    _inherit = "res.company"
 
     default_odoo_backend_id = fields.Many2one(
-        comodel_name='odoo.backend',
-        string='Default Odoo Backend',
+        comodel_name="odoo.backend",
+        string="Default Odoo Backend",
     )
