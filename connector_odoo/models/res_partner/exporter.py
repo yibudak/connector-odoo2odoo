@@ -7,6 +7,7 @@ import logging
 from odoo.addons.component.core import Component
 from odoo.exceptions import ValidationError
 from odoo.addons.connector.components.mapper import mapping, only_create
+from unicode_tr import unicode_tr
 
 # from odoo.addons.connector.exception import MappingError
 
@@ -240,7 +241,6 @@ class PartnerExportMapper(Component):
     _apply_on = ["odoo.res.partner"]
 
     direct = [
-        ("name", "name"),
         ("street", "street"),
         ("street2", "street2"),
         ("city", "city"),
@@ -253,6 +253,10 @@ class PartnerExportMapper(Component):
         ("ecommerce_partner", "ecommerce_partner"),
         ("tax_office_name", "tax_office_name"),
     ]
+
+    @mapping
+    def name(self, record):
+        return {"name": unicode_tr(record.name).title()}
 
     @mapping
     def country_id(self, record):
