@@ -230,7 +230,11 @@ class OdooPartnerExporter(Component):
             domain += [("parent_id", "=", parent_ext_id)]
 
         external_ids = self.backend_adapter.search(model="res.partner", domain=domain)
-        if external_ids:
+        if external_ids and not self.binding.search(
+            [
+                ("external_id", "=", external_ids[0]),
+            ]
+        ):
             self.external_id = external_ids[0]
         return self.external_id
 
