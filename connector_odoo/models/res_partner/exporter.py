@@ -69,7 +69,7 @@ class OdooPartnerExporter(Component):
         if not self.binding.vat or self.binding.parent_id:
             return False
 
-        if self.binding.vat in ["11111111111", "2222222222"]:
+        if self.binding.vat in ["1"*11, "2"*11]:
             return False
 
         match_domain = [
@@ -81,32 +81,28 @@ class OdooPartnerExporter(Component):
             model="res.partner",
             domain=match_domain,
         )
-        if matched_partner:
-            # If we found a match, but it's the same partner, we don't want to set
-            # it as parent.
-            if matched_partner[0] != self.binding.external_id:
+        # If we found a match, but it's the same partner, we don't want to set
+        # it as parent.
+        if matched_partner and matched_partner[0] != self.binding.external_id:
+            parent = self.binding.search(
+                [
+                    ("external_id", "=", matched_partner[0]),
+                ],
+                limit=1,
+            ).commercial_partner_id
+            if not parent:
+                self.binding.import_record(
+                    backend=self.backend_record,
+                    external_id=matched_partner[0],
+                )
                 parent = self.binding.search(
                     [
                         ("external_id", "=", matched_partner[0]),
                     ],
                     limit=1,
                 ).commercial_partner_id
-                if not parent:
-                    self.binding.import_record(
-                        backend=self.backend_record,
-                        external_id=matched_partner[0],
-                    )
-                    parent = self.binding.search(
-                        [
-                            ("external_id", "=", matched_partner[0]),
-                        ],
-                        limit=1,
-                    ).commercial_partner_id
-                # Müşterinin kendisi veya şirket çalışanıysa
-                self.binding.parent_id = parent
-                self.binding.company_name = False
-            else:
-                return True
+            self.binding.parent_id = parent
+            self.binding.company_name = False
 
         # İlk defa oluşturulan şirketlerde bu durum çalışır.
         if (
@@ -122,18 +118,13 @@ class OdooPartnerExporter(Component):
         return True
 
     def _check_created_company(self):
-        """
-        v16'da oluşturulan kayıtlar ecommerce_partner özelliğine sahip, bu da
-        export edilebileceği anlamına geliyor. create_company() fonsksiyonu ile
-        company_name string'inden oluşturulan bir cari belki de bizim veritabanımızda
-        olabilir. Bu yüzden create_company'den gelen cariyi kontrol etmeliyiz,
-        yapabiliyorsak import etmeliyiz.
-        """
         created_company = self.binding.parent_id
         if not created_company.vat:
             raise ValidationError(
                 "Created company %s must have vat number" % created_company.name
             )
+        # To avoid infinite loop
+        self.binding.external_id = 0
         external_company = self.backend_adapter.search(
             model="res.partner",
             domain=[
@@ -144,6 +135,12 @@ class OdooPartnerExporter(Component):
             limit=1,
         )
         if external_company:
+
+            external_company = self.work.odoo_api.browse(
+                model="res.partner",
+                res_id=external_company[0],
+            )
+
             # Bulduğumuz şirketi import edelim.
             self.binding.import_record(
                 self.backend_record, external_company["id"], force=False
@@ -181,61 +178,27 @@ class OdooPartnerExporter(Component):
         return datas
 
     def _get_external_id_with_data(self):
-        """Return the external id of the record"""
-        if not self.binding.vat:
+        """
+        Match the company with vat number and return external id
+        """
+
+        # We should only match parents with vat number
+        if not self.binding.vat or self.binding.parent_id:
             return False
 
-        # We are mapping delivery addresses with just external_id, not with
-        # parent_id. So we don't need to search for parent_id.
-        if self.binding.type == "delivery":
-            return False
-
-        if self.binding.vat in ["11111111111", "2222222222"]:
+        if self.binding.vat in ["1"*11, "2"*11]:
             return False
 
         domain = [
             ("vat", "=", self.binding.vat),
-            ("is_company", "=", self.binding.is_company),
+            ("parent_id", "=", False),
         ]
-        # Müşterinin alt adreslerinden biriyse bu durum çalışır.
-        if self.binding.parent_id:
-            parent_ext_id = self.binding.mapped("parent_id.bind_ids.external_id")
-            if not parent_ext_id:
-                raise ValidationError(
-                    "Parent partner %s not found in Odoo. Export it first."
-                    % self.binding.parent_id.name
-                )
-            domain += [("parent_id", "=", parent_ext_id)]
-        # Müşteri gerçek bir kişi olarak üye olup sipariş geçtiyse ve bu müşteri
-        # bir şirkete bağlıysa bu durum çalışır.
-        elif (
-            self.binding.commercial_partner_id
-            and self.binding.commercial_partner_id != self.binding.odoo_id
-        ):
-            parent_ext_id = (
-                self.binding.commercial_partner_id.bind_ids.external_id
-                or self.backend_adapter.search(
-                    model="res.partner",
-                    domain=[
-                        ("parent_id", "=", False),
-                        ("vat", "=", self.binding.commercial_partner_id.vat),
-                    ],
-                )
-            )
-            if not parent_ext_id:
-                raise ValidationError(
-                    "Parent partner %s not found in Odoo"
-                    % self.binding.commercial_partner_id.name
-                )
-            domain += [("parent_id", "=", parent_ext_id)]
-
-        external_ids = self.backend_adapter.search(model="res.partner", domain=domain)
-        if external_ids and not self.binding.search(
-            [
-                ("external_id", "=", external_ids[0]),
-            ]
-        ):
-            self.external_id = external_ids[0]
+        matched_partner = self.backend_adapter.search(
+            model="res.partner",
+            domain=domain,
+        )
+        if matched_partner:
+            self.external_id = matched_partner[0]
         return self.external_id
 
 

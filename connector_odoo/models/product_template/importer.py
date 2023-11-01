@@ -250,6 +250,7 @@ class ProductTemplateImporter(Component):
         return True
 
     def _import_website_attachments(self, tmpl_id, force=False):
+        # Todo:
         if attachment_ids := self.odoo_record["website_attachment_ids"]:
             for attachment_id in attachment_ids:
                 self.env["odoo.ir.attachment"].delayed_import_record(
