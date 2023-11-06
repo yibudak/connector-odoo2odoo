@@ -47,6 +47,7 @@ class OdooBackend(models.Model):
         ]
 
     active = fields.Boolean(default=True)
+    no_export = fields.Boolean(default=True)
     state = fields.Selection(selection="_select_state", default="draft")
     version = fields.Selection(selection="_select_versions", required=True)
     login = fields.Char(

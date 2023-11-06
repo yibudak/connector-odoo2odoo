@@ -46,6 +46,7 @@
 								<field name="password" password="1" />
 								<field name="uid" />
 								<field name="force" />
+								<field name="no_export" />
                             </group>
 						</group>
 						<notebook>

@@ -203,6 +203,10 @@ class OdooBinding(models.AbstractModel):
     @api.model
     def execute_method(self, backend, model, method, args=None, context=None):
         """Execute a method on Odoo"""
+
+        if backend.no_export:
+            return _("Executing is disabled for this backend (no export flag)")
+
         odoo_api = backend.get_connection()
         # Always pass the external_id as first argument to use as ~self~
         if not args:

@@ -81,6 +81,9 @@ class OdooBaseExporter(AbstractComponent):
         """Run the synchronization
         :param binding: binding record to export
         """
+        if self.backend_record.no_export:
+            return _("Nothing to export. (no export flag on connector)")
+
         self.binding = binding
         self.external_id = self.binder.to_external(self.binding, wrap=False)
 
