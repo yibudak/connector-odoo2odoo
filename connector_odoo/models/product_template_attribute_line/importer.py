@@ -17,6 +17,30 @@ class ProductTemlateAttributeLineImporter(Component):
     _inherit = "odoo.importer"
     _apply_on = "odoo.product.template.attribute.line"
 
+    def _get_binding_with_data(self, binding):
+        if not binding:
+            attr_id_binding = self.env["odoo.product.template.attribute.line"].search(
+                [
+                    (
+                        "product_tmpl_id.bind_ids.external_id",
+                        "=",
+                        self.odoo_record["product_tmpl_id"][0],
+                    ),
+                    (
+                        "attribute_id.bind_ids.external_id",
+                        "=",
+                        self.odoo_record["attribute_id"][0],
+                    ),
+                    "|",
+                    ("active", "=", False),
+                    ("active", "=", True),
+                ],
+                limit=1,
+            )
+            if attr_id_binding:
+                binding = attr_id_binding
+        return binding
+
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
         record = self.odoo_record
@@ -71,23 +95,6 @@ class ProductTemplateAttributeLineMapper(Component):
     @mapping
     def product_tmpl_id(self, record):
         return {"product_tmpl_id": self._get_product_tmpl_id(record)}
-
-    @only_create
-    @mapping
-    def check_existing(self, record):
-        vals = {}
-        attr_id = self.env["product.template.attribute.line"].search(
-            [
-                ("product_tmpl_id", "=", self._get_product_tmpl_id(record)),
-                ("attribute_id", "=", self._get_attribute_id(record)),
-                "|",
-                ("active", "=", False),
-                ("active", "=", True),
-            ]
-        )
-        if attr_id:
-            vals["odoo_id"] = attr_id.id
-        return vals
 
     @mapping
     def active(self, record):
