@@ -421,7 +421,6 @@ class OdooExporter(AbstractComponent):
             record = self._update_data(map_record, fields=fields)
             if not record:
                 return _("Nothing to export.")
-            return
             self._update(record)
         else:
             record = self._create_data(map_record, fields=fields)
@@ -430,6 +429,5 @@ class OdooExporter(AbstractComponent):
             if "external_id" in record and record["external_id"]:
                 self.external_id = record["external_id"]
             else:
-                return
                 self.external_id = self._create(record)
         return _("Record exported with ID %s on Odoo.") % self.external_id

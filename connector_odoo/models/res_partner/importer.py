@@ -144,7 +144,7 @@ class PartnerImportMapper(Component):
 
             local_state_id = self.env["res.country.state"].search(
                 [
-                    ("name", "ilike", external_state_id["name"]),
+                    ("name", "=", external_state_id["name"]),
                     ("country_id.name", "=", external_state_id["country_id"][1]),
                 ]
             )
