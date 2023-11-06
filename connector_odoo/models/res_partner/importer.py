@@ -63,22 +63,21 @@ class PartnerImportMapper(Component):
         # Todo : buraya v12 deki eklediğimiz özel fieldları da koy
     ]
 
-    # @mapping
-    # def category_id(self, record):
-    #     if record["category_id"]:
-    #         binder = self.binder_for("odoo.res.partner.category")
-    #         return {
-    #             "category_id": [
-    #                 (
-    #                     6,
-    #                     0,
-    #                     [
-    #                         binder.to_internal(category_id, unwrap=True).id
-    #                         for category_id in record["category_id"]
-    #                     ],
-    #                 )
-    #             ]
-    #         }
+    @mapping
+    def pricelist_id(self, record):
+        vals = {}
+        binder = self.binder_for("odoo.product.pricelist")
+        if property_pricelist := record["property_product_pricelist"]:
+            local_pricelist = binder.to_internal(property_pricelist[0], unwrap=True)
+            if local_pricelist:
+                vals["property_product_pricelist"] = local_pricelist.id
+
+        if website_pricelist := record["website_pricelist_id"]:
+            local_pricelist = binder.to_internal(website_pricelist[0], unwrap=True)
+            if local_pricelist:
+                vals["website_pricelist_id"] = local_pricelist.id
+
+        return vals
 
     @only_create
     @mapping
@@ -248,6 +247,22 @@ class PartnerImporter(Component):
             self._import_dependency(
                 receivable_account_id[0],
                 "odoo.account.account",
+                force=force,
+            )
+
+        # Pricelist dependencies
+        if property_pricelist := self.odoo_record["property_product_pricelist"]:
+            _logger.info("Importing pricelist")
+            self._import_dependency(
+                property_pricelist[0],
+                "odoo.product.pricelist",
+                force=force,
+            )
+        if website_pricelist := self.odoo_record["website_pricelist_id"]:
+            _logger.info("Importing website pricelist")
+            self._import_dependency(
+                website_pricelist[0],
+                "odoo.product.pricelist",
                 force=force,
             )
 
