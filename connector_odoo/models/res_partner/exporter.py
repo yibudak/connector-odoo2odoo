@@ -72,6 +72,9 @@ class OdooPartnerExporter(Component):
         if self.binding.vat in ["1"*11, "2"*11]:
             return False
 
+        if self.binding.country_id.code != "TR":
+            return False
+
         match_domain = [
             ("vat", "=", self.binding.vat),
             ("parent_id", "=", False),
@@ -187,6 +190,9 @@ class OdooPartnerExporter(Component):
             return False
 
         if self.binding.vat in ["1"*11, "2"*11]:
+            return False
+
+        if self.binding.country_id.code != "TR":
             return False
 
         domain = [
