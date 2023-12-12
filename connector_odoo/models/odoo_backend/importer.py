@@ -23,7 +23,7 @@ class MetadataBatchImporter(Component):
     _apply_on = [
         "odoo.product.uom",
         "odoo.product.attribute",
-        "odoo.product.attribute.value",
+        # "odoo.product.attribute.value",
     ]
 
     # Todo: buraya gerek var mı? çünkü bizim için product.attribute.value çok büyük bir

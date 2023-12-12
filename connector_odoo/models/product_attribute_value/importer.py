@@ -9,6 +9,25 @@ from odoo.addons.connector.components.mapper import mapping, only_create
 _logger = logging.getLogger(__name__)
 
 
+class ProductAttributeValueBatchImporter(Component):
+
+    _name = "odoo.product.attribute.value.batch.importer"
+    _inherit = "odoo.delayed.batch.importer"
+    _apply_on = ["odoo.product.attribute.value"]
+
+    def run(self, domain=None, force=False):
+        """Run the synchronization"""
+        external_ids = self.backend_adapter.search(domain)
+        _logger.info(
+            "search for odoo products attribute values %s returned %s items",
+            domain,
+            len(external_ids),
+        )
+        for external_id in external_ids:
+            job_options = {"priority": 15}
+            self._import_record(external_id, force=force)
+
+
 class ProductAttributeValueImporter(Component):
     """Import Odoo Attribute Value"""
 
