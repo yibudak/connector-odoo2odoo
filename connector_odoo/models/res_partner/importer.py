@@ -121,15 +121,16 @@ class PartnerImportMapper(Component):
 
     @mapping
     def country_id(self, record):
-        vals = {"country_id": False}
-        if not record.get("country_id"):
-            return vals
-        local_country_id = self.env["res.country"].search(
-            [("name", "=", record["country_id"][1])]
-        )
-        if local_country_id:
-            vals["country_id"] = local_country_id.id
-        return vals
+        return {"country_id", record.get("country_id", False)}
+        # vals = {"country_id": False}
+        # if not record.get("country_id"):
+        #     return vals
+        # local_country_id = self.env["res.country"].search(
+        #     [("name", "=", record["country_id"][1])]
+        # )
+        # if local_country_id:
+        #     vals["country_id"] = local_country_id.id
+        # return vals
 
     @mapping
     def state_id(self, record):

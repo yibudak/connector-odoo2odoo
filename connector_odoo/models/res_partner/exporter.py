@@ -233,7 +233,7 @@ class PartnerExportMapper(Component):
 
     @mapping
     def country_id(self, record):
-        return {"country_id": 224}  # Türkiye
+        return {"country_id": record.country_id.id}
 
     @mapping
     def customer(self, record):
