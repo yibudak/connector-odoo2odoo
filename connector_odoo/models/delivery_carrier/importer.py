@@ -55,7 +55,6 @@ class DeliveryCarrierMapper(Component):
 
     @mapping
     def deci_type(self, record):
-        # todo: samet (bunu da diğerleri gibi yapabiliriz)
         try:
             deci = str(record.get("deci_type"))
         except ValueError:
@@ -64,40 +63,34 @@ class DeliveryCarrierMapper(Component):
 
     @mapping
     def currency_id(self, record):
-        # todo: samet (bunu da diğerleri gibi yapabiliriz)
-        vals = {}
+        vals = {"currency_id": False}
         if currency := record.get("currency_id"):
             currency = self.env["res.currency"].search([("name", "=", currency[1])])
             vals["currency_id"] = currency.id
-        else:
-            vals["currency_id"] = False
         return vals
 
     @mapping
     def delivery_type(self, record):
-        # todo: samet (null durumda base_on_rule yazması doğru mu?)
         if record.get("delivery_type") == "fixed":
             delivery_type = "fixed"
         else:
             delivery_type = "base_on_rule"
         return {"delivery_type": delivery_type}
 
-    @only_create
+    # @only_create
     @mapping
     def country_ids(self, record):
-        return {"country_ids": [(6, 0, self.env.ref("base.tr").ids)]}
+        return {"country_ids": [(6, 0, record.get("country_ids", []))]}
 
     @mapping
     def product_id(self, record):
-        # todo: samet (bunu da diğerleri gibi yapabiliriz)
-        vals = {}
+        vals = {"product_id": False}
         binder = self.binder_for("odoo.product.product")
         if product := record.get("product_id"):
             local_product = binder.to_internal(product[0], unwrap=True)
             vals["product_id"] = local_product.id
-        else:
-            vals["product_id"] = False
         return vals
+
     # @only_create
     # @mapping
     # def odoo_id(self, record):
