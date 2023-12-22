@@ -61,7 +61,7 @@ class OdooAPI(object):
 
             except Exception as exc:
                 _logger.error(exc)
-                time.sleep(5)  # wait 5 seconds before retrying
+                # time.sleep(5)  # wait 5 seconds before retrying
                 raise RetryableJobError(
                     "OdooAPI: Connection error: {}".format(exc),
                     seconds=5,
