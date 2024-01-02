@@ -3,7 +3,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 import logging
-
+import ast
 from odoo import fields, models, api
 
 from odoo.addons.component.core import Component
@@ -140,6 +140,22 @@ class SaleOrderAdapter(Component):
 
     # Set get_passive to True to get the passive records also.
     _get_passive = True
+
+    def search(self, domain=None, model=None, offset=0, limit=None, order=None):
+        """Search records according to some criteria
+        and returns a list of ids
+
+        :rtype: list
+        """
+        if domain is None:
+            domain = []
+        ext_filter = ast.literal_eval(
+            str(self.backend_record.external_sale_order_domain_filter)
+        )
+        domain += ext_filter or []
+        return super(SaleOrderAdapter, self).search(
+            domain=domain, model=model, offset=offset, limit=limit, order=order
+        )
 
 
 class SaleOrderListener(Component):

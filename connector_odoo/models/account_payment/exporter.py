@@ -32,7 +32,6 @@ class AccountPaymentExportMapper(Component):
 
     @mapping
     def partner_id(self, record):
-        # yigit partnert export_dependencies'de export etmek gerekir mi?
         binder = self.binder_for("odoo.res.partner")
         return {
             "partner_id": binder.to_external(record.partner_id, wrap=True),
@@ -72,40 +71,6 @@ class AccountPaymentExportMapper(Component):
             return {"state": "cancelled"}
         else:
             return {"state": "draft"}
-
-    #
-    # @mapping
-    # def type(self, record):
-    #     return {"type": "form"}
-    #
-    # @mapping
-    # def acquirer_id(self, record):
-    #     pass
-    #     # yigit elle map et
-    #
-
-    #
-
-    #
-    # @mapping
-    # def partner_country_id(self, record):
-    #     binder = self.binder_for("odoo.res.country")
-    #     return {
-    #         "partner_country_id": binder.to_external(
-    #             record.partner_country_id, wrap=True
-    #         ),
-    #     }
-    #
-    # @mapping
-    # def sale_order_ids(self, record):
-    #     binder = self.binder_for("odoo.sale.order")
-    #     return {
-    #         "sale_order_ids": [(6, 0, binder.to_external(record.sale_order_ids))],
-    #     }
-    #
-    # @mapping
-    # def payment_id(self, record):
-    #     pass
 
 
 class OdooAccountPaymentExporter(Component):

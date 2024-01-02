@@ -92,7 +92,6 @@ class GenericAdapter(AbstractComponent):
                 "OdooAPI instance to be able to use the "
                 "Backend Adapter."
             )
-        # Todo: maybe we shouldn't only get id field.
         return [
             q["id"]
             for q in odoo_api.search(
@@ -103,11 +102,12 @@ class GenericAdapter(AbstractComponent):
                 limit=limit,
                 order=order,
                 context=context,
+                get_passive=self._get_passive,
             )
         ]
 
     # pylint: disable=W8106,W0622
-    def read(self, id, model=None, context=None):
+    def read(self, res_id, model=None, context=None):
         """Returns the information of a record
         :rtype: dict
         """
@@ -122,7 +122,10 @@ class GenericAdapter(AbstractComponent):
             )
 
         return odoo_api.browse(
-            model=ext_model, res_id=id, context=context, get_passive=self._get_passive
+            model=ext_model,
+            res_id=res_id,
+            context=context,
+            get_passive=self._get_passive,
         )
 
     def create(self, data):

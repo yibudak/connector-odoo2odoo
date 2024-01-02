@@ -58,111 +58,111 @@ class OdooPartnerExporter(Component):
     _inherit = "odoo.exporter"
     _apply_on = ["odoo.res.partner"]
 
-    def _must_skip(self):
-        if not self.binding.ecommerce_partner:
-            return True
-        else:
-            return False
+    # def _must_skip(self):
+    #     if not self.binding.ecommerce_partner:
+    #         return True
+    #     else:
+    #         return False
 
-    def _before_export(self):
-        """Try to match parent partner from Odoo backend."""
-        if not self.binding.vat or self.binding.parent_id:
-            return False
+    # def _before_export(self):
+    #     """Try to match parent partner from Odoo backend."""
+    #     if not self.binding.vat or self.binding.parent_id:
+    #         return False
+    #
+    #     if self.binding.vat in ["1" * 11, "2" * 11]:
+    #         return False
+    #
+    #     if self.binding.country_id.code != "TR":
+    #         return False
+    #
+    #     match_domain = [
+    #         ("vat", "=", self.binding.vat),
+    #         ("parent_id", "=", False),
+    #         ("ecommerce_partner", "=", False),
+    #     ]
+    #     matched_partner = self.backend_adapter.search(
+    #         model="res.partner",
+    #         domain=match_domain,
+    #     )
+    #     # If we found a match, but it's the same partner, we don't want to set
+    #     # it as parent.
+    #     if matched_partner and matched_partner[0] != self.binding.external_id:
+    #         parent = self.binding.search(
+    #             [
+    #                 ("external_id", "=", matched_partner[0]),
+    #             ],
+    #             limit=1,
+    #         ).commercial_partner_id
+    #         if not parent:
+    #             self.binding.import_record(
+    #                 backend=self.backend_record,
+    #                 external_id=matched_partner[0],
+    #             )
+    #             parent = self.binding.search(
+    #                 [
+    #                     ("external_id", "=", matched_partner[0]),
+    #                 ],
+    #                 limit=1,
+    #             ).commercial_partner_id
+    #         self.binding.parent_id = parent
+    #         self.binding.company_name = False
+    #
+    #     # İlk defa oluşturulan şirketlerde bu durum çalışır.
+    #     if (
+    #         (
+    #             self.binding.commercial_partner_id == self.binding.odoo_id
+    #         )  # This means it doesn't have any parent
+    #         and not self.binding.parent_id
+    #         and self.binding.company_name
+    #     ):
+    #         self.binding.odoo_id.create_company()
+    #         self._check_created_company()
+    #
+    #     return True
 
-        if self.binding.vat in ["1"*11, "2"*11]:
-            return False
-
-        if self.binding.country_id.code != "TR":
-            return False
-
-        match_domain = [
-            ("vat", "=", self.binding.vat),
-            ("parent_id", "=", False),
-            ("ecommerce_partner", "=", False),
-        ]
-        matched_partner = self.backend_adapter.search(
-            model="res.partner",
-            domain=match_domain,
-        )
-        # If we found a match, but it's the same partner, we don't want to set
-        # it as parent.
-        if matched_partner and matched_partner[0] != self.binding.external_id:
-            parent = self.binding.search(
-                [
-                    ("external_id", "=", matched_partner[0]),
-                ],
-                limit=1,
-            ).commercial_partner_id
-            if not parent:
-                self.binding.import_record(
-                    backend=self.backend_record,
-                    external_id=matched_partner[0],
-                )
-                parent = self.binding.search(
-                    [
-                        ("external_id", "=", matched_partner[0]),
-                    ],
-                    limit=1,
-                ).commercial_partner_id
-            self.binding.parent_id = parent
-            self.binding.company_name = False
-
-        # İlk defa oluşturulan şirketlerde bu durum çalışır.
-        if (
-            (
-                self.binding.commercial_partner_id == self.binding.odoo_id
-            )  # This means it doesn't have any parent
-            and not self.binding.parent_id
-            and self.binding.company_name
-        ):
-            self.binding.odoo_id.create_company()
-            self._check_created_company()
-
-        return True
-
-    def _check_created_company(self):
-        created_company = self.binding.parent_id
-        if not created_company.vat:
-            raise ValidationError(
-                "Created company %s must have vat number" % created_company.name
-            )
-        # To avoid infinite loop
-        self.binding.external_id = 0
-        external_company = self.backend_adapter.search(
-            model="res.partner",
-            domain=[
-                ("vat", "=", created_company.vat),
-                ("parent_id", "=", False),
-                ("ecommerce_partner", "=", False),
-            ],
-            limit=1,
-        )
-        if external_company:
-
-            external_company = self.work.odoo_api.browse(
-                model="res.partner",
-                res_id=external_company[0],
-            )
-
-            # Bulduğumuz şirketi import edelim.
-            self.binding.import_record(
-                self.backend_record, external_company["id"], force=False
-            )
-            imported_partner = self.env["odoo.res.partner"].search(
-                [("external_id", "=", external_company["id"])], limit=1
-            )
-            if not imported_partner:
-                raise ValidationError(
-                    "Imported partner %s not found in Odoo."
-                    " Are you sure about import process?" % external_company["name"]
-                )
-            # Bulduğumuz şirketi şu anki carinin parentı yapalım.
-            self.binding.parent_id = imported_partner.odoo_id
-            # Bir şirketle eşleştirebildik, oluşturduğumuz dummy şirketi çöpe at.
-            created_company.unlink()
-        else:
-            created_company.ecommerce_partner = True
-        return True
+    # def _check_created_company(self):
+    #     created_company = self.binding.parent_id
+    #     if not created_company.vat:
+    #         raise ValidationError(
+    #             "Created company %s must have vat number" % created_company.name
+    #         )
+    #     # To avoid infinite loop
+    #     self.binding.external_id = 0
+    #     external_company = self.backend_adapter.search(
+    #         model="res.partner",
+    #         domain=[
+    #             ("vat", "=", created_company.vat),
+    #             ("parent_id", "=", False),
+    #             ("ecommerce_partner", "=", False),
+    #         ],
+    #         limit=1,
+    #     )
+    #     if external_company:
+    #
+    #         external_company = self.work.odoo_api.browse(
+    #             model="res.partner",
+    #             res_id=external_company[0],
+    #         )
+    #
+    #         # Bulduğumuz şirketi import edelim.
+    #         self.binding.import_record(
+    #             self.backend_record, external_company["id"], force=False
+    #         )
+    #         imported_partner = self.env["odoo.res.partner"].search(
+    #             [("external_id", "=", external_company["id"])], limit=1
+    #         )
+    #         if not imported_partner:
+    #             raise ValidationError(
+    #                 "Imported partner %s not found in Odoo."
+    #                 " Are you sure about import process?" % external_company["name"]
+    #             )
+    #         # Bulduğumuz şirketi şu anki carinin parentı yapalım.
+    #         self.binding.parent_id = imported_partner.odoo_id
+    #         # Bir şirketle eşleştirebildik, oluşturduğumuz dummy şirketi çöpe at.
+    #         created_company.unlink()
+    #     else:
+    #         created_company.ecommerce_partner = True
+    #     return True
 
     def _export_dependencies(self):
         parents = self.binding.parent_id
@@ -180,32 +180,32 @@ class OdooPartnerExporter(Component):
         datas = map_record.values(for_create=True, fields=fields, **kwargs)
         return datas
 
-    def _get_external_id_with_data(self):
-        """
-        Match the company with vat number and return external id
-        """
-
-        # We should only match parents with vat number
-        if not self.binding.vat or self.binding.parent_id:
-            return False
-
-        if self.binding.vat in ["1"*11, "2"*11]:
-            return False
-
-        if self.binding.country_id.code != "TR":
-            return False
-
-        domain = [
-            ("vat", "=", self.binding.vat),
-            ("parent_id", "=", False),
-        ]
-        matched_partner = self.backend_adapter.search(
-            model="res.partner",
-            domain=domain,
-        )
-        if matched_partner:
-            self.external_id = matched_partner[0]
-        return self.external_id
+    # def _get_external_id_with_data(self):
+    #     """
+    #     Match the company with vat number and return external id
+    #     """
+    #
+    #     # We should only match parents with vat number
+    #     if not self.binding.vat or self.binding.parent_id:
+    #         return False
+    #
+    #     if self.binding.vat in ["1" * 11, "2" * 11]:
+    #         return False
+    #
+    #     if self.binding.country_id.code != "TR":
+    #         return False
+    #
+    #     domain = [
+    #         ("vat", "=", self.binding.vat),
+    #         ("parent_id", "=", False),
+    #     ]
+    #     matched_partner = self.backend_adapter.search(
+    #         model="res.partner",
+    #         domain=domain,
+    #     )
+    #     if matched_partner:
+    #         self.external_id = matched_partner[0]
+    #     return self.external_id
 
 
 class PartnerExportMapper(Component):
@@ -218,12 +218,13 @@ class PartnerExportMapper(Component):
         ("street2", "street2"),
         ("city", "city"),
         ("website", "website"),
+        ("lang", "lang"),
         ("phone", "phone"),
         ("mobile", "mobile"),
         ("email", "email"),
         ("vat", "vat"),
         ("type", "type"),
-        ("ecommerce_partner", "ecommerce_partner"),
+        # ("ecommerce_partner", "ecommerce_partner"),
         ("tax_office_name", "tax_office_name"),
     ]
 
@@ -241,9 +242,39 @@ class PartnerExportMapper(Component):
 
     @mapping
     def parent_id(self, record):
+        vals = {"parent_id": False}
         if record.parent_id:
             binder = self.binder_for("odoo.res.partner")
-            return {"parent_id": binder.to_external(record.parent_id, wrap=True)}
+            vals["parent_id"] = binder.to_external(record.parent_id, wrap=True)
+        return vals
+
+    @mapping
+    def accounts(self, record):
+        vals = {
+            "property_account_receivable_id": False,
+            "property_account_payable_id": False,
+        }
+        binder = self.binder_for("odoo.account.account")
+        if record.property_account_receivable_id:
+            vals["property_account_receivable_id"] = binder.to_external(
+                record.property_account_receivable_id, wrap=True
+            )
+        if record.property_account_payable_id:
+            vals["property_account_payable_id"] = binder.to_external(
+                record.property_account_payable_id, wrap=True
+            )
+        return vals
+
+    @mapping
+    def pricelists(self, record):
+        vals = {"property_product_pricelist": False}
+        if record.property_product_pricelist:
+            binder = self.binder_for("odoo.product.pricelist")
+            external_pricelist = binder.to_external(
+                record.property_product_pricelist, wrap=True
+            )
+            if external_pricelist:
+                vals["property_product_pricelist"] = external_pricelist
 
     @mapping
     def address_fields(self, record):

@@ -25,10 +25,10 @@ class SaleOrderBatchImporter(Component):
 
     def run(self, domain=None, force=False):
         """Run the synchronization"""
-        exported_ids = self.model.search([("external_id", "!=", 0)]).mapped(
-            "external_id"
-        )
-        domain += [("id", "in", exported_ids)]
+        # exported_ids = self.model.search([("external_id", "!=", 0)]).mapped(
+        #     "external_id"
+        # )
+        # domain += [("id", "in", exported_ids)]
         updated_ids = self.backend_adapter.search(domain)
         _logger.info(
             "search for odoo sale orders %s returned %s items",
@@ -45,24 +45,24 @@ class SaleOrderImportMapper(Component):
     _apply_on = "odoo.sale.order"
 
     direct = [
-        ("date_order", "backend_date_order"),
+        ("date_order", "date_order"),
+        ("confirmation_date", "confirmation_date"),
         ("name", "name"),
-        ("state", "backend_state"),
+        ("state", "state"),
         ("order_state", "order_state"),
         ("sale_deci", "sale_deci"),
+        ("client_order_ref", "client_order_ref"),
     ]
 
     @mapping
-    def backend_amount_total(self, record):
-        return {"backend_amount_total": record["amount_total"]}
-
-    @mapping
-    def backend_amount_tax(self, record):
-        return {"backend_amount_tax": record["amount_tax"]}
-
-    @mapping
-    def backend_picking_count(self, record):
-        return {"backend_picking_count": len(record["picking_ids"])}
+    def backend_fields(self, record):
+        return {
+            "backend_amount_total": record["amount_total"],
+            "backend_amount_tax": record["amount_tax"],
+            "backend_picking_count": len(record["picking_ids"]),
+            "backend_date_order": record["date_order"],
+            "backend_state": record["state"],
+        }
 
     @only_create
     @mapping
@@ -106,11 +106,13 @@ class SaleOrderImporter(Component):
 
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
+        # pricelist
         self._import_dependency(
             self.odoo_record["pricelist_id"][0],
             "odoo.product.pricelist",
             force=force,
         )
+        # partners
         partner_ids = list(
             {
                 self.odoo_record["partner_id"][0],
@@ -122,6 +124,13 @@ class SaleOrderImporter(Component):
             self._import_dependency(
                 partner_id,
                 "odoo.res.partner",
+                force=force,
+            )
+        # payment term
+        if self.odoo_record["payment_term_id"]:
+            self._import_dependency(
+                self.odoo_record["payment_term_id"][0],
+                "odoo.account.payment.term",
                 force=force,
             )
 

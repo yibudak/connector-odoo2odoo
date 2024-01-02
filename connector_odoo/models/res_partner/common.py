@@ -75,8 +75,10 @@ class PartnerAdapter(Component):
         """
         if domain is None:
             domain = []
-        # Fix for not null constraint bug
-        # domain += [("name", "!=", False)]
+        ext_filter = ast.literal_eval(
+            str(self.backend_record.external_res_partner_domain_filter)
+        )
+        domain += ext_filter or []
         return super(PartnerAdapter, self).search(
             domain=domain, model=model, offset=offset, limit=limit, order=order
         )

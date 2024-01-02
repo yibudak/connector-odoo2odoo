@@ -24,7 +24,6 @@ class PaymentTransactionExportMapper(Component):
     direct = [
         ("garanti_xid", "garanti_xid"),
         ("garanti_secure3d_hash", "garanti_secure3d_hash"),
-        # ("callback_hash", "callback_hash"), # todo: yigit fix permission issue and enable this line.
         ("reference", "reference"),
         ("amount", "amount"),
         ("state", "state"),
@@ -43,7 +42,6 @@ class PaymentTransactionExportMapper(Component):
 
     @mapping
     def partner_id(self, record):
-        # yigit partnert export_dependencies'de export etmek gerekir mi
         binder = self.binder_for("odoo.res.partner")
         return {
             "partner_id": binder.to_external(record.partner_id, wrap=True),

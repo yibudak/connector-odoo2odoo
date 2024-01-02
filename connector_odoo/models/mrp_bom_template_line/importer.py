@@ -42,10 +42,7 @@ class MrpBomTemplateLineMapper(Component):
 
     @mapping
     def bom_id(self, record):
-        # todo: samet
-        res = {
-            "bom_id": False,
-        }
+        res = {"bom_id": False}
         if bom := record.get("bom_id"):
             local_bom = self.env["odoo.mrp.bom"].search([("external_id", "=", bom[0])])
             if local_bom:
@@ -54,10 +51,7 @@ class MrpBomTemplateLineMapper(Component):
 
     @mapping
     def product_tmpl_id(self, record):
-        # todo: samet
-        res = {
-            "product_tmpl_id": False,
-        }
+        res = {"product_tmpl_id": False}
         if product := record.get("product_tmpl_id"):
             local_product = self.env["odoo.product.template"].search(
                 [("external_id", "=", product[0])]
@@ -68,7 +62,6 @@ class MrpBomTemplateLineMapper(Component):
 
     @mapping
     def product_uom_id(self, record):
-        # todo: samet
         res = {"product_uom_id": False}
         if uom := record.get("product_uom_id"):
             local_uom = self.env["odoo.uom.uom"].search([("external_id", "=", uom[0])])
@@ -78,18 +71,21 @@ class MrpBomTemplateLineMapper(Component):
 
     @mapping
     def attributes(self, record):
-        # todo: samet
         """
         Odoo 12 -> Odoo 16
         attribute_value_ids -> bom_product_template_attribute_value_ids
         target_attribute_value_ids -> target_bom_product_template_attribute_value_ids
         inherited_attribute_ids -> inherited_attribute_ids
         """
-        res = {}
+        res = {
+            "attribute_value_ids": False,
+            "target_attribute_value_ids": False,
+            "inherited_attribute_ids": False,
+        }
         attribute_binder = self.binder_for("odoo.product.attribute")
         attribute_value_binder = self.binder_for("odoo.product.attribute.value")
-        bom_binder = self.binder_for("odoo.mrp.bom")
-        local_bom_id = bom_binder.to_internal(record["bom_id"][0], unwrap=True)
+        # bom_binder = self.binder_for("odoo.mrp.bom")
+        # local_bom_id = bom_binder.to_internal(record["bom_id"][0], unwrap=True)
         if attribute_value_ids := record["attribute_value_ids"]:
             val_ids = []
             for attr_val in attribute_value_ids:

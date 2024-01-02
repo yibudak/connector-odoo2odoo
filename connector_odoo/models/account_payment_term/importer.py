@@ -54,33 +54,33 @@ class AccountPaymentTermImportMapper(Component):
             .with_context(ctx)
             .search(
                 [
-                    ("name", "=", record.name),
+                    ("name", "=", record["name"]),
                 ],
                 limit=1,
             )
         )
         if pt_record:
             _logger.info(
-                "Account Fiscal Position found for %s : %s" % (record, pt_record)
+                "Account Fiscal Position found for %s : %s"
+                % (record["name"], pt_record)
             )
             res.update({"odoo_id": pt_record.id})
         return res
 
-    @mapping
-    def line_ids(self, record):
-        # todo: samet
-        res = {}
-        if record.line_ids:
-            lines = []
-            for line in record.line_ids:
-                create_vals = {
-                    "value": line.value,
-                    "value_amount": line.value_amount,
-                    "days": line.days,
-                }
-                lines.append((0, 0, create_vals))
-            res.update({"line_ids": lines})
-        return res
+    # @mapping
+    # def line_ids(self, record):
+    #     res = {}
+    #     if record.line_ids:
+    #         lines = []
+    #         for line in record.line_ids:
+    #             create_vals = {
+    #                 "value": line.value,
+    #                 "value_amount": line.value_amount,
+    #                 "days": line.days,
+    #             }
+    #             lines.append((0, 0, create_vals))
+    #         res.update({"line_ids": lines})
+    #     return res
 
 
 class AccountPaymentTermImporter(Component):
