@@ -279,10 +279,7 @@ class OdooExporter(AbstractComponent):
         wrap = relation._name != binding_model
 
         if wrap and hasattr(relation, binding_field):
-            if (
-                hasattr(self.backend_adapter, "_get_passive")
-                and self.backend_adapter._get_passive
-            ):
+            if rel_binder and hasattr(rel_binder.model, "active"):
                 binding = self.env[binding_model].search(
                     [
                         ("odoo_id", "=", relation.id),
