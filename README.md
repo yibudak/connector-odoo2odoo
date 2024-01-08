@@ -1,4 +1,4 @@
-
+# NOTE: THIS REPOSITORY IS HIGHLY CUSTOMIZED FOR SPECIAL CASES, READ THE CODES BEFORE INSTALL
 [![Runboat](https://img.shields.io/badge/runboat-Try%20me-875A7B.png)](https://runboat.odoo-community.org/builds?repo=OCA/connector-odoo2odoo&target_branch=16.0)
 [![Pre-commit Status](https://github.com/OCA/connector-odoo2odoo/actions/workflows/pre-commit.yml/badge.svg?branch=16.0)](https://github.com/OCA/connector-odoo2odoo/actions/workflows/pre-commit.yml?query=branch%3A16.0)
 [![Build Status](https://github.com/OCA/connector-odoo2odoo/actions/workflows/test.yml/badge.svg?branch=16.0)](https://github.com/OCA/connector-odoo2odoo/actions/workflows/test.yml?query=branch%3A16.0)

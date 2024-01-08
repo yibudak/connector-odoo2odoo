@@ -279,7 +279,17 @@ class OdooExporter(AbstractComponent):
         wrap = relation._name != binding_model
 
         if wrap and hasattr(relation, binding_field):
-            binding = relation[binding_field]
+            if rel_binder and hasattr(rel_binder.model, "active"):
+                binding = self.env[binding_model].search(
+                    [
+                        ("odoo_id", "=", relation.id),
+                        "|",
+                        ("active", "=", False),
+                        ("active", "=", True),
+                    ],
+                )
+            else:
+                binding = relation[binding_field]
             if binding:
                 assert len(binding) == 1, (
                     "only 1 binding for a backend is " "supported in _export_dependency"
