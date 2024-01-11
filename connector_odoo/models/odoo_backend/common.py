@@ -134,6 +134,18 @@ class OdooBackend(models.Model):
         help="Filter in the Odoo Destination",
     )
 
+    external_res_partner_domain_filter = fields.Char(
+        string="External Partner domain filter",
+        default="[]",
+        help="Filter in the Odoo Destination",
+    )
+
+    external_sale_order_domain_filter = fields.Char(
+        string="External Sale Order domain filter",
+        default="[]",
+        help="Filter in the Odoo Destination",
+    )
+
     """
     DATE FIELDS
     """
@@ -343,11 +355,9 @@ class OdooBackend(models.Model):
         return self._cron_multi_import(models=base_models, date_field=date_field)
 
     def import_mrp_models(self):
-        # todo: burası iyi çalışmıyor. bazı bom lineları kaçırıyor
-        # yigit: bom satırlarını bom'dan sonra aktarma yaptık, belki çözüm olabilir
         mrp_models = [
-            "odoo.mrp.bom",  # We import bom in line dependencies
-            # "odoo.mrp.bom.line",
+            "odoo.mrp.bom",
+            # "odoo.mrp.bom.line", # We import lines in BoM dependencies
         ]
         date_field = "import_mrp_models_from_date"
         return self._cron_multi_import(models=mrp_models, date_field=date_field)

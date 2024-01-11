@@ -60,8 +60,7 @@ class AccountGroupImportMapper(Component):
 
     @mapping
     def parent_id(self, record):
-        # todo: samet
-        res = {}
+        res = {"parent_id": False}
         parent_id = record.get("parent_id")
         if parent_id:
             binder = self.binder_for("odoo.account.group")
@@ -72,7 +71,6 @@ class AccountGroupImportMapper(Component):
 
     @mapping
     def prefix(self, record):
-        # todo: samet
         code_prefix = record["code_prefix"].split(".")
         vals = {"code_prefix_start": code_prefix[0], "code_prefix_end": ""}
         if len(code_prefix) > 1:

@@ -68,7 +68,6 @@ class AddressNeighbourImportMapper(Component):
 
     @mapping
     def region_id(self, record):
-        # todo: samet
         region_record = self.binder_for("odoo.address.region").to_internal(
             record["region_id"][0], unwrap=True
         )

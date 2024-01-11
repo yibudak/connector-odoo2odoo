@@ -76,10 +76,14 @@
                                         <field name="external_bom_domain_filter" string="Ext. BoM Filter" />
                                         <field name="external_bom_line_domain_filter" string="Ext. BoM Line Filter" />
                                     </group>
+									<group string="Order and Partners">
+										<field name="external_res_partner_domain_filter" string="Ext. Partner Filter" />
+										<field name="external_sale_order_domain_filter" string="Ext. Sale Order Filter" />
+									</group>
 								</group>
 							</page>
                             <page string="Helpers" name="helpers_page">
-								<strong>AVOID USING THESE BUTTONS.</strong>
+								<h2><strong style="color:red;">AVOID USING THESE BUTTONS.</strong></h2>
                                 <group name="helper_group">
                                     <button name="action_fix_category_seo_name" type="object" string="Fix category seo name" />
                                     <button name="action_fix_product_seo_name" type="object" string="Fix product seo name" />

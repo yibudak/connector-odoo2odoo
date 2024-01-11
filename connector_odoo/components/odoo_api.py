@@ -76,7 +76,7 @@ class OdooAPI(object):
         }
 
     def _build_context(self, context=None):
-        _ctx = {"lang": self._lang}
+        _ctx = {"lang": self._lang, "connector_request": True}
         if context:
             _ctx.update(context)
         return _ctx
@@ -105,7 +105,6 @@ class OdooAPI(object):
     def _build_execute_kw_payload(
         self,
         kwargs=None,
-        context=None,
     ):
         payload = self._base_payload()
         args = self._build_authenticate_payload() + (kwargs or [])
@@ -157,13 +156,19 @@ class OdooAPI(object):
         limit=None,
         order=None,
         context=None,
+        get_passive=None,
     ):
+        if get_passive:
+            base_domain = ["|", ["active", "=", True], ["active", "=", False]]
+        else:
+            base_domain = []
+        base_domain.extend(domain)
         return self._post(
             self._build_execute_kw_payload(
                 kwargs=[
                     model,
                     "search_read",
-                    [domain],
+                    [base_domain + domain],
                     {
                         "fields": fields,
                         "offset": offset,
@@ -216,7 +221,7 @@ class OdooAPI(object):
             raise IDMissingInBackend("ID {} not found in backend".format(res_id))
 
     def unlink(self, res_id):
-        pass
+        raise NotImplementedError
 
     def execute(self, model, method, args=None, context=None):
         return self._post(

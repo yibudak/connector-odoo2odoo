@@ -63,13 +63,14 @@ class ProductTemplateImportMapper(Component):
     @mapping
     def dimensions(self, record):
         binder = self.binder_for("odoo.uom.uom")
-        dimensional_uom = binder.to_internal(
-            record["dimensional_uom_id"][0], unwrap=True
-        )
         weight_uom = binder.to_internal(record["weight_uom_id"][0], unwrap=True)
         volume_uom = binder.to_internal(record["volume_uom_id"][0], unwrap=True)
         return {
-            "dimensional_uom_id": dimensional_uom.id,
+            "dimensional_uom_id": binder.to_internal(
+                record["dimensional_uom_id"][0], unwrap=True
+            ).id
+            if record["dimensional_uom_id"]
+            else False,
             "product_length": record["product_length"],
             "product_width": record["product_width"],
             "product_height": record["product_height"],
@@ -107,28 +108,20 @@ class ProductTemplateImportMapper(Component):
 
     @mapping
     def default_code(self, record):
-        # todo: samet
-        if not (code := record["default_code"]):
-            return {}
-        if not code:
-            return {"default_code": "/"}
-        return {"default_code": code}
+        return {"default_code": record.get("default_code", "/")}
 
     @mapping
     def name(self, record):
-        # todo: samet
-        if not (name := record["name"]):
-            return {}
-        if not name:
-            return {"name": "/"}
-        return {"name": name}
+        return {"name": record.get("name", "/")}
 
     @mapping
     def category(self, record):
-        # todo: samet
         """This method is used to map the category of the product,
         also it will map the public category of the product."""
-        vals = {}
+        vals = {
+            "categ_id": False,
+            "public_categ_ids": False,
+        }
         categ_id = record["categ_id"]
         binder = self.binder_for("odoo.product.category")
 
@@ -196,7 +189,6 @@ class ProductTemplateImporter(Component):
 
     def _import_dependencies(self, force=False):
         """Import the dependencies for the record"""
-        # Todo yigit: this causes concurrency issues
         self._import_dependency(
             self.odoo_record["uom_id"][0],
             "odoo.uom.uom",
@@ -207,6 +199,7 @@ class ProductTemplateImporter(Component):
             "odoo.product.category",
             force=force,
         )
+        # todo yibudak: check if this should be enabled
         # if default_variant_id := self.odoo_record.get("default_variant_id"):
         #     self._import_dependency(
         #         default_variant_id[0],
@@ -250,7 +243,6 @@ class ProductTemplateImporter(Component):
         return True
 
     def _import_website_attachments(self, tmpl_id, force=False):
-        # Todo:
         if attachment_ids := self.odoo_record["website_attachment_ids"]:
             for attachment_id in attachment_ids:
                 self.env["odoo.ir.attachment"].delayed_import_record(
@@ -267,6 +259,12 @@ class ProductTemplateImporter(Component):
                     "website_attachment_ids": [
                         (6, 0, imported_attachments.mapped("odoo_id.id"))
                     ],
+                }
+            )
+        else:
+            tmpl_id.write(
+                {
+                    "website_attachment_ids": False,
                 }
             )
         return True

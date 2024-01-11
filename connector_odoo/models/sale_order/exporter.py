@@ -41,12 +41,6 @@ class OdooSaleOrderExporter(Component):
 
         return super(OdooSaleOrderExporter, self)._should_import()
 
-    # todo yigit: check this method is necessary or not
-    # def _must_skip(self):
-    #     """If there is no USER on the sale order, this means that guest user creates the
-    #     order. We don't want to export it."""
-    #     return not (self.binding.partner_id.user_id or self.binding.partner_id.user_ids)
-
     def _export_dependencies(self):
         if not self.binding.partner_id:
             return
@@ -185,15 +179,15 @@ class SaleOrderExportMapper(Component):
         binder = self.binder_for("odoo.delivery.carrier")
         return {"carrier_id": binder.to_external(record.carrier_id, wrap=True)}
 
-    # Todo yigit: burası tam map olmuyor çünkü hedef kayıtlar da bozuk.
-    # @mapping
-    # def payment_term_id(self, record):
-    #     if not record.payment_term_id:
-    #         return {"payment_term_id": False}
-    #     binder = self.binder_for("odoo.account.payment.term")
-    #     return {"carrier_id": binder.to_external(record.payment_term_id, wrap=True)}
+    @mapping
+    def payment_term_id(self, record):
+        if not record.payment_term_id:
+            return {"payment_term_id": False}
+        binder = self.binder_for("odoo.account.payment.term")
+        return {
+            "payment_term_id": binder.to_external(record.payment_term_id, wrap=True)
+        }
 
     @mapping
     def client_order_ref(self, record):
-        # Todo: müşterinin satınalma numarası için bir field yapılacak
-        return {"client_order_ref": record.name}
+        return {"client_order_ref": record.client_order_ref}

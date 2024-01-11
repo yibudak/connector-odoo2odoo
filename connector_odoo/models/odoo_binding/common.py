@@ -130,7 +130,7 @@ class OdooBinding(models.AbstractModel):
                 # Bağlantı hatalarında iş sürekli tekrar deneniyor ve delay olmadığı
                 # zaman retry_count çok hızlı bir şekilde doluyor. Delay ekleyerek
                 # aradaki bağlantının düzelmesini bekliyoruz.
-                time.sleep(5)
+                time.sleep(0.5)
                 raise RetryableJobError(
                     "Could not import record %s: \n%s" % (external_id, str(e)),
                     seconds=5,

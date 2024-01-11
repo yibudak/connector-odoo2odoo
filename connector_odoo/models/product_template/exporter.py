@@ -101,7 +101,6 @@ class ProductTemplateExportMapper(Component):
     _inherit = "odoo.export.mapper"
     _apply_on = ["odoo.product.template"]
 
-    # TODO :     categ, special_price => minimal_price
     direct = [
         (field_by_lang("name"), "name"),
         (field_by_lang("description"), "description"),

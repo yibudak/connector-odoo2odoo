@@ -40,7 +40,6 @@ class MrpBomLineMapper(Component):
 
     @mapping
     def bom_id(self, record):
-        # todo: samet
         res = {}
         if bom := record.get("bom_id"):
             local_bom = self.env["odoo.mrp.bom"].search([("external_id", "=", bom[0])])
@@ -54,7 +53,6 @@ class MrpBomLineMapper(Component):
 
     @mapping
     def product_id(self, record):
-        # todo: samet
         res = {"product_id": False}
         if product := record.get("product_id"):
             local_product = self.binder_for("odoo.product.product").to_internal(
