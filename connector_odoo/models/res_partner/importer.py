@@ -24,10 +24,11 @@ class PartnerBatchImporter(Component):
 
     def run(self, domain=None, force=False):
         """Run the synchronization"""
-        # exported_ids = self.model.search([("external_id", "!=", 0)]).mapped(
-        #     "external_id"
-        # )
-        # domain += [("id", "in", exported_ids)]
+        # Todo: implement new partner sync
+        exported_ids = self.model.search([("external_id", "!=", 0)]).mapped(
+            "external_id"
+        )
+        domain += [("id", "in", exported_ids)]
         external_ids = self.backend_adapter.search(domain)
         _logger.debug(
             "search for odoo partner %s returned %s items", domain, len(external_ids)
@@ -95,6 +96,9 @@ class PartnerImportMapper(Component):
                 ("external_id", "=", record["id"]),
                 ("name", "=", record["name"]),
                 ("vat", "=", record["vat"]),
+                "|",
+                ("active", "=", False),
+                ("active", "=", True),
             ]
         )
         if len(odoo_partner_id) == 1:

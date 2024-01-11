@@ -8,6 +8,7 @@ from . import odoo_backend
 from . import base_multi_image_image
 from . import res_currency_rate
 from . import res_currency
+from . import res_users
 from . import res_company
 from . import partner_category
 from . import res_partner
@@ -49,4 +50,3 @@ from . import stock_location
 from . import mapping_models
 from . import stock_picking
 from . import stock_move
-from . import users

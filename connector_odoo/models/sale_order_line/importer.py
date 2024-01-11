@@ -43,6 +43,7 @@ class SaleOrderLineImportMapper(Component):
         ("price_unit", "price_unit"),
         ("product_uom_qty", "product_uom_qty"),
         ("product_qty", "product_qty"),
+        ("is_delivery", "is_delivery"),
         ("display_type", "display_type"),
         ("customer_lead", "customer_lead"),
         ("discount", "discount"),

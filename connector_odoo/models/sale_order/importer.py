@@ -29,6 +29,10 @@ class SaleOrderBatchImporter(Component):
         #     "external_id"
         # )
         # domain += [("id", "in", exported_ids)]
+        synced_partner_ext_ids = (
+            self.env["odoo.res.partner"].search([]).mapped("external_id")
+        )
+        domain += [("partner_id", "in", synced_partner_ext_ids)]
         updated_ids = self.backend_adapter.search(domain)
         _logger.info(
             "search for odoo sale orders %s returned %s items",
@@ -81,6 +85,17 @@ class SaleOrderImportMapper(Component):
         return {"pricelist_id": pricelist_id.id}
 
     @mapping
+    def payment_term_id(self, record):
+        vals = {"payment_term_id": False}
+        if record["payment_term_id"]:
+            binder = self.binder_for("odoo.account.payment.term")
+            payment_term_id = binder.to_internal(
+                record["payment_term_id"][0], unwrap=True
+            )
+            vals["payment_term_id"] = payment_term_id.id
+        return vals
+
+    @mapping
     def partner_id(self, record):
         binder = self.binder_for("odoo.res.partner")
         return {
@@ -97,6 +112,11 @@ class SaleOrderImportMapper(Component):
                 unwrap=True,
             ).id,
         }
+
+    @mapping
+    def user_id(self, record):
+        binder = self.binder_for("odoo.res.users")
+        return {"user_id": binder.to_internal(record["user_id"][0], unwrap=True).id}
 
 
 class SaleOrderImporter(Component):
@@ -131,6 +151,13 @@ class SaleOrderImporter(Component):
             self._import_dependency(
                 self.odoo_record["payment_term_id"][0],
                 "odoo.account.payment.term",
+                force=force,
+            )
+        # sale person
+        if self.odoo_record["user_id"]:
+            self._import_dependency(
+                self.odoo_record["user_id"][0],
+                "odoo.res.users",
                 force=force,
             )
 
