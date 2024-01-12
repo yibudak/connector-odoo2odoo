@@ -62,8 +62,9 @@ class OdooSaleOrderExporter(Component):
             for line in binding.order_line:
                 self._export_dependency(line, "odoo.sale.order.line")
         if binding and binding.transaction_ids:
+            # Only export done Garanti transactions
             electronic_txs = binding.transaction_ids.filtered(
-                lambda t: t.provider_id.code == "garanti"
+                lambda t: t.provider_id.code == "garanti" and t.state == "done"
             )
             if electronic_txs:
                 for tx in electronic_txs:
