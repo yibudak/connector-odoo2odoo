@@ -250,22 +250,23 @@ class PartnerExportMapper(Component):
             vals["parent_id"] = binder.to_external(record.parent_id, wrap=True)
         return vals
 
-    @mapping
-    def accounts(self, record):
-        vals = {
-            "property_account_receivable_id": False,
-            "property_account_payable_id": False,
-        }
-        binder = self.binder_for("odoo.account.account")
-        if record.property_account_receivable_id:
-            vals["property_account_receivable_id"] = binder.to_external(
-                record.property_account_receivable_id, wrap=True
-            )
-        if record.property_account_payable_id:
-            vals["property_account_payable_id"] = binder.to_external(
-                record.property_account_payable_id, wrap=True
-            )
-        return vals
+    # todo: fix accounts and enable it
+    # @mapping
+    # def accounts(self, record):
+    #     vals = {
+    #         "property_account_receivable_id": False,
+    #         "property_account_payable_id": False,
+    #     }
+    #     binder = self.binder_for("odoo.account.account")
+    #     if record.property_account_receivable_id:
+    #         vals["property_account_receivable_id"] = binder.to_external(
+    #             record.property_account_receivable_id, wrap=True
+    #         )
+    #     if record.property_account_payable_id:
+    #         vals["property_account_payable_id"] = binder.to_external(
+    #             record.property_account_payable_id, wrap=True
+    #         )
+    #     return vals
 
     @mapping
     def pricelists(self, record):
