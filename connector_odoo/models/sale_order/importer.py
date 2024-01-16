@@ -115,6 +115,8 @@ class SaleOrderImportMapper(Component):
 
     @mapping
     def user_id(self, record):
+        if not record["user_id"]:
+            return {"user_id": False}
         binder = self.binder_for("odoo.res.users")
         return {"user_id": binder.to_internal(record["user_id"][0], unwrap=True).id}
 

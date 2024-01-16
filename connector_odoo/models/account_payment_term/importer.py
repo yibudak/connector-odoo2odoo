@@ -44,28 +44,28 @@ class AccountPaymentTermImportMapper(Component):
         ("active", "active"),
     ]
 
-    @only_create
-    @mapping
-    def check_account_fiscal_position_exists(self, record):
-        res = {}
-        ctx = {"lang": self.backend_record.get_default_language_code()}
-        pt_record = (
-            self.env["account.payment.term"]
-            .with_context(ctx)
-            .search(
-                [
-                    ("name", "=", record["name"]),
-                ],
-                limit=1,
-            )
-        )
-        if pt_record:
-            _logger.info(
-                "Account Fiscal Position found for %s : %s"
-                % (record["name"], pt_record)
-            )
-            res.update({"odoo_id": pt_record.id})
-        return res
+    # @only_create
+    # @mapping
+    # def check_account_fiscal_position_exists(self, record):
+    #     res = {}
+    #     ctx = {"lang": self.backend_record.get_default_language_code()}
+    #     pt_record = (
+    #         self.env["account.payment.term"]
+    #         .with_context(ctx)
+    #         .search(
+    #             [
+    #                 ("name", "=", record["name"]),
+    #             ],
+    #             limit=1,
+    #         )
+    #     )
+    #     if pt_record:
+    #         _logger.info(
+    #             "Account Fiscal Position found for %s : %s"
+    #             % (record["name"], pt_record)
+    #         )
+    #         res.update({"odoo_id": pt_record.id})
+    #     return res
 
     # @mapping
     # def line_ids(self, record):
