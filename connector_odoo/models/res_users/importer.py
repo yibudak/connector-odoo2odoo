@@ -79,6 +79,16 @@ class ResUsersImporter(Component):
     _inherit = "odoo.importer"
     _apply_on = "odoo.res.users"
 
+    def _create(self, data):
+        """
+        When creating new binding, if there is any odoo_id, we should remove all the
+        keys and just keep the odoo_id key. So it means we would create a new binding
+        for the odoo_id.
+        """
+        if data.get("odoo_id"):
+            data = {"odoo_id": data["odoo_id"], "backend_id": self.backend_record.id}
+        return super(ResUsersImporter, self)._create(data)
+
     def _import_dependencies(self, force=False):
         self._import_dependency(
             self.odoo_record["partner_id"][0],
