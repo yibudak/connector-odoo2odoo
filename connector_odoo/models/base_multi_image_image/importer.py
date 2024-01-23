@@ -155,10 +155,11 @@ class BaseMultiImageImageImporter(Component):
                 "odoo.ir.attachment",
                 force=force,
             )
-        if variant_ids := record.get("product_variant_ids"):
-            for variant in variant_ids:
-                self._import_dependency(
-                    variant,
-                    "odoo.product.product",
-                    force=force,
-                )
+        # TODO: This incredibly slows down the import process. Fix it later.
+        # if variant_ids := record.get("product_variant_ids"):
+        #     for variant in variant_ids:
+        #         self._import_dependency(
+        #             variant,
+        #             "odoo.product.product",
+        #             force=force,
+        #         )
