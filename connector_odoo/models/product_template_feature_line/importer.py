@@ -63,7 +63,6 @@ class ProductTemplateFeatureLineMapper(Component):
         binder = self.binder_for("odoo.product.template")
         return binder.to_internal(record["product_tmpl_id"][0], unwrap=True).id
 
-    @only_create
     @mapping
     def product_tmpl_id(self, record):
         return {"product_tmpl_id": self._get_product_tmpl_id(record)}
