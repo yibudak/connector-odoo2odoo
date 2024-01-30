@@ -232,7 +232,6 @@ class PartnerExportMapper(Component):
 
     @mapping
     def name(self, record):
-        # todo: burada ülke ayrımı yapmak lazım
         if record.country_id and record.country_id.code == "TR":
             titled_name = unicode_tr(record.name).title()
         else:
