@@ -221,7 +221,7 @@ class ProductPricelistItemImportMapper(Component):
 
     @mapping
     def product_tmpl_id(self, record):
-        if tmpl_id := record.get("base_pricelist_id"):
+        if tmpl_id := record.get("product_tmpl_id"):
             binder = self.binder_for("odoo.product.template")
             product = binder.to_internal(tmpl_id[0], unwrap=True)
             return {"product_tmpl_id": product.id}
