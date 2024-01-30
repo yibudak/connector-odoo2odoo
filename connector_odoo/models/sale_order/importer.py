@@ -120,6 +120,30 @@ class SaleOrderImportMapper(Component):
         binder = self.binder_for("odoo.res.users")
         return {"user_id": binder.to_internal(record["user_id"][0], unwrap=True).id}
 
+    @mapping
+    def utm(self, record):
+        vals = {
+            "campaign_id": False,
+            "medium_id": False,
+            "source_id": False,
+        }
+        if utm_campaign_id := record.get("campaign_id"):
+            binder = self.binder_for("utm.campaign")
+            local_campaign = binder.to_internal(utm_campaign_id[0], unwrap=True)
+            if local_campaign:
+                vals["campaign_id"] = local_campaign.id
+        if utm_medium_id := record.get("medium_id"):
+            binder = self.binder_for("utm.medium")
+            local_medium = binder.to_internal(utm_medium_id[0], unwrap=True)
+            if local_medium:
+                vals["medium_id"] = local_medium.id
+        if utm_source_id := record.get("source_id"):
+            binder = self.binder_for("utm.source")
+            local_source = binder.to_internal(utm_source_id[0], unwrap=True)
+            if local_source:
+                vals["source_id"] = local_source.id
+        return vals
+
 
 class SaleOrderImporter(Component):
     _name = "odoo.sale.order.importer"

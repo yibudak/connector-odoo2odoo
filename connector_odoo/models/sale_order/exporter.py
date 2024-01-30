@@ -192,3 +192,21 @@ class SaleOrderExportMapper(Component):
     @mapping
     def client_order_ref(self, record):
         return {"client_order_ref": record.client_order_ref}
+
+    @mapping
+    def utm(self, record):
+        vals = {
+            "campaign_id": False,
+            "medium_id": False,
+            "source_id": False,
+        }
+        if record.campaign_id:
+            binder = self.binder_for("odoo.utm.campaign")
+            vals["campaign_id"] = binder.to_external(record.campaign_id, wrap=True)
+        if record.medium_id:
+            binder = self.binder_for("odoo.utm.medium")
+            vals["medium_id"] = binder.to_external(record.medium_id, wrap=True)
+        if record.source_id:
+            binder = self.binder_for("odoo.utm.source")
+            vals["source_id"] = binder.to_external(record.source_id, wrap=True)
+        return vals

@@ -13,9 +13,9 @@
             <group string="Odoo Binding">
                 <field name="bind_ids" readonly="1" nolabel="1" />
             </group>
-            <group string="Queue Job">
-                <field name="active_job_ids" readonly="1" nolabel="1" />
-            </group>
+<!--            <group string="Queue Job">-->
+<!--                <field name="active_job_ids" readonly="1" nolabel="1" />-->
+<!--            </group>-->
         </xpath>
       </field>
     </record>

@@ -226,13 +226,18 @@ class PartnerExportMapper(Component):
         ("email", "email"),
         ("vat", "vat"),
         ("type", "type"),
-        ("ecommerce_partner", "ecommerce_partner"), # todo: remove this field
+        ("ecommerce_partner", "ecommerce_partner"),  # todo: remove this field
         ("tax_office_name", "tax_office_name"),
     ]
 
     @mapping
     def name(self, record):
-        return {"name": unicode_tr(record.name).title()}
+        # todo: burada ülke ayrımı yapmak lazım
+        if record.country_id and record.country_id.code == "TR":
+            titled_name = unicode_tr(record.name).title()
+        else:
+            titled_name = record.name.title()
+        return {"name": titled_name}
 
     @mapping
     def country_id(self, record):
@@ -267,6 +272,24 @@ class PartnerExportMapper(Component):
     #             record.property_account_payable_id, wrap=True
     #         )
     #     return vals
+
+    @mapping
+    def utm(self, record):
+        vals = {
+            "campaign_id": False,
+            "medium_id": False,
+            "source_id": False,
+        }
+        if record.campaign_id:
+            binder = self.binder_for("odoo.utm.campaign")
+            vals["campaign_id"] = binder.to_external(record.campaign_id, wrap=True)
+        if record.medium_id:
+            binder = self.binder_for("odoo.utm.medium")
+            vals["medium_id"] = binder.to_external(record.medium_id, wrap=True)
+        if record.source_id:
+            binder = self.binder_for("odoo.utm.source")
+            vals["source_id"] = binder.to_external(record.source_id, wrap=True)
+        return vals
 
     @mapping
     def pricelists(self, record):

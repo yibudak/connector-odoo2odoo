@@ -166,6 +166,7 @@ class OdooBackend(models.Model):
     import_account_from_date = fields.Datetime("Import Account from date")
     import_mrp_models_from_date = fields.Datetime("Import MRP models from date")
     import_sale_order_from_date = fields.Datetime("Import Sale Order from date")
+    import_utm_models_from_date = fields.Datetime("Import UTM models from date")
 
     @api.onchange("login")
     def _onchange_login(self):
@@ -361,6 +362,15 @@ class OdooBackend(models.Model):
         ]
         date_field = "import_mrp_models_from_date"
         return self._cron_multi_import(models=mrp_models, date_field=date_field)
+
+    def import_utm_models(self):
+        utm_models = [
+            "odoo.utm.source",
+            "odoo.utm.medium",
+            "odoo.utm.campaign",
+        ]
+        date_field = "import_utm_models_from_date"
+        return self._cron_multi_import(models=utm_models, date_field=date_field)
 
     def _get_next_import_time(self, import_start_time):
         next_time = import_start_time - timedelta(seconds=IMPORT_DELTA_BUFFER)
