@@ -1,7 +1,8 @@
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 # flake8: noqa
 from . import queue_job
-from . import base
+
+# from . import base # Todo: yigit: check if this is needed.
 from . import odoo_binding  # Keep this order for inheritance
 from . import odoo_backend
 
@@ -42,6 +43,9 @@ from . import mrp_bom_line
 from . import mrp_bom_template_line
 from . import payment_transaction
 from . import account_payment
+from . import utm_source
+from . import utm_medium
+from . import utm_campaign
 
 # Disabled Models
 from . import purchase_order

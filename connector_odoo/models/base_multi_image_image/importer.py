@@ -52,6 +52,7 @@ class BaseMultiImageImageMapper(Component):
 
     @mapping
     def name(self, record):
+        # Avoid duplicate names
         owner = self._get_owner(record)
         name = record.get("name", owner.name)
         if owner:
@@ -61,8 +62,6 @@ class BaseMultiImageImageMapper(Component):
                     ("owner_id", "=", owner.odoo_id.id),
                 ]
             )
-            # Avoid duplicate names
-            # Todo: exclude the current record from the search
             if name in exist_images.mapped("name"):
                 name = "%s %s" % (name, record["id"])
         return {"name": name}
