@@ -25,10 +25,10 @@ class PartnerBatchImporter(Component):
     def run(self, domain=None, force=False):
         """Run the synchronization"""
         # Todo: implement new partner sync
-        exported_ids = self.model.search([("external_id", "!=", 0)]).mapped(
-            "external_id"
-        )
-        domain += [("id", "in", exported_ids)]
+        # exported_ids = self.model.search([("external_id", "!=", 0)]).mapped(
+        #     "external_id"
+        # )
+        # domain += [("id", "in", exported_ids)]
         external_ids = self.backend_adapter.search(domain)
         _logger.debug(
             "search for odoo partner %s returned %s items", domain, len(external_ids)
@@ -271,41 +271,40 @@ class PartnerImporter(Component):
         _logger.info("Dependencies imported for external ID %s", self.external_id)
         return result
 
-    # Todo: finish this method
-    # def _after_import(self, binding, force=False):
-    #     res = super()._after_import(binding, force)
-    #     imported_partner = self.binder.to_internal(self.external_id)
-    #     if not imported_partner:
-    #         return res
-    #
-    #     if imported_partner.type == "delivery":
-    #         return res
-    #
-    #     def generate_password(length=15):
-    #         alphabet = string.ascii_letters + string.digits
-    #         password = "".join(secrets.choice(alphabet) for i in range(length))
-    #         return password
-    #
-    #     # Eğer no_reset_password=True olmazsa, kullanıcılar için şifre yenileme maili gider.
-    #     ResUsers = self.env["res.users"].with_context(no_reset_password=True)
-    #     user = ResUsers.search([("login", "=", imported_partner.email)], limit=1)
-    #
-    #     # Eğer kullanıcı varsa, oluşturduğumuz partner'ın şirketiyle eşleştir.
-    #     if (
-    #         user
-    #         and imported_partner.odoo_id.commercial_partner_id
-    #         != imported_partner.odoo_id
-    #     ):
-    #         user.parent_id = imported_partner.odoo_id.commercial_partner_id
-    #     else:
-    #         ResUsers.create(
-    #             {
-    #                 "partner_id": imported_partner.odoo_id.id,
-    #                 "login": imported_partner.email,
-    #                 "name": imported_partner.name,
-    #                 "password": generate_password(),
-    #                 "groups_id": [(6, 0, [self.env.ref("base.group_portal").id])],
-    #                 "lang": imported_partner.lang,
-    #             }
-    #         )
-    #     return res
+    def _after_import(self, binding, force=False):
+        res = super()._after_import(binding, force)
+        imported_partner = self.binder.to_internal(self.external_id)
+        if not imported_partner:
+            return res
+
+        if imported_partner.type == "delivery":
+            return res
+
+        def generate_password(length=15):
+            alphabet = string.ascii_letters + string.digits
+            password = "".join(secrets.choice(alphabet) for i in range(length))
+            return password
+
+        # Eğer no_reset_password=True olmazsa, kullanıcılar için şifre yenileme maili gider.
+        ResUsers = self.env["res.users"].with_context(no_reset_password=True)
+        user = ResUsers.search([("login", "=", imported_partner.email)], limit=1)
+
+        # Eğer kullanıcı varsa, oluşturduğumuz partner'ın şirketiyle eşleştir.
+        if (
+            user
+            and imported_partner.odoo_id.commercial_partner_id
+            != imported_partner.odoo_id
+        ):
+            user.parent_id = imported_partner.odoo_id.commercial_partner_id
+        else:
+            ResUsers.create(
+                {
+                    "partner_id": imported_partner.odoo_id.id,
+                    "login": imported_partner.email,
+                    "name": imported_partner.name,
+                    "password": generate_password(),
+                    "groups_id": [(6, 0, [self.env.ref("base.group_portal").id])],
+                    "lang": imported_partner.lang,
+                }
+            )
+        return res
