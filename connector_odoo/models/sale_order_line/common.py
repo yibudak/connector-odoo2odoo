@@ -12,7 +12,7 @@ _logger = logging.getLogger(__name__)
 
 
 class OdooSaleOrderLine(models.Model):
-    _queue_priority = 5
+    _queue_priority = 2
     _name = "odoo.sale.order.line"
     _inherit = "odoo.binding"
     _inherits = {"sale.order.line": "odoo_id"}

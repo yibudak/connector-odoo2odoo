@@ -4,7 +4,7 @@ from odoo.addons.component.core import Component
 
 
 class OdooProductTemplateAttributeLine(models.Model):
-    _queue_priority = 10
+    _queue_priority = 5
     _name = "odoo.product.template.attribute.line"
     _inherit = ["odoo.binding"]
     _inherits = {"product.template.attribute.line": "odoo_id"}

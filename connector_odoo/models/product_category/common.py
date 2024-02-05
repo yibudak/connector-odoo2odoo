@@ -12,7 +12,7 @@ _logger = logging.getLogger(__name__)
 
 
 class OdooProductCategory(models.Model):
-    _queue_priority = 10
+    _queue_priority = 5
     _name = "odoo.product.category"
     _inherit = "odoo.binding"
     _inherits = {"product.category": "odoo_id"}

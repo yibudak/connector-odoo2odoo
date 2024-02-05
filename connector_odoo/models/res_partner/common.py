@@ -13,7 +13,8 @@ _logger = logging.getLogger(__name__)
 
 
 class OdooPartner(models.Model):
-    _queue_priority = 5
+    _special_channel = "root.2"
+    _queue_priority = 3
     _name = "odoo.res.partner"
     _inherit = "odoo.binding"
     _inherits = {"res.partner": "odoo_id"}

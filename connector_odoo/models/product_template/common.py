@@ -13,7 +13,7 @@ _logger = logging.getLogger(__name__)
 
 
 class OdooProductTemplate(models.Model):
-    _queue_priority = 10
+    _queue_priority = 3
     _name = "odoo.product.template"
     _inherit = "odoo.binding"
     _inherits = {"product.template": "odoo_id"}

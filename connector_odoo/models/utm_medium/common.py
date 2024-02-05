@@ -11,7 +11,7 @@ _logger = logging.getLogger(__name__)
 
 
 class OdooUTMMedium(models.Model):
-    _queue_priority = 5
+    _queue_priority = 10
     _name = "odoo.utm.medium"
     _inherit = ["odoo.binding"]
     _inherits = {"utm.medium": "odoo_id"}

@@ -14,7 +14,7 @@ _logger = logging.getLogger(__name__)
 
 class OdooSaleOrder(models.Model):
     _special_channel = "root.5"
-    _queue_priority = 5
+    _queue_priority = 1
     _name = "odoo.sale.order"
     _inherit = "odoo.binding"
     _inherits = {"sale.order": "odoo_id"}

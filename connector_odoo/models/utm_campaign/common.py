@@ -11,7 +11,7 @@ _logger = logging.getLogger(__name__)
 
 
 class OdooUTMCampaign(models.Model):
-    _queue_priority = 5
+    _queue_priority = 10
     _name = "odoo.utm.campaign"
     _inherit = ["odoo.binding"]
     _inherits = {"utm.campaign": "odoo_id"}

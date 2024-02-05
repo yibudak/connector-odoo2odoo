@@ -47,6 +47,10 @@ class OdooBinding(models.AbstractModel):
         2. Sum the ascii values of the hash.
         3. Get the remainder of the sum divided by 10.
         4. Return the remainder.
+
+        .. attribute:: priority
+
+        Priority of the job, 0 being the higher priority.
         """
         if hasattr(self, "_special_channel"):
             return self._special_channel

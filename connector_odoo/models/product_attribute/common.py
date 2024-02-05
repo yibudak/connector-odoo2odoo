@@ -8,7 +8,7 @@ from odoo.addons.component.core import Component
 
 
 class OdooProductAttribute(models.Model):
-    _queue_priority = 10
+    _queue_priority = 7
     _name = "odoo.product.attribute"
     _inherit = ["odoo.binding"]
     _inherits = {"product.attribute": "odoo_id"}
