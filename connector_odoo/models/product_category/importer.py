@@ -104,6 +104,7 @@ class ProductCategoryImportMapper(Component):
         ("is_published", "is_published"),
         ("pricelist_discount_scales", "pricelist_discount_scales"),
         ("show_in_pricelist", "show_in_pricelist"),
+        ("ecommerce_image", "ecommerce_image"),
     ]
 
     @mapping
