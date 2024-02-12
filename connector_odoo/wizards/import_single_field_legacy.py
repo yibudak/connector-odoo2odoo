@@ -27,14 +27,16 @@ class ImportSingleFieldLegacyWizard(models.TransientModel):
         imported_records = self.env[self.model_id.model].search(
             [("backend_id", "=", self.backend_id.id)]
         )
+        domain = [("id", "in", imported_records.mapped("external_id"))]
+        if hasattr(self.model_id, "active"):
+            domain += [
+                "|",
+                ("active", "=", True),
+                ("active", "=", False),
+            ]
         external_records = connection.search(
             model=self.model_id.model.lstrip("odoo."),
-            domain=[
-                "|",
-                ["active", "=", True],
-                ["active", "=", False],
-                ["id", "in", imported_records.mapped("external_id")],
-            ],
+            domain=domain,
             fields=[self.field_name],
         )
         record_dict = {rec.external_id: rec for rec in imported_records}
