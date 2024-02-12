@@ -347,9 +347,9 @@ class OdooBackend(models.Model):
     def import_base_models(self):
         base_models = [
             "odoo.product.category",
-            "odoo.uom.uom",
-            "odoo.product.attribute",
-            "odoo.product.attribute.value",
+            # "odoo.uom.uom",
+            # "odoo.product.attribute",
+            # "odoo.product.attribute.value",
             # "odoo.res.partner",
         ]
         date_field = "import_base_models_from_date"
