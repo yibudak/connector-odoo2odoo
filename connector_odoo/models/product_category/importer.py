@@ -51,19 +51,23 @@ class ProductCategoryImporter(Component):
 
     def _after_import(self, binding, force=False):
         """Hook called at the end of the import"""
-        self._create_public_category(binding)
+        self._sync_public_category(binding)
         binding._parent_store_compute()
         return super()._after_import(binding, force)
 
-    def _create_public_category(self, binding):
+    def _sync_public_category(self, binding):
         """Create a public category for the binding"""
         categ_id = binding.odoo_id
 
         public_categ_id = self.env["product.public.category"].search(
-            [("origin_categ_id", "=", categ_id.id)]
+            [("origin_categ_id", "=", categ_id.id)], limit=1
         )
         parent_id = self.env["product.public.category"].search(
-            [("origin_categ_id", "=", categ_id.parent_id.id)]
+            [
+                ("origin_categ_id", "!=", False),
+                ("origin_categ_id", "=", categ_id.parent_id.id),
+            ],
+            limit=1,
         )
 
         vals = {
