@@ -71,22 +71,28 @@ class ProductCategoryImporter(Component):
         )
 
         vals = {
-            "name": categ_id.name,
-            "sequence": categ_id.sequence,
+            "name": self.odoo_record["name_translatable"],
+            "sequence": self.odoo_record["sequence"],
             "origin_categ_id": categ_id.id,
             "website_id": self.env.user.company_id.website_id.id,
             "parent_id": parent_id.id or False,
         }
 
         if not public_categ_id:
-            public_categ_id = self.env["product.public.category"].create(vals)
+            public_categ_id = (
+                self.env["product.public.category"]
+                .with_context(lang=self.backend_record.default_lang_id.code)
+                .create(vals)
+            )
             _logger.info(
                 "created public category %s for odoo product category %s",
                 public_categ_id,
                 binding,
             )
         else:
-            public_categ_id.write(vals)
+            public_categ_id.with_context(
+                lang=self.backend_record.default_lang_id.code
+            ).write(vals)
             _logger.info(
                 "writed public category %s for odoo product category %s",
                 public_categ_id,
@@ -103,6 +109,7 @@ class ProductCategoryImportMapper(Component):
     _apply_on = "odoo.product.category"
 
     direct = [
+        ("name_translatable", "name_translatable"),
         ("name", "name"),
         ("sequence", "sequence"),
         ("is_published", "is_published"),
