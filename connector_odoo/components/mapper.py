@@ -43,7 +43,8 @@ class OdooImportMapper(AbstractComponent):
 
     @mapping
     def backend_id(self, record):
-        return {"backend_id": self.backend_record.id}
+        # Todo: This is a temporary solution. It should be handled by the backend
+        return {"backend_id": 1}
 
     def _map_direct(self, record, from_attr, to_attr):
         """Apply the ``direct`` mappings.
