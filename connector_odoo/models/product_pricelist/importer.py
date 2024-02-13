@@ -66,24 +66,25 @@ class ProductPricelistImportMapper(Component):
         ("sequence", "sequence"),
     ]
 
-    @only_create
-    @mapping
-    def odoo_id(self, record):
-        # multiple pricelist with the same name will be allowed and not
-        # duplicated
-        pricelist = self.env["product.pricelist"].search(
-            [
-                ("name", "=", record["name"]),
-                ("currency_id.name", "=", record["currency_id"][1]),
-            ],
-            limit=1,
-        )
-        if len(pricelist) == 1:
-            _logger.info(
-                "found pricelist %s for record %s" % (pricelist.name, record["name"])
-            )
-            return {"odoo_id": pricelist.id}
-        return {}
+    # yigit: We don't need this method since we are matching the records with ids.
+    # @only_create
+    # @mapping
+    # def odoo_id(self, record):
+    #     # multiple pricelist with the same name will be allowed and not
+    #     # duplicated
+    #     pricelist = self.env["product.pricelist"].search(
+    #         [
+    #             ("name", "=", record["name"]),
+    #             ("currency_id.name", "=", record["currency_id"][1]),
+    #         ],
+    #         limit=1,
+    #     )
+    #     if len(pricelist) == 1:
+    #         _logger.info(
+    #             "found pricelist %s for record %s" % (pricelist.name, record["name"])
+    #         )
+    #         return {"odoo_id": pricelist.id}
+    #     return {}
 
     @mapping
     def currency_id(self, record):
