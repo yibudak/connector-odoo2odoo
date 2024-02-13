@@ -235,35 +235,36 @@ class OdooBackend(models.Model):
             yield work
 
     def synchronize_basedata(self):
-        self.ensure_one()
-        lang = self.get_default_language_code()
-        self = self.with_context(lang=lang)
-        try:
-            for backend in self:
-                for model_name in (
-                    "odoo.product.category",
-                    "odoo.uom.uom",
-                    "odoo.product.attribute.value",  # this gets attributes too
-                    "odoo.res.currency.rate",  # this gets currencies too
-                ):
-                    # import directly, do not delay because this
-                    # is a fast operation, a direct return is fine
-                    # and it is simpler to import them sequentially
-                    imported_ids = self.env[model_name].search([]).mapped("external_id")
-                    # bypass already imported records since this method is manually triggered
-                    self.env[model_name].with_context(lang=lang).delayed_import_batch(
-                        backend, [("id", "not in", imported_ids)]
-                    )
-            return True
-        except BaseException as e:
-            _logger.error(e, exc_info=True)
-            raise UserError(
-                _(
-                    "Check your configuration, we can't get the data. "
-                    "Here is the error:\n%s"
-                )
-                % e
-            ) from e
+        raise UserError(_("This method is deprecated."))
+        # self.ensure_one()
+        # lang = self.get_default_language_code()
+        # self = self.with_context(lang=lang)
+        # try:
+        #     for backend in self:
+        #         for model_name in (
+        #             "odoo.product.category",
+        #             "odoo.uom.uom",
+        #             "odoo.product.attribute.value",  # this gets attributes too
+        #             "odoo.res.currency.rate",  # this gets currencies too
+        #         ):
+        #             # import directly, do not delay because this
+        #             # is a fast operation, a direct return is fine
+        #             # and it is simpler to import them sequentially
+        #             imported_ids = self.env[model_name].search([]).mapped("external_id")
+        #             # bypass already imported records since this method is manually triggered
+        #             self.env[model_name].with_context(lang=lang).delayed_import_batch(
+        #                 backend, [("id", "not in", imported_ids)]
+        #             )
+        #     return True
+        # except BaseException as e:
+        #     _logger.error(e, exc_info=True)
+        #     raise UserError(
+        #         _(
+        #             "Check your configuration, we can't get the data. "
+        #             "Here is the error:\n%s"
+        #         )
+        #         % e
+        #     ) from e
 
     def _get_backends(self):
         """
@@ -377,6 +378,19 @@ class OdooBackend(models.Model):
         return fields.Datetime.to_string(next_time)
 
     def _import_from_date(self, model, from_date_field):
+        if self.env["queue.job"].search(
+            [
+                ("model_name", "=", model),
+                ("method_name", "=", "import_batch"),
+                ("state", "in", ["enqueued", "pending"]),
+                # Hack: This is needed for multi connector backends
+                ("func_string", "ilike", str(self)),
+            ],
+            limit=1,
+        ):
+            # There is already a job for this model, skip this import
+            return
+
         import_start_time = datetime.now()
         domain = [("write_date", "<", fields.Datetime.to_string(import_start_time))]
         for backend in self:
