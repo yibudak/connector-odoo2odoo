@@ -43,7 +43,6 @@ class PartnerImportMapper(Component):
     _apply_on = ["odoo.res.partner"]
 
     direct = [
-        ("active", "active"),
         ("name", "name"),
         ("street", "street"),
         ("street2", "street2"),
@@ -64,6 +63,17 @@ class PartnerImportMapper(Component):
         ("vat", "vat"),
         ("tax_office_name", "tax_office_name"),
     ]
+
+    @mapping
+    def active(self, record):
+        active = record.get("active", False)
+        if not active and record.get("email"):
+            # If the partner is not active, check if there is a user with the same email
+            # set the partner as always active.
+            user = self.env["res.users"].search([("login", "=", record["email"])])
+            if user:
+                active = True
+        return {"active": active}
 
     @mapping
     def pricelist_id(self, record):
@@ -290,12 +300,13 @@ class PartnerImporter(Component):
         user = ResUsers.search([("login", "=", imported_partner.email)], limit=1)
 
         # Eğer kullanıcı varsa, oluşturduğumuz partner'ın şirketiyle eşleştir.
-        if (
-            user
-            and imported_partner.odoo_id.commercial_partner_id
-            != imported_partner.odoo_id
-        ):
-            user.parent_id = imported_partner.odoo_id.commercial_partner_id
+        if user:
+            if (
+                imported_partner.odoo_id.commercial_partner_id
+                != imported_partner.odoo_id
+            ):
+                user.parent_id = imported_partner.odoo_id.commercial_partner_id
+            return res
         else:
             ResUsers.create(
                 {

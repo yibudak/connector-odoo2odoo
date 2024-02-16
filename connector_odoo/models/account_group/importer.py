@@ -42,21 +42,21 @@ class AccountGroupImportMapper(Component):
         ("name", "name"),
     ]
 
-    @only_create
-    @mapping
-    def check_account_group_exists(self, record):
-        res = {}
-        prefix = record["code_prefix"].split(".")
-        domain = [("code_prefix_start", "=", prefix[0])]
-        if len(prefix) > 1:
-            domain.append(("code_prefix_end", "=", prefix[1]))
-        account_id = self.env["account.group"].search(domain)
-        if len(account_id) == 1:
-            _logger.info(
-                "Account Group found for %s : %s" % (record["name"], account_id.name)
-            )
-            res.update({"odoo_id": account_id.id})
-        return res
+    # @only_create
+    # @mapping
+    # def check_account_group_exists(self, record):
+    #     res = {}
+    #     prefix = record["code_prefix"].split(".")
+    #     domain = [("code_prefix_start", "=", prefix[0])]
+    #     if len(prefix) > 1:
+    #         domain.append(("code_prefix_end", "=", prefix[1]))
+    #     account_id = self.env["account.group"].search(domain)
+    #     if len(account_id) == 1:
+    #         _logger.info(
+    #             "Account Group found for %s : %s" % (record["name"], account_id.name)
+    #         )
+    #         res.update({"odoo_id": account_id.id})
+    #     return res
 
     @mapping
     def parent_id(self, record):
