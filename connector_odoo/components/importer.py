@@ -20,7 +20,7 @@ from odoo import _, fields
 from odoo.tools import frozendict
 
 from odoo.addons.component.core import AbstractComponent
-from odoo.addons.connector.exception import IDMissingInBackend
+from odoo.addons.connector.exception import IDMissingInBackend, RetryableJobError
 from odoo.addons.queue_job.exception import NothingToDoJob
 
 _logger = logging.getLogger(__name__)
@@ -292,24 +292,26 @@ class OdooImporter(AbstractComponent):
             )
             return _("Import skipped.")
 
-        if not force and self._is_uptodate(binding):
-            _logger.info("Already up-to-date")
-            return _("Already up-to-date.")
+        # Todo: this is a temporary solution. We need to find a better way to handle this.
+        if self.env.company.default_odoo_backend_id == self.backend_record:
+            if not force and self._is_uptodate(binding):
+                _logger.info("Already up-to-date")
+                return _("Already up-to-date.")
 
         if not binding:
             binding = self._get_binding_odoo_id_changed(binding)
 
-        # Add relation between job and binding, so we can monitor the import
-        if binding and self.job_uuid:
-            job_id = self.env["queue.job"].search([("uuid", "=", self.job_uuid)])
-            if job_id:
-                job_id.write(
-                    {
-                        "odoo_binding_model_name": binding.odoo_id._name,
-                        "odoo_binding_id": binding.odoo_id.id,
-                    }
-                )
-                self.env.cr.commit()  # Commit in case of a failure in the next steps
+        # # Add relation between job and binding, so we can monitor the import
+        # if binding and self.job_uuid:
+        #     job_id = self.env["queue.job"].search([("uuid", "=", self.job_uuid)])
+        #     if job_id:
+        #         job_id.write(
+        #             {
+        #                 "odoo_binding_model_name": binding.odoo_id._name,
+        #                 "odoo_binding_id": binding.odoo_id.id,
+        #             }
+        #         )
+        #         self.env.cr.commit()  # Commit in case of a failure in the next steps
         self._before_import()
 
         # import the missing linked resources
@@ -333,7 +335,12 @@ class OdooImporter(AbstractComponent):
                     self.external_id, e
                 )
             )
-            raise  # Todo: raise RetryableJobError
+            raise RetryableJobError(
+                "An error occurred while connecting the record {}: {}".format(
+                    self.external_id, e
+                ),
+                seconds=5,
+            )
 
         _logger.info("Binding ({}: {})".format(self.work.model_name, external_id))
         self.binder.bind(self.external_id, binding)
