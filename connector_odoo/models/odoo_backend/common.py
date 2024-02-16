@@ -382,14 +382,14 @@ class OdooBackend(models.Model):
             [
                 ("model_name", "=", model),
                 ("method_name", "=", "import_batch"),
-                ("state", "in", ["enqueued", "pending"]),
+                ("state", "in", ["enqueued", "pending", "started"]),
                 # Hack: This is needed for multi connector backends
                 ("func_string", "ilike", str(self)),
             ],
             limit=1,
         ):
             # There is already a job for this model, skip this import
-            return
+            return datetime.now()
 
         import_start_time = datetime.now()
         domain = [("write_date", "<", fields.Datetime.to_string(import_start_time))]
