@@ -203,12 +203,17 @@ class OdooImporter(AbstractComponent):
         Also we need to check if the field has translate=True in the model.
         """
         if not (binding and self.odoo_record.get("translated_fields")):
-            return
+            return False
 
         for field, translations in self.odoo_record["translated_fields"].items():
             target_field = binding._fields.get(field)
             if target_field and target_field.translate:
-                binding.update_field_translations(field, translations)
+                # HTML field requires a different approach
+                if target_field.type == "html":
+                    for lang, value in translations.items():
+                        binding.with_context(lang=lang).write({field: value})
+                else:
+                    binding.update_field_translations(field, translations)
 
         return True
 

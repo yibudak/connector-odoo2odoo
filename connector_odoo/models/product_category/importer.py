@@ -49,19 +49,35 @@ class ProductCategoryImporter(Component):
         if parent := record["parent_id"]:
             self._import_dependency(parent[0], self.model, force=force)
 
+    def _get_public_category(self, record):
+        return self.env["product.public.category"].search(
+            [("origin_categ_id", "=", record.id)], limit=1
+        )
+
     def _after_import(self, binding, force=False):
         """Hook called at the end of the import"""
         self._sync_public_category(binding)
         binding._parent_store_compute()
         return super()._after_import(binding, force)
 
+    def _translate_fields(self, binding):
+        """
+        Translate the public categories name of the binding manually.
+        """
+        res = super()._translate_fields(binding)
+        if res:
+            public_categ_id = self._get_public_category(binding.odoo_id)
+            translated_fields = self.odoo_record.get("translated_fields")
+            if public_categ_id and translated_fields:
+                for lang, val in translated_fields["name_translatable"].items():
+                    public_categ_id.with_context(lang=lang).write({"name": val})
+        return res
+
     def _sync_public_category(self, binding):
         """Create a public category for the binding"""
         categ_id = binding.odoo_id
 
-        public_categ_id = self.env["product.public.category"].search(
-            [("origin_categ_id", "=", categ_id.id)], limit=1
-        )
+        public_categ_id = self._get_public_category(categ_id)
         parent_id = self.env["product.public.category"].search(
             [
                 ("origin_categ_id", "!=", False),
@@ -79,20 +95,14 @@ class ProductCategoryImporter(Component):
         }
 
         if not public_categ_id:
-            public_categ_id = (
-                self.env["product.public.category"]
-                .with_context(lang=self.backend_record.default_lang_id.code)
-                .create(vals)
-            )
+            public_categ_id = self.env["product.public.category"].create(vals)
             _logger.info(
                 "created public category %s for odoo product category %s",
                 public_categ_id,
                 binding,
             )
         else:
-            public_categ_id.with_context(
-                lang=self.backend_record.default_lang_id.code
-            ).write(vals)
+            public_categ_id.write(vals)
             _logger.info(
                 "writed public category %s for odoo product category %s",
                 public_categ_id,
