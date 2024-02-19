@@ -39,6 +39,7 @@
 								<field name="port" />
 								<field name="timeout" />
 								<field name="default_lang_id" />
+								<field name="translation_lang_ids" widget="many2many_tags"/>
                             </group>
 							<group>
 								<field name="database" />

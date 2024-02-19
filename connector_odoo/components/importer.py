@@ -194,6 +194,24 @@ class OdooImporter(AbstractComponent):
         _logger.info("%d updated from Odoo %s", binding, self.external_id)
         return
 
+    def _translate_fields(self, binding):
+        """
+        Update translations for translatable fields with Odoo 16.0's new
+        update_field_translations method. `translated_fields` is a dictionary
+        that contains the translations for each field. Example:
+        {field_name: {lang: new_value}}
+        Also we need to check if the field has translate=True in the model.
+        """
+        if not (binding and self.odoo_record.get("translated_fields")):
+            return
+
+        for field, translations in self.odoo_record["translated_fields"].items():
+            target_field = binding._fields.get(field)
+            if target_field and target_field.translate:
+                binding.update_field_translations(field, translations)
+
+        return True
+
     def _commit(self):
         """Committing the current transaction will also execute compute methods.
         We want to pass the additional context to the compute methods. That's why
@@ -292,11 +310,9 @@ class OdooImporter(AbstractComponent):
             )
             return _("Import skipped.")
 
-        # Todo: this is a temporary solution. We need to find a better way to handle this.
-        if self.env.company.default_odoo_backend_id == self.backend_record:
-            if not force and self._is_uptodate(binding):
-                _logger.info("Already up-to-date")
-                return _("Already up-to-date.")
+        if not force and self._is_uptodate(binding):
+            _logger.info("Already up-to-date")
+            return _("Already up-to-date.")
 
         if not binding:
             binding = self._get_binding_odoo_id_changed(binding)
@@ -341,6 +357,11 @@ class OdooImporter(AbstractComponent):
                 ),
                 seconds=5,
             )
+
+        _logger.info(
+            "Translating Fields ({}: {})".format(self.work.model_name, external_id)
+        )
+        self._translate_fields(binding)
 
         _logger.info("Binding ({}: {})".format(self.work.model_name, external_id))
         self.binder.bind(self.external_id, binding)

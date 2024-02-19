@@ -90,6 +90,11 @@ class OdooBackend(models.Model):
     default_lang_id = fields.Many2one(
         comodel_name="res.lang", string="Default Language"
     )
+    translation_lang_ids = fields.Many2many(
+        comodel_name="res.lang",
+        string="Translation Languages",
+        help="Languages to be used for translations",
+    )
     export_backend_id = fields.Integer(
         string="Backend ID in the external system",
         help="""The backend id that represents this system in the external
@@ -187,6 +192,9 @@ class OdooBackend(models.Model):
         )
         return lang
 
+    def get_translation_lang_codes(self):
+        return self.translation_lang_ids.mapped("code")
+
     def get_connection(self):
         self.ensure_one()
         return OdooAPI(
@@ -196,7 +204,8 @@ class OdooBackend(models.Model):
             password=self.password,
             timeout=self.timeout,
             uid=self.uid,
-            lang=self.get_default_language_code(),
+            default_lang=self.get_default_language_code(),
+            translation_langs=self.get_translation_lang_codes(),
         )
 
     # def get_legacy_connection(self):

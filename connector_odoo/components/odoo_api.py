@@ -23,14 +23,16 @@ class OdooAPI(object):
         password,
         timeout=15,
         uid=0,
-        lang="tr_TR",
+        default_lang="tr_TR",
+        translation_langs=None,
     ):
         self.base_url = base_url
         self.db = db
         self.login = login
         self.password = password
         self.timeout = timeout
-        self._lang = lang
+        self._default_lang = default_lang
+        self._translation_langs = translation_langs
         self._session = requests.Session()
         self._uid = self._get_uid() if uid == 0 else uid
         if not self._uid:
@@ -76,9 +78,15 @@ class OdooAPI(object):
         }
 
     def _build_context(self, context=None):
-        _ctx = {"lang": self._lang, "connector_request": True}
+        _ctx = {
+            "lang": self._default_lang,
+            "connector_request": True,
+        }
         if context:
             _ctx.update(context)
+        # Add translation languages to context
+        if self._translation_langs:
+            _ctx["translation_lang_codes"] = self._translation_langs
         return _ctx
 
     def _build_authenticate_payload(self):
@@ -168,7 +176,7 @@ class OdooAPI(object):
                 kwargs=[
                     model,
                     "search_read",
-                    [base_domain + domain],
+                    [base_domain],
                     {
                         "fields": fields,
                         "offset": offset,
