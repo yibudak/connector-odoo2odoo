@@ -180,7 +180,7 @@ class PartnerImportMapper(Component):
     @mapping
     def property_account_receivable(self, record):
         vals = {"property_account_receivable_id": False}
-        if account_id := record.get("property_account_payable_id"):
+        if account_id := record.get("property_account_receivable_id"):
             binder = self.binder_for("odoo.account.account")
             local_account = binder.to_internal(account_id[0], unwrap=True)
             if local_account:
@@ -188,9 +188,9 @@ class PartnerImportMapper(Component):
         return vals
 
     @mapping
-    def property_account_receivable(self, record):
+    def property_account_payable(self, record):
         vals = {"property_account_payable_id": False}
-        if account_id := record.get("property_account_receivable_id"):
+        if account_id := record.get("property_account_payable_id"):
             binder = self.binder_for("odoo.account.account")
             local_account = binder.to_internal(account_id[0], unwrap=True)
             if local_account:
