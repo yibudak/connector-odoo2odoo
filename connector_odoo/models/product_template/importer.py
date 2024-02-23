@@ -222,6 +222,7 @@ class ProductTemplateImporter(Component):
             self._import_attribute_lines(force=force)
             self._import_feature_lines(force=force)
             self._import_default_variant(imported_template, force=force)
+            self._import_product_accessories(imported_template, force=force)
         super(ProductTemplateImporter, self)._after_import(binding, force=force)
 
     def _import_attribute_lines(self, force=False):
@@ -262,11 +263,31 @@ class ProductTemplateImporter(Component):
                 }
             )
         else:
+            tmpl_id.write({"website_attachment_ids": False})
+        return True
+
+    def _import_product_accessories(self, tmpl_id, force=False):
+        if accessory_ids := self.odoo_record["accessory_product_ids"]:
+            for product_id in accessory_ids:
+                self._import_dependency(
+                    product_id,
+                    "odoo.product.product",
+                    force=force,
+                )
+            imported_accessories = self.env["odoo.product.product"].search(
+                [
+                    ("external_id", "in", accessory_ids),
+                ]
+            )
             tmpl_id.write(
                 {
-                    "website_attachment_ids": False,
+                    "accessory_product_ids": [
+                        (6, 0, imported_accessories.mapped("odoo_id.id"))
+                    ],
                 }
             )
+        else:
+            tmpl_id.write({"accessory_product_ids": False})
         return True
 
     def _import_default_variant(self, tmpl_id, force=False):

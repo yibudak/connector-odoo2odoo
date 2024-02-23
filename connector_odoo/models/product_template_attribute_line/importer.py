@@ -100,3 +100,20 @@ class ProductTemplateAttributeLineMapper(Component):
     def active(self, record):
         # We don't have any active field in Odoo 12, just set it True
         return {"active": True}
+
+    @mapping
+    def default_value_id(self, record):
+        vals = {"default_value_id": False}
+        if record.get("default_value_id"):
+            binder = self.binder_for("odoo.product.attribute.value")
+            local_attribute_value_id = binder.to_internal(
+                record["default_value_id"][0], unwrap=True
+            )
+            if local_attribute_value_id:
+                vals["default_value_id"] = local_attribute_value_id.id
+            else:
+                ValidationError(
+                    "Attribute value %s is not imported yet"
+                    % record["default_value_id"]
+                )
+        return vals
