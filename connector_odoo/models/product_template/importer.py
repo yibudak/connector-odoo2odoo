@@ -319,3 +319,11 @@ class ProductTemplateImporter(Component):
     #                 self.backend_record, image_id, force=force
     #             )
     #     return True
+
+    def _translate_fields(self, binding):
+        """Inherited to map website description field from v12 to v16."""
+        translations = binding and self.odoo_record.get("translated_fields")
+        if translations:
+            sale_description = translations.pop("short_public_description", False)
+            translations["description_sale"] = sale_description
+        return super(ProductTemplateImporter, self)._translate_fields(binding)

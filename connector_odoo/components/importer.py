@@ -22,6 +22,7 @@ from odoo.tools import frozendict
 from odoo.addons.component.core import AbstractComponent
 from odoo.addons.connector.exception import IDMissingInBackend, RetryableJobError
 from odoo.addons.queue_job.exception import NothingToDoJob
+from psycopg2.extras import Json
 
 _logger = logging.getLogger(__name__)
 
@@ -208,13 +209,27 @@ class OdooImporter(AbstractComponent):
         for field, translations in self.odoo_record["translated_fields"].items():
             target_field = binding._fields.get(field)
             if target_field and target_field.translate:
-                # HTML field requires a different approach
-                if target_field.type == "html":
-                    for lang, value in translations.items():
-                        binding.with_context(lang=lang).write({field: value})
-                else:
+                if target_field.type != "html":
                     binding.update_field_translations(field, translations)
-
+                # TODO: this might be a temporary solution for html fields
+                else:  # HTML field requires a different approach
+                    source_lang = self.backend_record.default_lang_id.code
+                    for lang, value in translations.items():
+                        if value:
+                            binding.odoo_id._cr.execute(
+                                f"""
+                                UPDATE "{binding.odoo_id._table}"
+                                SET "{field}" = NULLIF(
+                                    jsonb_strip_nulls(%s || COALESCE("{field}", '{{}}'::jsonb) || %s),
+                                    '{{}}'::jsonb)
+                                WHERE id = %s
+                            """,
+                                (
+                                    Json({source_lang: binding[field]}),
+                                    Json({lang: value}),
+                                    binding.odoo_id.id,
+                                ),
+                            )
         return True
 
     def _commit(self):
