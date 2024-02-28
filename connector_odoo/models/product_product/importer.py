@@ -269,3 +269,10 @@ class ProductImporter(Component):
                 )
 
         return super()._import_dependencies(force=force)
+
+    def _translate_fields(self, binding):
+        """Inherited to map website description field from v12 to v16."""
+        translations = binding and self.odoo_record.get("translated_fields")
+        if translations:
+            self.odoo_record["translated_fields"] = {}
+        return super(ProductImporter, self)._translate_fields(binding)

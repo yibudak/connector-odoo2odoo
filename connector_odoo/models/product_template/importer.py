@@ -326,4 +326,5 @@ class ProductTemplateImporter(Component):
         if translations:
             sale_description = translations.pop("short_public_description", False)
             translations["description_sale"] = sale_description
+            translations.pop("description", False)  # This is not translated in v12
         return super(ProductTemplateImporter, self)._translate_fields(binding)
