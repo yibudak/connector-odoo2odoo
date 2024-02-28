@@ -387,18 +387,19 @@ class OdooBackend(models.Model):
         return fields.Datetime.to_string(next_time)
 
     def _import_from_date(self, model, from_date_field):
-        if self.env["queue.job"].search(
-            [
-                ("model_name", "=", model),
-                ("method_name", "=", "import_batch"),
-                ("state", "in", ["enqueued", "pending", "started"]),
-                # Hack: This is needed for multi connector backends
-                ("func_string", "ilike", str(self)),
-            ],
-            limit=1,
-        ):
-            # There is already a job for this model, skip this import
-            return datetime.now()
+        # Todo: When we poll for changes, this may be causing us to miss records that have changed over time.
+        # if self.env["queue.job"].search(
+        #     [
+        #         ("model_name", "=", model),
+        #         ("method_name", "=", "import_batch"),
+        #         ("state", "in", ["enqueued", "pending", "started"]),
+        #         # Hack: This is needed for multi connector backends
+        #         ("func_string", "ilike", str(self)),
+        #     ],
+        #     limit=1,
+        # ):
+        #     # There is already a job for this model, skip this import
+        #     return datetime.now()
 
         import_start_time = datetime.now()
         domain = [("write_date", "<", fields.Datetime.to_string(import_start_time))]

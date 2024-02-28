@@ -62,19 +62,20 @@ class ProductProduct(models.Model):
         res = {}
         for product in self:
             context = {}
-            bindings = product.bind_ids or product.product_tmpl_id.bind_ids
+            bindings = product.bind_ids
             if not bindings:
                 continue
-            # FIXME: Not sure how we should specify one
             binding = bindings[0]
             location = location or self._context.get("location", False)
             if location:
                 context.update(location=location)
             with binding.backend_id.work_on("odoo.product.product") as work:
                 adapter = work.component(usage="record.importer").backend_adapter
-                res[product.id] = adapter.read(
-                    binding.external_id, context=context
-                ).qty_available
+                data = adapter.read(binding.external_id, context=context)
+                res[product.id] = {
+                    "qty_available_merkez": data.get("qty_available_merkez", 0),
+                    "qty_available_sincan": data.get("qty_available_sincan", 0),
+                }
         return res
 
 

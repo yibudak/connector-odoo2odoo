@@ -64,6 +64,7 @@ class ProductPricelistImportMapper(Component):
         ("discount_policy", "discount_policy"),
         ("name", "name"),
         ("sequence", "sequence"),
+        ("allow_check_stock", "allow_check_stock"),
     ]
 
     # yigit: We don't need this method since we are matching the records with ids.
