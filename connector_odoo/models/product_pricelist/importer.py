@@ -41,18 +41,6 @@ class ProductPricelistImporter(Component):
     _inherit = "odoo.importer"
     _apply_on = ["odoo.product.pricelist"]
 
-    def _get_binding_with_data(self, binding):
-        """Return a binding with the data from the backend"""
-        if not binding:
-            binding = self.env["odoo.product.pricelist"].search(
-                [
-                    ("name", "=", self.odoo_record["name"]),
-                    ("currency_id.name", "=", self.odoo_record["currency_id"][1]),
-                ],
-                limit=1,
-            )
-        return binding
-
 
 class ProductPricelistImportMapper(Component):
     _name = "odoo.product.pricelist.import.mapper"
@@ -66,26 +54,6 @@ class ProductPricelistImportMapper(Component):
         ("sequence", "sequence"),
         ("allow_check_stock", "allow_check_stock"),
     ]
-
-    # yigit: We don't need this method since we are matching the records with ids.
-    # @only_create
-    # @mapping
-    # def odoo_id(self, record):
-    #     # multiple pricelist with the same name will be allowed and not
-    #     # duplicated
-    #     pricelist = self.env["product.pricelist"].search(
-    #         [
-    #             ("name", "=", record["name"]),
-    #             ("currency_id.name", "=", record["currency_id"][1]),
-    #         ],
-    #         limit=1,
-    #     )
-    #     if len(pricelist) == 1:
-    #         _logger.info(
-    #             "found pricelist %s for record %s" % (pricelist.name, record["name"])
-    #         )
-    #         return {"odoo_id": pricelist.id}
-    #     return {}
 
     @mapping
     def currency_id(self, record):
