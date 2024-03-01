@@ -73,8 +73,8 @@ class ProductProduct(models.Model):
                 adapter = work.component(usage="record.importer").backend_adapter
                 data = adapter.read(binding.external_id, context=context)
                 res[product.id] = {
-                    "qty_available_merkez": data.get("qty_available_merkez", 0),
-                    "qty_available_sincan": data.get("qty_available_sincan", 0),
+                    "qty_unreserved_merkez": data.get("qty_unreserved_merkez", 0),
+                    "qty_unreserved_sincan": data.get("qty_unreserved_sincan", 0),
                 }
         return res
 
