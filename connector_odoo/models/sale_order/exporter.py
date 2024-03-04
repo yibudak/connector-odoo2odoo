@@ -66,6 +66,9 @@ class OdooSaleOrderExporter(Component):
             electronic_txs = binding.transaction_ids.filtered(
                 lambda t: t.provider_id.code == "garanti" and t.state == "done"
             )
+            credit_payment = binding.transaction_ids.filtered(
+                lambda txn: txn.provider_id.id == 19
+            )
             if electronic_txs:
                 for tx in electronic_txs:
                     self._export_dependency(tx, "odoo.payment.transaction")
@@ -84,6 +87,11 @@ class OdooSaleOrderExporter(Component):
                             "payment_term_id": 24,  # Kredi kartı ile tahsilat
                         },
                     )
+
+            elif credit_payment:
+                # Do nothing, keep mapped payment term
+                pass
+
             else:
                 self.backend_adapter.write(
                     self.external_id,

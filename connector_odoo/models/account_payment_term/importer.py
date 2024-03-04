@@ -42,6 +42,7 @@ class AccountPaymentTermImportMapper(Component):
         ("name", "name"),
         ("note", "note"),
         ("active", "active"),
+        ("use_risk_credit_limit", "use_risk_credit_limit"),
     ]
 
     # @only_create

@@ -57,6 +57,24 @@ class Partner(models.Model):
                 partner.bind_ids.unlink()
         return super(Partner, self).unlink()
 
+    def get_remote_risk_credit_limit(self):
+        res = {}
+        for partner in self:
+            context = {}
+            bindings = partner.bind_ids
+            if not bindings:
+                continue
+            binding = bindings[0]
+            with binding.backend_id.work_on("odoo.res.partner") as work:
+                adapter = work.component(usage="record.importer").backend_adapter
+                data = adapter.read(binding.external_id, context=context)
+                res[partner.id] = {
+                    "risk_currency_id": data.get("risk_currency_id", 0),
+                    "risk_total": data.get("risk_total", 0),
+                    "credit_limit": data.get("credit_limit", 0),
+                }
+        return res
+
 
 class PartnerAdapter(Component):
     _name = "odoo.res.partner.adapter"
