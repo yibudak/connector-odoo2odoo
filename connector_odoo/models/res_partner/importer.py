@@ -198,6 +198,16 @@ class PartnerImportMapper(Component):
         return vals
 
     @mapping
+    def property_payment_term(self, record):
+        vals = {"property_payment_term_id": False}
+        if payment_term_id := record.get("property_payment_term_id"):
+            binder = self.binder_for("odoo.account.payment.term")
+            local_payment_term = binder.to_internal(payment_term_id[0], unwrap=True)
+            if local_payment_term:
+                vals["property_payment_term_id"] = local_payment_term.id
+        return vals
+
+    @mapping
     def utm(self, record):
         vals = {
             "campaign_id": False,
@@ -253,6 +263,14 @@ class PartnerImporter(Component):
             self._import_dependency(
                 receivable_account_id[0],
                 "odoo.account.account",
+                force=force,
+            )
+
+        if payment_term_id := self.odoo_record["property_payment_term_id"]:
+            _logger.info("Importing payment term")
+            self._import_dependency(
+                payment_term_id[0],
+                "odoo.account.payment.term",
                 force=force,
             )
 
