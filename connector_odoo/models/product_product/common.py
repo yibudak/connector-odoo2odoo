@@ -66,16 +66,11 @@ class ProductProduct(models.Model):
             if not bindings:
                 continue
             binding = bindings[0]
-            location = location or self._context.get("location", False)
-            if location:
-                context.update(location=location)
-            with binding.backend_id.work_on("odoo.product.product") as work:
-                adapter = work.component(usage="record.importer").backend_adapter
-                data = adapter.read(binding.external_id, context=context)
-                res[product.id] = {
-                    "qty_unreserved_merkez": data.get("qty_unreserved_merkez", 0),
-                    "qty_unreserved_sincan": data.get("qty_unreserved_sincan", 0),
-                }
+            res[product.id] = binding.execute_method(
+                backend=binding.backend_id,
+                model=self._name,
+                method="get_quantity_website",
+            )[0]
         return res
 
 
