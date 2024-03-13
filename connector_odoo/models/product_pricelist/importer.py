@@ -140,6 +140,19 @@ class ProductPricelistItemImportMapper(Component):
         ("price_surcharge", "price_surcharge"),
     ]
 
+    # Todo: this is temporary solution for price.type
+    @mapping
+    def price_type_currency_id(self, record):
+        vals = {"price_type_currency_id": 2}
+        try:
+            price_type = self.work.odoo_api.browse(
+                model="product.price.type", res_id=int(record["base"])
+            )
+            vals["price_type_currency_id"] = price_type["currency"][0]
+        except:
+            pass
+        return vals
+
     @mapping
     def pricelist_id(self, record):
         binder = self.binder_for("odoo.product.pricelist")
