@@ -56,6 +56,7 @@ class SaleOrderImportMapper(Component):
         ("order_state", "order_state"),
         ("sale_deci", "sale_deci"),
         ("client_order_ref", "client_order_ref"),
+        ("access_token", "access_token"),
     ]
 
     @mapping

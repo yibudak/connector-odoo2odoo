@@ -110,6 +110,7 @@ class SaleOrderExportMapper(Component):
         ("name", "name"),
         ("sale_deci", "sale_deci"),
         ("delivery_rating_success", "delivery_rating_success"),
+        ("access_token", "access_token"),
     ]
 
     # yigit: buraya artık gerek yok cunku sale.order.line'ı mapledik.
