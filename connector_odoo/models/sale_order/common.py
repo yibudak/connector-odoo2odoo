@@ -49,8 +49,8 @@ class OdooSaleOrder(models.Model):
                 order_id.amount_total, 2
             ):
                 order_id.import_state = "error_amount"
-            elif order_id.backend_picking_count != len(order_id.picking_ids):
-                order_id.import_state = "error_sync"
+            # elif order_id.backend_picking_count != len(order_id.picking_ids):
+            #     order_id.import_state = "error_sync"
             else:
                 order_id.import_state = "done"
 
