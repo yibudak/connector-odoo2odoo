@@ -340,6 +340,7 @@ class OdooBackend(models.Model):
             "odoo.account.tax",
             "odoo.account.fiscal.position",
             "odoo.account.payment.term",
+            "odoo.payment.provider.error",
         ]
         date_field = "import_account_from_date"
         return self._cron_multi_import(models=account_models, date_field=date_field)

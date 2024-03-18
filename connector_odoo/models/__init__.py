@@ -46,6 +46,7 @@ from . import account_payment
 from . import utm_source
 from . import utm_medium
 from . import utm_campaign
+from . import payment_provider_error
 
 # Disabled Models
 from . import purchase_order
