@@ -46,28 +46,24 @@ class OdooAPI(object):
         return randint(1, 99999)
 
     def _post(self, payload):
-        with self._session as client:
-            try:
-                response = client.post(
-                    self.base_url + "/jsonrpc",
-                    json=payload,
-                    timeout=self.timeout,
-                )
-                response.raise_for_status()
-                json_resp = response.json()
-
-                if json_resp.get("error"):
-                    raise requests.HTTPError(json_resp["error"])
-
-                return json_resp["result"] if ("result" in json_resp) else None
-
-            except Exception as exc:
-                _logger.error(exc)
-                # time.sleep(5)  # wait 5 seconds before retrying
-                raise RetryableJobError(
-                    "OdooAPI: Connection error: {}".format(exc),
-                    seconds=5,
-                )
+        try:
+            response = self._session.post(
+                self.base_url + "/jsonrpc",
+                json=payload,
+                timeout=self.timeout,
+            )
+            response.raise_for_status()
+            json_resp = response.json()
+            if json_resp.get("error"):
+                raise requests.HTTPError(json_resp["error"])
+            return json_resp["result"] if ("result" in json_resp) else None
+        except Exception as exc:
+            _logger.error(exc)
+            # time.sleep(5)  # wait 5 seconds before retrying
+            raise RetryableJobError(
+                "OdooAPI: Connection error: {}".format(exc),
+                seconds=5,
+            )
 
     def _base_payload(self):
         return {
