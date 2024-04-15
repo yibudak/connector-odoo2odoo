@@ -41,6 +41,15 @@ class ProductPricelistImporter(Component):
     _inherit = "odoo.importer"
     _apply_on = ["odoo.product.pricelist"]
 
+    def _import_dependencies(self, force=False):
+        """Import the dependencies for the record"""
+        record = self.odoo_record
+
+        if alternate_pricelist_id := record.get("alternate_pricelist_id"):
+            self._import_dependency(
+                alternate_pricelist_id[0], "odoo.product.pricelist", force=force
+            )
+
 
 class ProductPricelistImportMapper(Component):
     _name = "odoo.product.pricelist.import.mapper"
@@ -66,6 +75,15 @@ class ProductPricelistImportMapper(Component):
             )
             return {"currency_id": currency.id}
         raise MappingError("No currency found %s" % currency.name)
+
+    @mapping
+    def alternate_pricelist_id(self, record):
+        vals = {"alternate_pricelist_id": False}
+        if alternate_pricelist_id := record.get("alternate_pricelist_id"):
+            binder = self.binder_for("odoo.product.pricelist")
+            pricelist = binder.to_internal(alternate_pricelist_id[0], unwrap=True)
+            vals["alternate_pricelist_id"] = pricelist.id
+        return vals
 
     @mapping
     def company_id(self, record):
