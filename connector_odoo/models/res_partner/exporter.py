@@ -62,7 +62,7 @@ class OdooPartnerExporter(Component):
 
     def _should_import(self):
         """
-        Inherited to
+        Inherited to always override current record to external system.
         """
         return False
 
