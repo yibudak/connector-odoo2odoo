@@ -60,6 +60,12 @@ class OdooPartnerExporter(Component):
 
     # Todo: remove matching functions
 
+    def _should_import(self):
+        """
+        Inherited to
+        """
+        return False
+
     def _must_skip(self):
         if not self.binding.ecommerce_partner:
             return True
