@@ -57,6 +57,7 @@ class PartnerImportMapper(Component):
         ("sale_warn_msg", "sale_warn_msg"),
         ("vat", "vat"),
         ("tax_office_name", "tax_office_name"),
+        ("website_privacy_level", "website_privacy_level"),
     ]
 
     @mapping

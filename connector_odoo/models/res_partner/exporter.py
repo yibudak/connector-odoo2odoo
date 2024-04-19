@@ -234,6 +234,7 @@ class PartnerExportMapper(Component):
         ("type", "type"),
         ("ecommerce_partner", "ecommerce_partner"),  # todo: remove this field
         ("tax_office_name", "tax_office_name"),
+        ("website_privacy_level", "website_privacy_level"),
     ]
 
     @mapping
