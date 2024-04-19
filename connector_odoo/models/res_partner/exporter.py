@@ -66,11 +66,11 @@ class OdooPartnerExporter(Component):
         """
         return False
 
-    def _must_skip(self):
-        if not self.binding.ecommerce_partner:
-            return True
-        else:
-            return False
+    # def _must_skip(self):
+    #     if not self.binding.ecommerce_partner:
+    #         return True
+    #     else:
+    #         return False
 
     def _before_export(self):
         """Try to match parent partner from Odoo backend."""
@@ -80,13 +80,13 @@ class OdooPartnerExporter(Component):
         if self.binding.vat in ["1" * 11, "2" * 11]:
             return False
 
-        if self.binding.country_id.code != "TR":
-            return False
+        # if self.binding.country_id.code != "TR":
+        #     return False
 
         match_domain = [
             ("vat", "=", self.binding.vat),
             ("parent_id", "=", False),
-            ("ecommerce_partner", "=", False),
+            # ("ecommerce_partner", "=", False),
         ]
         matched_partner = self.backend_adapter.search(
             model="res.partner",
@@ -141,7 +141,7 @@ class OdooPartnerExporter(Component):
             domain=[
                 ("vat", "=", created_company.vat),
                 ("parent_id", "=", False),
-                ("ecommerce_partner", "=", False),
+                # ("ecommerce_partner", "=", False),
             ],
             limit=1,
         )
@@ -200,8 +200,8 @@ class OdooPartnerExporter(Component):
         if self.binding.vat in ["1" * 11, "2" * 11]:
             return False
 
-        if self.binding.country_id.code != "TR":
-            return False
+        # if self.binding.country_id.code != "TR":
+        #     return False
 
         domain = [
             ("vat", "=", self.binding.vat),
