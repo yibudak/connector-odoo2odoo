@@ -231,6 +231,7 @@ class PartnerExportMapper(Component):
         ("mobile", "mobile"),
         ("email", "email"),
         ("vat", "vat"),
+        ("zip", "zip"),
         ("type", "type"),
         ("ecommerce_partner", "ecommerce_partner"),  # todo: remove this field
         ("tax_office_name", "tax_office_name"),
