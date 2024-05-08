@@ -23,6 +23,9 @@ class ImportSingleFieldLegacyWizard(models.TransientModel):
 
     def action_import(self):
         self.ensure_one()
+        self.with_delay()._import_single_field()
+
+    def _import_single_field(self):
         connection = self.backend_id.get_connection()
         imported_records = self.env[self.model_id.model].search(
             [("backend_id", "=", self.backend_id.id)]
