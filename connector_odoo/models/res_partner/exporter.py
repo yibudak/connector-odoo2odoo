@@ -300,14 +300,24 @@ class PartnerExportMapper(Component):
 
     @mapping
     def pricelists(self, record):
-        vals = {"property_product_pricelist": False}
+        vals = {
+            "property_product_pricelist": False,
+            "website_pricelist_id": False,
+        }
+        binder = self.binder_for("odoo.product.pricelist")
         if record.property_product_pricelist:
-            binder = self.binder_for("odoo.product.pricelist")
             external_pricelist = binder.to_external(
                 record.property_product_pricelist, wrap=True
             )
             if external_pricelist:
                 vals["property_product_pricelist"] = external_pricelist
+        if record.website_pricelist_id:
+            external_website_pricelist = binder.to_external(
+                record.website_pricelist_id, wrap=True
+            )
+            if external_website_pricelist:
+                vals["website_pricelist_id"] = external_website_pricelist
+        return vals
 
     @mapping
     def address_fields(self, record):
