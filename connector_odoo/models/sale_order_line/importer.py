@@ -47,7 +47,8 @@ class SaleOrderLineImportMapper(Component):
         ("display_type", "display_type"),
         ("customer_lead", "customer_lead"),
         ("discount", "discount"),
-        ("deci", "deci"),
+        ("volume", "volume"),
+        ("weight", "weight"),
     ]
 
     @mapping

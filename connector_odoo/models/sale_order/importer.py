@@ -55,6 +55,8 @@ class SaleOrderImportMapper(Component):
         ("state", "state"),
         ("order_state", "order_state"),
         ("sale_deci", "sale_deci"),
+        ("sale_weight", "sale_weight"),
+        ("sale_volume", "sale_volume"),
         ("client_order_ref", "client_order_ref"),
         ("access_token", "access_token"),
     ]
