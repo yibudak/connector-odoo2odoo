@@ -320,6 +320,16 @@ class PartnerExportMapper(Component):
         return vals
 
     @mapping
+    def fiscal_position(self, record):
+        vals = {"property_account_position_id": False}
+        binder = self.binder_for("odoo.account.fiscal.position")
+        if record.property_account_position_id:
+            vals["property_account_position_id"] = binder.to_external(
+                record.property_account_position_id, wrap=True
+            )
+        return vals
+
+    @mapping
     def address_fields(self, record):
         vals = {}
         adapter = self.work.odoo_api

@@ -45,28 +45,6 @@ class AccountFiscalPositionImportMapper(Component):
         ("active", "active"),
     ]
 
-    @only_create
-    @mapping
-    def check_account_fiscal_position_exists(self, record):
-        res = {}
-        ctx = {"lang": self.backend_record.get_default_language_code()}
-        fp_record = (
-            self.env["account.fiscal.position"]
-            .with_context(ctx)
-            .search(
-                [
-                    ("name", "=", record.name),
-                ],
-                limit=1,
-            )
-        )
-        if fp_record:
-            _logger.info(
-                "Account Fiscal Position found for %s : %s" % (record, fp_record)
-            )
-            res.update({"odoo_id": fp_record.id})
-        return res
-
 
 class AccountFiscalPositionImporter(Component):
     _name = "odoo.account.fiscal.position.importer"
@@ -93,16 +71,25 @@ class AccountFiscalPositionImporter(Component):
                 for item in sublist
             )
             for tax_id in list(taxes_set):
-                self._import_dependency(
-                    tax_id, "odoo.account.tax", force=force
-                )
+                self._import_dependency(tax_id, "odoo.account.tax", force=force)
 
         if account_ids := record.get("account_ids"):
             # todo: this part is missing.
-            src_accounts = [x.account_src_id for x in record.account_ids]
-            dest_accounts = [x.account_dest_id for x in record.account_ids]
-            for account in src_accounts + dest_accounts:
-                self._import_dependency(account.id, "odoo.account.account", force=force)
+            accounts_to_import = []
+            for account in account_ids:
+                ext_account = self.work.odoo_api.search(
+                    "account.fiscal.position.account",
+                    domain=[
+                        ("id", "=", account),
+                    ],
+                )
+                if len(ext_account) == 1:
+                    ext_account = ext_account[0]
+                    accounts_to_import.append(ext_account["account_src_id"][0])
+                    accounts_to_import.append(ext_account["account_dest_id"][0])
+
+            for account in accounts_to_import:
+                self._import_dependency(account, "odoo.account.account", force=force)
 
     def _after_import(self, binding, force=False):
         """Hook called at the end of the import"""
@@ -110,7 +97,7 @@ class AccountFiscalPositionImporter(Component):
         # yigit: since we don't map line models, we need to import them after
         # the main record is imported
         self._import_tax_ids(binding)
-        self._import_account_ids(binding)
+        # self._import_account_ids(binding)
         return res
 
     def _import_tax_ids(self, binding):
@@ -152,37 +139,38 @@ class AccountFiscalPositionImporter(Component):
         binding.write({"tax_ids": [(6, 0, tax_lines)]})
         return True
 
-    def _import_account_ids(self, binding):
-        """
-        Manual import of account_ids since we don't map the many2many model
-        """
-        if not self.odoo_record.get("account_ids"):
-            return False
-
-        account_lines = []
-        account_binder = self.binder_for("odoo.account.account")
-
-        for account_line in self.odoo_record.get("account_ids"):
-            src_account = account_binder.to_internal(
-                account_line.account_src_id.id, unwrap=True
-            )
-            dest_account = account_binder.to_internal(
-                account_line.account_dest_id.id, unwrap=True
-            )
-            local_account_line = self.env["account.fiscal.position.account"].search(
-                [
-                    ("account_src_id", "=", src_account.id),
-                    ("account_dest_id", "=", dest_account.id),
-                    ("position_id", "=", binding.odoo_id.id),
-                ]
-            )
-            if not local_account_line:
-                create_vals = {
-                    "account_src_id": src_account.id,
-                    "account_dest_id": dest_account.id,
-                    "position_id": binding.odoo_id.id,
-                }
-                local_account_line = self.env["account.fiscal.position.account"].create(
-                    create_vals
-                )
-            account_lines.append(local_account_line.id)
+    # Todo: not implemented yet
+    # def _import_account_ids(self, binding):
+    #     """
+    #     Manual import of account_ids since we don't map the many2many model
+    #     """
+    #     if not self.odoo_record.get("account_ids"):
+    #         return False
+    #
+    #     account_lines = []
+    #     account_binder = self.binder_for("odoo.account.account")
+    #
+    #     for account_line in self.odoo_record.get("account_ids"):
+    #         src_account = account_binder.to_internal(
+    #             account_line.account_src_id.id, unwrap=True
+    #         )
+    #         dest_account = account_binder.to_internal(
+    #             account_line.account_dest_id.id, unwrap=True
+    #         )
+    #         local_account_line = self.env["account.fiscal.position.account"].search(
+    #             [
+    #                 ("account_src_id", "=", src_account.id),
+    #                 ("account_dest_id", "=", dest_account.id),
+    #                 ("position_id", "=", binding.odoo_id.id),
+    #             ]
+    #         )
+    #         if not local_account_line:
+    #             create_vals = {
+    #                 "account_src_id": src_account.id,
+    #                 "account_dest_id": dest_account.id,
+    #                 "position_id": binding.odoo_id.id,
+    #             }
+    #             local_account_line = self.env["account.fiscal.position.account"].create(
+    #                 create_vals
+    #             )
+    #         account_lines.append(local_account_line.id)
