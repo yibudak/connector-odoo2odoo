@@ -221,3 +221,13 @@ class SaleOrderExportMapper(Component):
             binder = self.binder_for("odoo.utm.source")
             vals["source_id"] = binder.to_external(record.source_id, wrap=True)
         return vals
+
+    @mapping
+    def fiscal_position_id(self, record):
+        vals = {"fiscal_position_id": False}
+        binder = self.binder_for("odoo.account.fiscal.position")
+        if record.fiscal_position_id:
+            vals["fiscal_position_id"] = binder.to_external(
+                record.fiscal_position_id, wrap=True
+            )
+        return vals

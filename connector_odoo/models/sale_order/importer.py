@@ -117,6 +117,17 @@ class SaleOrderImportMapper(Component):
         }
 
     @mapping
+    def fiscal_position_id(self, record):
+        vals = {"fiscal_position_id": False}
+        if record["fiscal_position_id"]:
+            binder = self.binder_for("odoo.account.fiscal.position")
+            fiscal_position_id = binder.to_internal(
+                record["fiscal_position_id"][0], unwrap=True
+            )
+            vals["fiscal_position_id"] = fiscal_position_id.id
+        return vals
+
+    @mapping
     def user_id(self, record):
         if not record["user_id"]:
             return {"user_id": False}
