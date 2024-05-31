@@ -42,16 +42,10 @@ class MrpBomLineMapper(Component):
     def bom_id(self, record):
         res = {}
         if bom := record.get("bom_id"):
-            local_bom = self.env["odoo.mrp.bom"].search(
-                [
-                    ("external_id", "=", bom[0]),
-                    "|",
-                    ("active", "=", False),
-                    ("active", "=", True),
-                ]
-            )
+            binder = self.binder_for("odoo.mrp.bom")
+            local_bom = binder.to_internal(bom[0], unwrap=True)
             if local_bom:
-                res["bom_id"] = local_bom.odoo_id.id
+                res["bom_id"] = local_bom.id
             else:
                 raise Exception(
                     "BOM not found, please import it first" f"External ID: {bom[0]}"

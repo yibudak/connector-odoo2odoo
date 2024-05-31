@@ -277,6 +277,9 @@ class ProductTemplateImporter(Component):
             imported_accessories = self.env["odoo.product.product"].search(
                 [
                     ("external_id", "in", accessory_ids),
+                    "|",
+                    ("active", "=", True),
+                    ("active", "=", False),
                 ]
             )
             tmpl_id.write(
@@ -292,16 +295,12 @@ class ProductTemplateImporter(Component):
 
     def _import_default_variant(self, tmpl_id, force=False):
         if default_variant_id := self.odoo_record["default_variant_id"]:
-            imported_variant = self.env["odoo.product.product"].search(
-                [
-                    ("external_id", "=", default_variant_id[0]),
-                ],
-                limit=1,
-            )
+            binder = self.binder_for("odoo.product.product")
+            imported_variant = binder.to_internal(default_variant_id[0], unwrap=True)
             if imported_variant:
                 tmpl_id.write(
                     {
-                        "default_variant_id": imported_variant.odoo_id.id,
+                        "default_variant_id": imported_variant.id,
                     }
                 )
             else:

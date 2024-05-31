@@ -19,7 +19,15 @@ class MrpBomBatchImporter(Component):
     def run(self, domain=None, force=False):
         """Run the synchronization"""
         imported_products = (
-            self.env["odoo.product.template"].search([]).mapped("external_id")
+            self.env["odoo.product.template"]
+            .search(
+                [
+                    "|",
+                    ("active", "=", True),
+                    ("active", "=", False),
+                ]
+            )
+            .mapped("external_id")
         )
         domain.append(("product_tmpl_id", "in", imported_products))
         external_ids = self.backend_adapter.search(domain)
@@ -50,33 +58,30 @@ class MrpBomMapper(Component):
     def product_uom_id(self, record):
         res = {"product_uom_id": False}
         if uom := record.get("product_uom_id"):
-            local_uom = self.env["odoo.uom.uom"].search(
-                [("external_id", "=", uom[0])], limit=1
-            )
+            binder = self.binder_for("odoo.uom.uom")
+            local_uom = binder.to_internal(uom[0], unwrap=True)
             if local_uom:
-                res["product_uom_id"] = local_uom.odoo_id.id
+                res["product_uom_id"] = local_uom.id
         return res
 
     @mapping
     def product_tmpl_id(self, record):
         res = {"product_tmpl_id": False}
         if product := record.get("product_tmpl_id"):
-            local_product = self.env["odoo.product.template"].search(
-                [("external_id", "=", product[0])], limit=1
-            )
+            binder = self.binder_for("odoo.product.template")
+            local_product = binder.to_internal(product[0], unwrap=True)
             if local_product:
-                res["product_tmpl_id"] = local_product.odoo_id.id
+                res["product_tmpl_id"] = local_product.id
         return res
 
     @mapping
     def product_id(self, record):
         res = {"product_id": False}
         if product := record.get("product_id"):
-            local_product = self.env["odoo.product.product"].search(
-                [("external_id", "=", product[0])]
-            )
+            binder = self.binder_for("odoo.product.product")
+            local_product = binder.to_internal(product[0], unwrap=True)
             if local_product:
-                res["product_id"] = local_product.odoo_id.id
+                res["product_id"] = local_product.id
         return res
 
 
