@@ -215,7 +215,7 @@ class PartnerImportMapper(Component):
             binder = self.binder_for("odoo.account.fiscal.position")
             local_position = binder.to_internal(fiscal_position_id[0], unwrap=True)
             if local_position:
-                vals["property_payment_term_id"] = local_position.id
+                vals["property_account_position_id"] = local_position.id
         return vals
 
     @mapping
