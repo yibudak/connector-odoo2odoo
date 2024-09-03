@@ -97,6 +97,14 @@ class ProductTemplateImportMapper(Component):
         return {"company_id": self.env.user.company_id.id}
 
     @mapping
+    def product_brand_id(self, record):
+        if product_brand_id := record.get("product_brand_id"):
+            binder = self.binder_for("odoo.product.brand")
+            brand = binder.to_internal(product_brand_id[0], unwrap=True)
+            return {"product_brand_id": brand.id}
+        return {"product_brand_id": False}
+
+    @mapping
     def uom_id(self, record):
         binder = self.binder_for("odoo.uom.uom")
         uom = binder.to_internal(record["uom_id"][0], unwrap=True)
