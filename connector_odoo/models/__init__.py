@@ -47,6 +47,7 @@ from . import utm_source
 from . import utm_medium
 from . import utm_campaign
 from . import payment_provider_error
+from . import product_brand
 
 # Disabled Models
 from . import purchase_order

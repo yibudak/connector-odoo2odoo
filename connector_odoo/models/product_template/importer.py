@@ -66,11 +66,11 @@ class ProductTemplateImportMapper(Component):
         weight_uom = binder.to_internal(record["weight_uom_id"][0], unwrap=True)
         volume_uom = binder.to_internal(record["volume_uom_id"][0], unwrap=True)
         return {
-            "dimensional_uom_id": binder.to_internal(
-                record["dimensional_uom_id"][0], unwrap=True
-            ).id
-            if record["dimensional_uom_id"]
-            else False,
+            "dimensional_uom_id": (
+                binder.to_internal(record["dimensional_uom_id"][0], unwrap=True).id
+                if record["dimensional_uom_id"]
+                else False
+            ),
             "product_length": record["product_length"],
             "product_width": record["product_width"],
             "product_height": record["product_height"],
@@ -199,6 +199,12 @@ class ProductTemplateImporter(Component):
             "odoo.product.category",
             force=force,
         )
+        if self.odoo_record["product_brand_id"]:
+            self._import_dependency(
+                self.odoo_record["product_brand_id"][0],
+                "odoo.product.brand",
+                force=force,
+            )
         # todo yibudak: check if this should be enabled
         # if default_variant_id := self.odoo_record.get("default_variant_id"):
         #     self._import_dependency(

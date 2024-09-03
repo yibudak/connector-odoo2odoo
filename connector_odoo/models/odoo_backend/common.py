@@ -362,6 +362,7 @@ class OdooBackend(models.Model):
             "odoo.product.attribute",
             "odoo.product.attribute.value",
             "odoo.res.partner",
+            "odoo.product.brand",
         ]
         date_field = "import_base_models_from_date"
         return self._cron_multi_import(models=base_models, date_field=date_field)
