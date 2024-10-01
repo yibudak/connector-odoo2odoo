@@ -37,7 +37,7 @@ class BatchPartnerExporter(Component):
             self.env["odoo.res.partner"].create(
                 {
                     "odoo_id": p.id,
-                    "external_id": 0,
+                    # "external_id": 0,
                     "backend_id": self.backend_record.id,
                 }
             )
