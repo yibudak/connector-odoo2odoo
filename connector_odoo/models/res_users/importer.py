@@ -6,6 +6,7 @@ import string
 import secrets
 from odoo.addons.component.core import Component
 from odoo.addons.connector.components.mapper import mapping, only_create
+from odoo import SUPERUSER_ID
 
 _logger = logging.getLogger(__name__)
 
@@ -34,9 +35,19 @@ class ResUsersMapper(Component):
     _apply_on = "odoo.res.users"
 
     direct = [
-        ("active", "active"),
         ("login", "login"),
     ]
+
+    @mapping
+    def active(self, record):
+        """
+        odoo/addons/base/models/res_users.py:596
+        Do not add active field for superuser
+        """
+        if record["id"] != SUPERUSER_ID:
+            return record["active"]
+        else:
+            return {}
 
     @mapping
     def partner_id(self, record):

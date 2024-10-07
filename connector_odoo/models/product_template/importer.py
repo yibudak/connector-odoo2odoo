@@ -110,10 +110,6 @@ class ProductTemplateImportMapper(Component):
         uom = binder.to_internal(record["uom_id"][0], unwrap=True)
         return {"uom_id": uom.id, "uom_po_id": uom.id}
 
-    # @mapping # Todo: we don't use pricing at template level
-    # def price(self, record):
-    #     return {"list_price": record.list_price}
-
     @mapping
     def default_code(self, record):
         return {"default_code": record.get("default_code", "/")}
@@ -175,19 +171,19 @@ class ProductTemplateImportMapper(Component):
             vals["public_description"] = cleaner.clean_html(desc) or ""
         return vals
 
-    # @mapping
-    # def default_variant_id(self, record):
-    #     vals = {}
-    #     if default_variant_id := record.get("default_variant_id"):
-    #         binder = self.binder_for("odoo.product.product")
-    #         product = binder.to_internal(default_variant_id[0], unwrap=True)
-    #         if not product:
-    #             raise MappingError(
-    #                 "Can't find external product with odoo_id: %s."
-    #                 % default_variant_id[0]
-    #             )
-    #         vals["default_variant_id"] = product.id
-    #     return vals
+    @mapping
+    def default_variant_id(self, record):
+        vals = {}
+        if default_variant_id := record.get("default_variant_id"):
+            binder = self.binder_for("odoo.product.product")
+            product = binder.to_internal(default_variant_id[0], unwrap=True)
+            if not product:
+                raise MappingError(
+                    "Can't find external product with odoo_id: %s."
+                    % default_variant_id[0]
+                )
+            vals["default_variant_id"] = product.id
+        return vals
 
 
 class ProductTemplateImporter(Component):
@@ -213,13 +209,6 @@ class ProductTemplateImporter(Component):
                 "odoo.product.brand",
                 force=force,
             )
-        # todo yibudak: check if this should be enabled
-        # if default_variant_id := self.odoo_record.get("default_variant_id"):
-        #     self._import_dependency(
-        #         default_variant_id[0],
-        #         "odoo.product.product",
-        #         force=force,
-        #     )
 
         return super()._import_dependencies(force=force)
 

@@ -62,9 +62,7 @@ class ProductImageImportMapper(Component):
     def product_tmpl_id(self, record):
         vals = {"product_tmpl_id": False}
         imported_tmpl_id = self.env["odoo.product.template"].search(
-            [
-                ("external_id", "=", record.owner_id)
-            ]
+            [("external_id", "=", record.owner_id)]
         )
         if imported_tmpl_id:
             vals.update({"product_tmpl_id": imported_tmpl_id.odoo_id.id})

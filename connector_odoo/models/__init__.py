@@ -2,7 +2,6 @@
 # flake8: noqa
 from . import queue_job
 
-# from . import base # Todo: yigit: check if this is needed.
 from . import odoo_binding  # Keep this order for inheritance
 from . import odoo_backend
 

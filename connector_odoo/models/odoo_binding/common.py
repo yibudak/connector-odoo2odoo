@@ -27,6 +27,11 @@ class OdooBinding(models.AbstractModel):
         ondelete="restrict",
     )
     external_id = fields.Integer(string="ID on Ext Odoo", required=False)
+    active_job_ids = fields.One2many(
+        "queue.job",
+        compute="_compute_active_job_ids",
+        store=False,
+    )
 
     _sql_constraints = [
         (
@@ -35,6 +40,22 @@ class OdooBinding(models.AbstractModel):
             "A binding already exists with the same backend for this object.",
         )
     ]
+
+    def _compute_active_job_ids(self):
+        """
+        Add active job ids to the recordset.
+        """
+        for record in self:
+            if record.id and hasattr(record, "bind_ids"):
+                record.active_job_ids = self.env["queue.job"].search(
+                    [
+                        ("odoo_binding_model_name", "=", record._name),
+                        ("odoo_binding_id", "=", record.id),
+                        ("state", "!=", "done"),
+                    ]
+                )
+            else:
+                record.active_job_ids = False
 
     @property
     def _unique_channel_name(self):
@@ -102,7 +123,6 @@ class OdooBinding(models.AbstractModel):
             importer = work.component(usage="batch.importer")
             importer.set_lock()
             try:
-                # todo: add job options for uid
                 return importer.run(domain=domain, force=force or backend.force)
             except Exception:
                 raise RetryableJobError(
@@ -169,6 +189,7 @@ class OdooBinding(models.AbstractModel):
         self.ensure_one()
         with backend.work_on(self._name) as work:
             exporter = work.component(usage="record.exporter")
+            exporter._connect_with_job(self._context)
             return exporter.run(self)
 
     def delayed_export_record(self, backend, local_id=None, fields=None):
@@ -180,12 +201,6 @@ class OdooBinding(models.AbstractModel):
             )
             .export_record(backend, local_id=local_id, fields=fields)
         )
-
-    def export_delete_record(self, backend, external_id):
-        """Delete a record on Odoo"""
-        with backend.work_on(self._name) as work:
-            deleter = work.component(usage="record.exporter.deleter")
-            return deleter.run(external_id)
 
     """
     EXECUTERS

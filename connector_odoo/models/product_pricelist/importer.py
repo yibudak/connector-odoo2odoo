@@ -158,7 +158,6 @@ class ProductPricelistItemImportMapper(Component):
         ("price_surcharge", "price_surcharge"),
     ]
 
-    # Todo: this is temporary solution for price.type
     @mapping
     def price_type_currency_id(self, record):
         vals = {"price_type_currency_id": 2}

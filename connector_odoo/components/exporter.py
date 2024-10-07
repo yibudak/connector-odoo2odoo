@@ -138,7 +138,7 @@ class DelayedBatchExporter(AbstractComponent):
         delayable = external_id.with_delay(
             channel=self.model._unique_channel_name,
             priority=self.model._priority,
-            **job_options or {}
+            **job_options or {},
         )
         delayable.export_record(self.backend_record, **kwargs)
 
@@ -163,6 +163,13 @@ class OdooExporter(AbstractComponent):
     def __init__(self, working_context):
         super(OdooExporter, self).__init__(working_context)
         self.binding = None
+        self.job_uuid = None
+
+    def _connect_with_job(self, context_dict):
+        """Save job_uuid in context to match write external odoo id to the job"""
+        if job_uuid := context_dict.get("job_uuid"):
+            self.job_uuid = job_uuid
+        return True
 
     def _lock(self):
         """Lock the binding record.
@@ -192,9 +199,18 @@ class OdooExporter(AbstractComponent):
                 seconds=5,
             )
 
-    # def _has_to_skip(self):
-    #     """Return True if the export can be skipped"""
-    #     return False
+    def _link_queue_job(self, binding):
+        # Add relation between job and binding, so we can monitor the process
+        if binding and self.job_uuid:
+            job_id = self.env["queue.job"].search([("uuid", "=", self.job_uuid)])
+            if job_id:
+                job_id.write(
+                    {
+                        "odoo_binding_model_name": binding.odoo_id._name,
+                        "odoo_binding_id": binding.odoo_id.id,
+                    }
+                )
+                self.env.cr.commit()  # Commit in case of a failure in the next steps
 
     @contextmanager
     def _retry_unique_violation(self):
@@ -354,25 +370,6 @@ class OdooExporter(AbstractComponent):
         """
         return self.mapper.map_record(self.binding)
 
-    def _validate_create_data(self, data):
-        """Check if the values to import are correct
-        Pro-actively check before the ``Model.create`` if some fields
-        are missing or invalid
-
-        Raise `InvalidDataError`
-        """
-        return
-
-    def _validate_update_data(self, data):
-        """Check if the values to import are correct
-
-        Pro-actively check before the ``Model.update`` if some fields
-        are missing or invalid
-
-        Raise `InvalidDataError`
-        """
-        return
-
     def _create_data(self, map_record, fields=None, **kwargs):
         """Get the data to pass to :py:meth:`_create`"""
         # datas = ast.literal_eval(
@@ -384,8 +381,6 @@ class OdooExporter(AbstractComponent):
 
     def _create(self, data):
         """Create the Odoo record"""
-        # special check on data before export
-        self._validate_create_data(data)
         return self.backend_adapter.create(data)
 
     def _update_data(self, map_record, fields=None, **kwargs):
@@ -395,8 +390,6 @@ class OdooExporter(AbstractComponent):
     def _update(self, data):
         """Update an Odoo record"""
         assert self.external_id
-        # special check on data before export
-        self._validate_update_data(data)
         self.backend_adapter.write(self.external_id, data)
 
     def _run(self, fields=None):
@@ -406,8 +399,8 @@ class OdooExporter(AbstractComponent):
         if not self.external_id:
             fields = None  # should be created with all the fields
 
-        # if self._has_to_skip():
-        #     return _("Export skipped.")
+        # Add relation between job and binding, so we can monitor the process
+        self._link_queue_job(self.binding)
 
         # run some logic before the export
         self._before_export()

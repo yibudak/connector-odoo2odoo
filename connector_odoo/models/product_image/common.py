@@ -13,6 +13,7 @@ class OdooProductImage(models.Model):
     base_multi_image.image ->>> product.image
 
     """
+
     _queue_priority = 15
     _name = "odoo.product.image"
     _inherit = "odoo.binding"

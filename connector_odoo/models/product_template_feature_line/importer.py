@@ -31,14 +31,6 @@ class ProductTemplateFeatureLineMapper(Component):
     _inherit = "odoo.import.mapper"
     _apply_on = "odoo.product.template.feature.line"
 
-    # Todo: altınkaya fields. check if needed
-    # direct = [
-    #     ("attr_type", "attr_type"),
-    #     ("attr_base_price", "attr_base_price"),
-    #     ("required", "required"),
-    #     ("use_in_pricing", "use_in_pricing"),
-    # ]
-
     def _get_feature_id(self, record):
         binder = self.binder_for("odoo.product.attribute")
         return binder.to_internal(record["feature_id"][0], unwrap=True).id

@@ -24,4 +24,3 @@ class MetadataBatchImporter(Component):
         "odoo.product.uom",
         "odoo.product.attribute",
     ]
-

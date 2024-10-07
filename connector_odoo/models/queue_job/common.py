@@ -6,28 +6,16 @@ from odoo import models, fields, api, _
 class JobQueue(models.Model):
     _inherit = "queue.job"
 
-    # odoo2odoo_connector_backend_id = fields.Many2one(
-    #     comodel_name="odoo2odoo.connector.backend",
-    #     string="Odoo2Odoo Connector Backend",
-    #     required=True,
-    #     ondelete="restrict",
-    # )
-    #
-    # odoo2odoo_connector_external_id = fields.Integer(
-    #     string="ID on Ext Odoo2Odoo",
-    #     required=False,
-    # )
-
-    # odoo_binding_model_name = fields.Char(
-    #     string="Odoo Binding Model Name",
-    #     help="The name of the Odoo binding model that this job is related to.",
-    #     readonly=True,
-    # )
-    # odoo_binding_id = fields.Integer(
-    #     string="Odoo Binding ID",
-    #     help="The ID of the Odoo binding that this job is related to.",
-    #     readonly=True,
-    # )
+    odoo_binding_model_name = fields.Char(
+        string="Odoo Binding Model Name",
+        help="The name of the Odoo binding model that this job is related to.",
+        readonly=True,
+    )
+    odoo_binding_id = fields.Integer(
+        string="Odoo Binding ID",
+        help="The ID of the Odoo binding that this job is related to.",
+        readonly=True,
+    )
 
     duplicate = fields.Boolean(
         string="Duplicate",

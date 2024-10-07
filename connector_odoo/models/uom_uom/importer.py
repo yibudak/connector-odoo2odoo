@@ -43,8 +43,6 @@ class UomMapper(Component):
         ("active", "active"),
     ]
 
-    # TODO: Improve and check family, factor etc...
-
     @mapping
     def category_id(self, record):
         """UOM category is manually created by user"""

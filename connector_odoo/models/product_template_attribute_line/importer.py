@@ -56,14 +56,6 @@ class ProductTemplateAttributeLineMapper(Component):
     _inherit = "odoo.import.mapper"
     _apply_on = "odoo.product.template.attribute.line"
 
-    # Todo: altınkaya fields. check if needed
-    # direct = [
-    #     ("attr_type", "attr_type"),
-    #     ("attr_base_price", "attr_base_price"),
-    #     ("required", "required"),
-    #     ("use_in_pricing", "use_in_pricing"),
-    # ]
-
     def _get_product_tmpl_id(self, record):
         binder = self.binder_for("odoo.product.template")
         return binder.to_internal(record["product_tmpl_id"][0], unwrap=True).id
@@ -84,12 +76,12 @@ class ProductTemplateAttributeLineMapper(Component):
         return vals
 
     @mapping
-    def attribute_id(self, record):
-        return {"attribute_id": self._get_attribute_id(record)}
-
-    @mapping
     def attribute_value_id(self, record):
         return {"value_ids": [(6, 0, self._get_attribute_value_id(record))]}
+
+    @mapping
+    def attribute_id(self, record):
+        return {"attribute_id": self._get_attribute_id(record)}
 
     @only_create
     @mapping

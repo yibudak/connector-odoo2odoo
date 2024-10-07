@@ -329,6 +329,11 @@ class PartnerImporter(Component):
 
         # Eğer no_reset_password=True olmazsa, kullanıcılar için şifre yenileme maili gider.
         ResUsers = self.env["res.users"].with_context(no_reset_password=True)
+
+        # Skip if email is not set
+        if not imported_partner.email:
+            return res
+
         user = ResUsers.search([("login", "=", imported_partner.email)], limit=1)
 
         # Eğer kullanıcı varsa, oluşturduğumuz partner'ın şirketiyle eşleştir.

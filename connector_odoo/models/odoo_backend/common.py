@@ -11,7 +11,6 @@ from odoo.exceptions import UserError
 # pylint: disable=W7950
 from odoo.addons.connector_odoo.components.odoo_api import OdooAPI
 
-# TODO : verify if needed
 IMPORT_DELTA_BUFFER = 30  # seconds
 
 _logger = logging.getLogger(__name__)
@@ -208,17 +207,6 @@ class OdooBackend(models.Model):
             translation_langs=self.get_translation_lang_codes(),
         )
 
-    # def get_legacy_connection(self):
-    #     self.ensure_one()
-    #     protocol = "https" if self.protocol == "jsonrpc+ssl" else "http"
-    #     return LegacyOdooAPI(
-    #         url=f"{protocol}://{self.hostname}:{self.port}",
-    #         db=self.database,
-    #         password=self.password,
-    #         username=self.login,
-    #         language=self.get_default_language_code(),
-    #     )
-
     def button_check_connection(self):
         odoo_api = self.get_connection()
         odoo_api.test_connection()
@@ -389,20 +377,6 @@ class OdooBackend(models.Model):
         return fields.Datetime.to_string(next_time)
 
     def _import_from_date(self, model, from_date_field):
-        # Todo: When we poll for changes, this may be causing us to miss records that have changed over time.
-        # if self.env["queue.job"].search(
-        #     [
-        #         ("model_name", "=", model),
-        #         ("method_name", "=", "import_batch"),
-        #         ("state", "in", ["enqueued", "pending", "started"]),
-        #         # Hack: This is needed for multi connector backends
-        #         ("func_string", "ilike", str(self)),
-        #     ],
-        #     limit=1,
-        # ):
-        #     # There is already a job for this model, skip this import
-        #     return datetime.now()
-
         import_start_time = datetime.now()
         domain = [("write_date", "<", fields.Datetime.to_string(import_start_time))]
         for backend in self:

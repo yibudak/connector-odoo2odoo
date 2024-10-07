@@ -155,6 +155,19 @@ class OdooImporter(AbstractComponent):
     #         data.update({"external_id": binding.external_id})
     #     return binding
 
+    def _link_queue_job(self, binding):
+        # Add relation between job and binding, so we can monitor the process
+        if binding and self.job_uuid:
+            job_id = self.env["queue.job"].search([("uuid", "=", self.job_uuid)])
+            if job_id:
+                job_id.write(
+                    {
+                        "odoo_binding_model_name": binding.odoo_id._name,
+                        "odoo_binding_id": binding.odoo_id.id,
+                    }
+                )
+                self.env.cr.commit()  # Commit in case of a failure in the next steps
+
     def _get_binding(self):
         return self.binder.to_internal(self.external_id)
 
@@ -211,7 +224,6 @@ class OdooImporter(AbstractComponent):
             if target_field and target_field.translate:
                 if target_field.type != "html":
                     binding.update_field_translations(field, translations)
-                # TODO: this might be a temporary solution for html fields
                 else:  # HTML field requires a different approach
                     source_lang = self.backend_record.default_lang_id.code
                     for lang, value in translations.items():
@@ -278,15 +290,6 @@ class OdooImporter(AbstractComponent):
         """
         return True
 
-    def _get_binding_odoo_id_changed(self, binding):
-        # It is possible that OpenERP/Odoo deletes and creates records
-        # instead of editing the information.
-        #
-        # e.g. In OpenERP it happens with ir.translation.
-        #
-        # This method will get the binding if needed
-        return binding
-
     def set_lock(self, external_id):
         lock_name = "import({}, {}, {}, {})".format(
             self.backend_record._name,
@@ -334,20 +337,8 @@ class OdooImporter(AbstractComponent):
             _logger.info("Already up-to-date")
             return _("Already up-to-date.")
 
-        if not binding:
-            binding = self._get_binding_odoo_id_changed(binding)
+        self._link_queue_job(binding)
 
-        # # Add relation between job and binding, so we can monitor the import
-        # if binding and self.job_uuid:
-        #     job_id = self.env["queue.job"].search([("uuid", "=", self.job_uuid)])
-        #     if job_id:
-        #         job_id.write(
-        #             {
-        #                 "odoo_binding_model_name": binding.odoo_id._name,
-        #                 "odoo_binding_id": binding.odoo_id.id,
-        #             }
-        #         )
-        #         self.env.cr.commit()  # Commit in case of a failure in the next steps
         self._before_import()
 
         # import the missing linked resources
