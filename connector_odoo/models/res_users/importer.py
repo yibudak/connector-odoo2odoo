@@ -45,7 +45,7 @@ class ResUsersMapper(Component):
         Do not add active field for superuser
         """
         if record["id"] != SUPERUSER_ID:
-            return record["active"]
+            return {"active": record["active"]}
         else:
             return {}
 
