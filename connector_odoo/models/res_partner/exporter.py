@@ -226,7 +226,6 @@ class PartnerExportMapper(Component):
         ("street2", "street2"),
         ("city", "city"),
         ("website", "website"),
-        ("lang", "lang"),
         ("phone", "phone"),
         ("mobile", "mobile"),
         ("email", "email"),
@@ -237,6 +236,13 @@ class PartnerExportMapper(Component):
         ("tax_office_name", "tax_office_name"),
         ("website_privacy_level", "website_privacy_level"),
     ]
+
+    @mapping
+    def lang(self, record):
+        if record.lang == "tr_TR":
+            return {"lang": record.lang}
+        else:
+            return {"lang": "en_US"}
 
     @mapping
     def name(self, record):
