@@ -59,7 +59,6 @@ class OdooAPI(object):
             return json_resp["result"] if ("result" in json_resp) else None
         except Exception as exc:
             _logger.error(exc)
-            # time.sleep(5)  # wait 5 seconds before retrying
             raise RetryableJobError(
                 "OdooAPI: Connection error: {}".format(exc),
                 seconds=5,

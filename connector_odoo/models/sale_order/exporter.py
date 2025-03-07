@@ -24,8 +24,8 @@ class OdooSaleOrderExporter(Component):
                 model="sale.order", domain=[("id", "=", self.external_id)]
             )
         ):
-            self.external_id = 0
-            self.binding.write({"external_id": 0})
+            self.external_id = None
+            self.binding.write({"external_id": None})
 
         # If it's exported but not binded, we should set external_id manually.
         if not self.binding.external_id:

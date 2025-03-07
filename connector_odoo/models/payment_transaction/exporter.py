@@ -56,13 +56,13 @@ class PaymentTransactionExportMapper(Component):
 
     @mapping
     def partner_country_id(self, record):
-        ext_counry = self.work.odoo_api.search(
+        ext_country = self.work.odoo_api.search(
             model="res.country",
             domain=[("code", "=", record.partner_country_id.code)],
             fields=["id"],
         )
         return {
-            "partner_country_id": ext_counry[0]["id"],
+            "partner_country_id": ext_country[0]["id"],
         }
 
     @mapping

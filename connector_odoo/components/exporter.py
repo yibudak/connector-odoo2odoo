@@ -418,9 +418,7 @@ class OdooExporter(AbstractComponent):
 
         map_record = self._map_data()
 
-        # 0 is a special value for external_id, it means that the
-        # record is not yet exported
-        if self.external_id and self.external_id != 0:
+        if self.external_id:
             record = self._update_data(map_record, fields=fields)
             if not record:
                 return _("Nothing to export.")

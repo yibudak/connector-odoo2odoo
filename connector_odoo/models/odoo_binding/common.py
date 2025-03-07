@@ -73,7 +73,7 @@ class OdooBinding(models.AbstractModel):
 
     @api.constrains("backend_id", "external_id")
     def unique_backend_external_id(self):
-        if self.external_id > 0:
+        if self.external_id:
             count = self.env[self._name].search_count(
                 [
                     ("backend_id", "=", self.backend_id.id),
@@ -130,10 +130,6 @@ class OdooBinding(models.AbstractModel):
             try:
                 return importer.run(external_id, force=force)
             except Exception as e:
-                # Bağlantı hatalarında iş sürekli tekrar deneniyor ve delay olmadığı
-                # zaman retry_count çok hızlı bir şekilde doluyor. Delay ekleyerek
-                # aradaki bağlantının düzelmesini bekliyoruz.
-                time.sleep(0.5)
                 raise RetryableJobError(
                     "Could not import record %s: \n%s" % (external_id, str(e)),
                     seconds=5,
