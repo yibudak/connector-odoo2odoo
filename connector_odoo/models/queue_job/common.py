@@ -50,6 +50,7 @@ class JobQueue(models.Model):
             if record.duplicate:
                 record.state = "done"
                 record.result = "Duplicate job automatically marked as done."
+        return res
 
     def run_next_job(self):
         """

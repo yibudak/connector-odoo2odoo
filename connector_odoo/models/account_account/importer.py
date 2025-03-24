@@ -44,6 +44,7 @@ class AccountAccountImportMapper(Component):
         ("reconcile", "reconcile"),
         ("note", "note"),
         ("deprecated", "deprecated"),
+        ("account_type", "account_type"),
     ]
 
     @only_create
@@ -65,25 +66,6 @@ class AccountAccountImportMapper(Component):
             binder = self.binder_for("odoo.res.currency")
             currency_id = binder.to_internal(record["currency_id"][0], unwrap=True)
             vals.update({"currency_id": currency_id.id})
-        return vals
-
-    @mapping
-    def user_type_id(self, record):
-        """Account types is not modelized in Odoo 16.
-        So we are mapping available account types from v12.0"""
-        vals = {}
-        available_types = map(
-            lambda f: f[0],
-            self.env["account.account"]._fields["account_type"].selection,
-        )
-        if record["user_type_id"]:
-            external_type = self.work.odoo_api.browse(
-                model="account.account.type", res_id=record["user_type_id"][0]
-            )
-            if external_type["type"] in available_types:
-                vals = {"account_type": external_type["type"]}
-            else:
-                vals = {"account_type": "income_other"}
         return vals
 
     @mapping

@@ -40,6 +40,8 @@ class AccountGroupImportMapper(Component):
 
     direct = [
         ("name", "name"),
+        ("code_prefix_start", "code_prefix_start"),
+        ("code_prefix_end", "code_prefix_end"),
     ]
 
     # @only_create
@@ -68,14 +70,6 @@ class AccountGroupImportMapper(Component):
             if local_parent:
                 res.update({"parent_id": local_parent.id})
         return res
-
-    @mapping
-    def prefix(self, record):
-        code_prefix = record["code_prefix"].split(".")
-        vals = {"code_prefix_start": code_prefix[0], "code_prefix_end": ""}
-        if len(code_prefix) > 1:
-            vals.update({"code_prefix_end": code_prefix[1]})
-        return vals
 
 
 class AccountGroupImporter(Component):

@@ -58,6 +58,7 @@ class OdooImporter(AbstractComponent):
     def _is_uptodate(self, binding):
         """Return True if the import should be skipped because
         it is already up-to-date in Odoo"""
+        return False
         assert self.odoo_record
         odoo_date = self.odoo_record.get("write_date", False)
         if not odoo_date:

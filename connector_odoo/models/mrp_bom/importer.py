@@ -32,7 +32,7 @@ class MrpBomBatchImporter(Component):
         domain.append(("product_tmpl_id", "in", imported_products))
         external_ids = self.backend_adapter.search(domain)
         _logger.info(
-            "search for delivery regions %s returned %s items",
+            "search for MRP bill of material %s returned %s items",
             domain,
             len(external_ids),
         )

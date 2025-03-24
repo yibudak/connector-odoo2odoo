@@ -90,8 +90,7 @@ class ProductTemplateAttributeLineMapper(Component):
 
     @mapping
     def active(self, record):
-        # We don't have any active field in Odoo 12, just set it True
-        return {"active": True}
+        return {"active": record.get("active", True)}
 
     @mapping
     def default_value_id(self, record):

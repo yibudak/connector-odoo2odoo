@@ -38,7 +38,7 @@ class ProductImageImportMapper(Component):
     _apply_on = ["odoo.product.image"]
 
     direct = [
-        ("image_main", "image_1920"),
+        ("image_1920", "image_1920"),
         # ("name", "name"), # We need to handle missing names
         # ("name", "name"),
         # ("description", "description"),

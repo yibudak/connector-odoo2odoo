@@ -119,10 +119,8 @@ class SaleOrderExportMapper(Component):
         ("sale_weight", "sale_weight"),
         ("delivery_rating_success", "delivery_rating_success"),
         ("access_token", "access_token"),
+        ("client_order_ref", "client_order_ref"),
     ]
-
-    # yigit: buraya artık gerek yok cunku sale.order.line'ı mapledik.
-    # children = [("order_line", "order_line", "odoo.sale.order.line")]
 
     @only_create
     @mapping
@@ -132,21 +130,6 @@ class SaleOrderExportMapper(Component):
         durum düzgün bir şekilde güncellensin.
         """
         return {"state": "draft"}
-
-    # We should NOT send the state field. It should be set to draft and then
-    # action_%s should be called.
-    # @mapping
-    # def state(self, record):
-    #     return {"state": record.state}
-
-    @mapping
-    def confirmation_date(self, record):
-        vals = {}
-        if record.confirmation_date:
-            vals["confirmation_date"] = record.confirmation_date.strftime(
-                DEFAULT_SERVER_DATETIME_FORMAT
-            )
-        return vals
 
     @mapping
     def date_order(self, record):
@@ -205,10 +188,6 @@ class SaleOrderExportMapper(Component):
         return {
             "payment_term_id": binder.to_external(record.payment_term_id, wrap=True)
         }
-
-    @mapping
-    def client_order_ref(self, record):
-        return {"client_order_ref": record.client_order_ref}
 
     @mapping
     def utm(self, record):

@@ -73,10 +73,10 @@ class ProductTemplateImportMapper(Component):
             "product_length": record["product_length"],
             "product_width": record["product_width"],
             "product_height": record["product_height"],
-            "product_weight": record["weight"],
-            "weight": record["weight"],
-            "product_volume": record["volume"],
             "volume": record["volume"],
+            "weight": record["weight"],
+            "product_volume": record["product_volume"],
+            "product_weight": record["product_weight"],
             "weight_uom_id": (
                 binder.to_internal(record["weight_uom_id"][0], unwrap=True).id
                 if record["weight_uom_id"]

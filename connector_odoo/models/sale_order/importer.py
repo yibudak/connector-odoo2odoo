@@ -50,7 +50,6 @@ class SaleOrderImportMapper(Component):
 
     direct = [
         ("date_order", "date_order"),
-        ("confirmation_date", "confirmation_date"),
         ("name", "name"),
         ("state", "state"),
         ("order_state", "order_state"),
