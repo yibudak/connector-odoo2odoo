@@ -20,7 +20,6 @@
         "connector_base_product",
         "sale",
         "purchase",
-        "altinkaya_product_dimensions",
         "l10n_tr_address",
         "altinkaya_ecommerce_sync",
         "delivery_integration_base",
