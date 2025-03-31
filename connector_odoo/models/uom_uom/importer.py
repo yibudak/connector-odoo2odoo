@@ -54,6 +54,7 @@ class UomMapper(Component):
             5: 6,
             7: 7,
             8: 8,
+            10: 5,
         }
 
         category_id = record["category_id"][0]
