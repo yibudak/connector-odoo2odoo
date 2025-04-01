@@ -25,7 +25,7 @@ class AccountPaymentExportMapper(Component):
     direct = [
         ("name", "name"),
         ("amount", "amount"),
-        ("ref", "communication"),
+        ("ref", "ref"),
         ("payment_type", "payment_type"),
         ("partner_type", "partner_type"),
     ]
